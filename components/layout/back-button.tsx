@@ -5,6 +5,8 @@ import { ArrowRight } from "lucide-react";
 import { useGoBack } from "@/hooks/use-go-back";
 
 const TRIP_DETAIL_PAGE = /^\/trips\/[^/]+$/;
+const TRAIL_DETAIL_PAGE = /^\/trails\/[^/]+$/;
+const PLACE_DETAIL_PAGE = /^\/places\/[^/]+$/;
 const HERO_BACK_PAGES = ["/wizard/results"];
 
 export function BackButton() {
@@ -13,8 +15,18 @@ export function BackButton() {
 
   const isTripDetailPage =
     TRIP_DETAIL_PAGE.test(pathname) && pathname !== "/trips/create";
+  const isTrailDetailPage = TRAIL_DETAIL_PAGE.test(pathname);
+  const isPlaceDetailPage = PLACE_DETAIL_PAGE.test(pathname);
 
-  if (pathname === "/" || isTripDetailPage || HERO_BACK_PAGES.includes(pathname)) return null;
+  if (
+    pathname === "/" ||
+    isTripDetailPage ||
+    isTrailDetailPage ||
+    isPlaceDetailPage ||
+    HERO_BACK_PAGES.includes(pathname)
+  ) {
+    return null;
+  }
 
   return (
     <button

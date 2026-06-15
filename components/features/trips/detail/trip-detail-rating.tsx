@@ -8,6 +8,7 @@ interface TripDetailRatingProps {
   userRating: number;
   onRate: (score: number) => void;
   canRate: boolean;
+  title?: string;
 }
 
 export function TripDetailRating({
@@ -15,11 +16,12 @@ export function TripDetailRating({
   userRating,
   onRate,
   canRate,
+  title = "דרג את הטיול",
 }: TripDetailRatingProps) {
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 md:px-6">
       <div className="rounded-[2px] border border-[#e5e7eb] bg-[#f9fafb] p-6">
-        <h2 className="mb-4 text-2xl font-light text-[#111827]">דרג את הטיול</h2>
+        <h2 className="mb-4 text-2xl font-light text-[#111827]">{title}</h2>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="mb-2 text-sm text-[#6b7280]">דירוג ממוצע</p>
