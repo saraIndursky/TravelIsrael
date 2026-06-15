@@ -1,0 +1,32 @@
+---
+description: TravelIsrael stack, communication, and coding standards
+alwaysApply: true
+---
+# Project
+TravelIsrael — trip planning platform for Israel. Demo data mode (no Supabase yet).
+
+# Stack
+Next.js 14 App Router, TypeScript strict, Tailwind, shadcn/ui
+Demo data via lib/data/ (future: Supabase, Resend, Vercel)
+
+# UI
+RTL Hebrew (dir="rtl", lang="he"), mobile-first, Tailwind only
+
+# Communication rules (token-saving)
+Be concise. No preamble like "Great question!" or "Sure!"
+No re-explaining what you're about to do
+Show code first, explain only if asked
+Don't repeat my code back to me
+Don't apologize
+
+# Code rules
+TypeScript strict, no any
+Server components by default, client components only when needed
+All data access via lib/data/ repos (typed)
+No console.log in production code
+
+# What NOT to do without asking
+Don't refactor unrelated code
+Don't add dependencies
+Don't run `npm run build` while dev server is on port 3000
+Don't delete `.next` while dev is running — see nextjs-dev-workflow rule

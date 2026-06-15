@@ -1,0 +1,33 @@
+---
+description: TravelIsrael App Router pages and routes
+globs: app/**
+alwaysApply: false
+---
+# Public Routes
+/                    → home (hero, popular trips, wizard link)
+/trips               → trip discovery (filters, sort, infinite scroll)
+/trips/[id]          → trip detail
+/trips/create        → create trip
+/trips/[id]/edit     → edit trip
+/places/[id]         → place detail
+/trails/[id]         → trail detail
+/wizard              → matching wizard (7 steps)
+/wizard/results      → match results
+
+# User Routes
+/profile             → personal area
+/profile/trips       → my trips by status
+
+# Admin Routes
+/admin               → admin dashboard
+/admin/trips         → manage trips
+/admin/places        → manage places
+/admin/trails        → manage trails
+/admin/reports       → reports
+/admin/users         → users
+
+# Page Patterns
+- Server Components with searchParams for URL-based filtering
+- loading.tsx skeletons per route group
+- error.tsx and not-found.tsx per route group
+- Hebrew metadata for SEO

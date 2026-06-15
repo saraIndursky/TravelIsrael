@@ -1,0 +1,27 @@
+import type { TripStation } from "@/types";
+
+export const seedTripStations: TripStation[] = [
+  { id: "ts-1", trip_id: "trip-1", order_index: 0, station_type: "place", place_id: "place-1", trail_id: null },
+  { id: "ts-2", trip_id: "trip-1", order_index: 1, station_type: "place", place_id: "place-7", trail_id: null },
+  { id: "ts-3", trip_id: "trip-1", order_index: 2, station_type: "place", place_id: "place-14", trail_id: null },
+  { id: "ts-4", trip_id: "trip-2", order_index: 0, station_type: "place", place_id: "place-3", trail_id: null },
+  { id: "ts-5", trip_id: "trip-2", order_index: 1, station_type: "trail", place_id: null, trail_id: "trail-9" },
+  { id: "ts-6", trip_id: "trip-2", order_index: 2, station_type: "place", place_id: "place-15", trail_id: null },
+  { id: "ts-7", trip_id: "trip-3", order_index: 0, station_type: "trail", place_id: null, trail_id: "trail-3" },
+  { id: "ts-8", trip_id: "trip-3", order_index: 1, station_type: "place", place_id: "place-6", trail_id: null },
+  { id: "ts-9", trip_id: "trip-3", order_index: 2, station_type: "place", place_id: "place-12", trail_id: null },
+  { id: "ts-10", trip_id: "trip-4", order_index: 0, station_type: "place", place_id: "place-5", trail_id: null },
+  { id: "ts-11", trip_id: "trip-4", order_index: 1, station_type: "trail", place_id: null, trail_id: "trail-10" },
+  { id: "ts-12", trip_id: "trip-4", order_index: 2, station_type: "place", place_id: "place-10", trail_id: null },
+  { id: "ts-13", trip_id: "trip-5", order_index: 0, station_type: "trail", place_id: null, trail_id: "trail-2" },
+  { id: "ts-14", trip_id: "trip-5", order_index: 1, station_type: "trail", place_id: null, trail_id: "trail-5" },
+  { id: "ts-15", trip_id: "trip-5", order_index: 2, station_type: "place", place_id: "place-4", trail_id: null },
+  { id: "ts-16", trip_id: "trip-6", order_index: 0, station_type: "place", place_id: "place-8", trail_id: null },
+  { id: "ts-17", trip_id: "trip-7", order_index: 0, station_type: "place", place_id: "place-9", trail_id: null },
+  { id: "ts-18", trip_id: "trip-8", order_index: 0, station_type: "trail", place_id: null, trail_id: "trail-1" },
+  { id: "ts-19", trip_id: "trip-8", order_index: 1, station_type: "place", place_id: "place-11", trail_id: null },
+  { id: "ts-20", trip_id: "trip-9", order_index: 0, station_type: "place", place_id: "place-2", trail_id: null },
+  { id: "ts-21", trip_id: "trip-10", order_index: 0, station_type: "trail", place_id: null, trail_id: "trail-6" },
+  { id: "ts-22", trip_id: "trip-11", order_index: 0, station_type: "place", place_id: "place-1", trail_id: null },
+  { id: "ts-23", trip_id: "trip-12", order_index: 0, station_type: "trail", place_id: null, trail_id: "trail-4" },
+];

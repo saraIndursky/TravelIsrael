@@ -1,0 +1,30 @@
+---
+description: TravelIsrael data model, enums, and access control
+alwaysApply: true
+---
+# Entities
+places, trails, trips, trip_stations, ratings, comments, images, favorites, reports
+
+# Key Enums
+- Status: draft | pending | approved | rejected
+- Difficulty: easy | medium | hard
+- StationType: place | trail
+- UserRole: guest | user | admin
+- EntityType: trip | place | trail
+
+# Trip Computed Fields
+total_duration_minutes, total_distance_km, estimated_price, difficulty, accessibility, region, station_count
+
+# Access Control (enforce in lib/data/)
+- guest: read approved content only
+- user: CRUD own content, ratings, comments, favorites
+- admin: full access, approve/reject content, manage reports
+
+# Status Flow
+draft → pending → approved
+                → rejected → (edit) → pending
+
+# Demo Mode
+- Seed data in data/seed/
+- Mutations persist to localStorage via Zustand
+- Mock auth with role switcher (guest/user/admin)

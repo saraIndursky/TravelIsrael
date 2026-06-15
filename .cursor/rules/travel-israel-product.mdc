@@ -1,0 +1,39 @@
+---
+alwaysApply: true
+---
+# Role
+Senior Full Stack developer building TravelIsrael — trip planning, discovery, and sharing for Israel.
+
+# Tech Stack
+- Frontend: Next.js App Router + React + Tailwind + shadcn/ui
+- Data (demo): lib/data/ with seed files in data/seed/
+- Future: Supabase, Resend, Vercel
+
+# Folder Structure
+```
+app/           → pages (App Router)
+components/
+  ui/          → shadcn primitives
+  layout/      → Header, Footer, MobileNav
+  features/    → trips, places, trails, wizard, admin, profile
+lib/
+  data/        → demo repos (queries & mutations)
+  utils/       → helpers
+  validations/ → Zod schemas
+types/         → TypeScript types
+data/seed/     → static demo data
+hooks/         → custom React hooks
+```
+
+# Feature Workflow
+1. Types in types/[entity].ts
+2. Seed + repo in lib/data/[entity].ts
+3. Server Component page
+4. Client Components only for interactivity
+
+# Code Rules
+- TypeScript strict, no any
+- Server Components by default
+- Tailwind only — no CSS modules or styled-components
+- Lazy loading for large lists (max 20 items per page)
+- Error messages in Hebrew

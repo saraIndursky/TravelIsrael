@@ -1,0 +1,33 @@
+---
+description: TravelIsrael business logic — trip calculations, wizard, status flow
+alwaysApply: true
+---
+# Trip Field Calculations (real-time on station add/remove)
+- total_duration_minutes = sum of all station durations
+- total_distance_km = sum of trail length_km only
+- estimated_price = sum of all station prices
+- difficulty = max difficulty among stations
+- accessibility = min accessibility among stations
+- region = most frequent region among stations
+- station_count = number of stations
+
+# Wizard Match Scoring
+Weighted sum per trip:
+- region match: 25%
+- difficulty match: 25%
+- accessibility match: 20%
+- tags overlap: 20%
+- other preferences: 10%
+
+# Wizard Steps
+region → difficulty → accessibility → trip type → tags → special preferences → summary
+- Each step skippable
+- State in Zustand + URL params
+- Progress indicator at top
+
+# State Management
+- Server state: lib/data/ repos
+- Form state: React Hook Form + Zod
+- UI state: useState / useReducer
+- Wizard/global: Zustand
+- Optimistic updates for favorites and ratings

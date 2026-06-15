@@ -1,0 +1,25 @@
+---
+description: Prevent Next.js white page and missing CSS after UI changes
+alwaysApply: true
+---
+# Next.js Dev — מניעת דף לבן / עיצוב חסר
+
+## הסיבה
+דף לבן או HTML בלי Tailwind נגרמים מ-cache שבור של `.next` (404 על `layout.css` ו-chunks).
+ב-Windows זה קורה כש:
+- `npm run build` רץ בזמן ש-`npm run dev` פעיל
+- מוחקים `.next` בזמן שה-dev server רץ
+- יש שני dev servers על פורט 3000
+
+## חובה לסוכן אחרי שינויי UI/CSS/עיצוב
+1. **אסור** להריץ `npm run build` כש-dev server רץ על פורט 3000
+2. **אסור** למחוק `.next` בלי לעצור קודם את dev (`Ctrl+C` או kill port 3000)
+3. **אחרי שינויי עיצוב** — להריץ `npm run verify:dev` (או לוודא ידנית ש-`/wizard` ו-CSS מחזירים 200)
+4. אם `verify:dev` נכשל או יש 404 על static — `npm run dev:clean` ואז רענון קשיח בדפדפן
+5. לא לסיים משימת עיצוב בלי לוודא שה-dev server תקין
+
+## פקודות
+- `npm run dev` — פיתוח רגיל (webpack memory cache ב-next.config)
+- `npm run dev:clean` — מחיקת cache + dev (לאחר בעיה)
+- `npm run verify:dev` — בדיקה ש-wizard + CSS עובדים
+- `npm run build` — נחסם אוטומטית אם dev רץ (`prebuild`)

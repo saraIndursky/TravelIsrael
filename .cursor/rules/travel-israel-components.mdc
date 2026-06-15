@@ -1,0 +1,31 @@
+---
+description: TravelIsrael UI primitives and feature components
+globs: components/**
+alwaysApply: false
+---
+# UI Primitives (shadcn + custom)
+Button (primary, secondary, ghost, danger)
+Card, Badge, Dialog, Tabs, Input, Select, Skeleton, Toast
+LazyList (Intersection Observer, 20/page)
+ImageGallery, StarRating, MapView (Leaflet)
+StatusBadge, DifficultyBadge
+
+# Feature Components
+TripCard — image, name, tags, rating, stats
+StationList — draggable stations (DnD)
+StationPicker — modal with search, filter, lazy load
+TripStats — computed duration, distance, difficulty, price
+WizardStep — single wizard step
+MatchScore — match percentage with explanation
+AdminTable — responsive admin table
+StatusTabs — drafts / pending / approved / rejected
+
+# Layout
+Header, Footer, MobileNav — RTL, mobile-first
+DemoRoleSwitcher in header for demo auth
+
+# UX Requirements
+- dir="rtl" throughout
+- Loading state for every async action
+- Success/error toast in Hebrew
+- Grid: 1 col mobile, 2 tablet, 3 desktop
