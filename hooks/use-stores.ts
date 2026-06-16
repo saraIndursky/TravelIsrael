@@ -10,6 +10,8 @@ interface AuthState {
   role: UserRole;
   userId: string;
   setRole: (role: UserRole) => void;
+  login: (userId: string, role: UserRole) => void;
+  logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -22,6 +24,8 @@ export const useAuthStore = create<AuthState>()(
           role,
           userId: role === "admin" ? "admin-1" : role === "user" ? DEMO_USER_ID : "",
         }),
+      login: (userId, role) => set({ userId, role }),
+      logout: () => set({ role: "guest", userId: "" }),
     }),
     { name: "travel-israel-auth" }
   )

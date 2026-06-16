@@ -1,45 +1,65 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getAllPlacesAdmin, updatePlaceStatus } from "@/lib/data/places";
-import { AdminTable } from "@/components/features/admin/admin-table";
-import { StatusTabs } from "@/components/features/admin/status-tabs";
-import { PageShell } from "@/components/layout/page-shell";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AdminEntityListPage } from "@/components/features/admin/admin-entity-list-page";
+import { placesAdminConfig } from "@/components/features/admin/admin-entity-configs";
 import { useAuthStore } from "@/hooks/use-stores";
-import type { Place, Status } from "@/types";
+import { deletePlace, getAllPlacesAdmin, restorePlace, updatePlaceStatus } from "@/lib/data/places";
+import { getUsers } from "@/lib/data/auth";
+import type { Place, User } from "@/types";
 import { toast } from "@/components/ui/use-toast";
 
 export default function AdminPlacesPage() {
   const { role } = useAuthStore();
   const [places, setPlaces] = useState<Place[]>([]);
-  const [tab, setTab] = useState<Status | "all">("all");
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const [allPlaces, allUsers] = await Promise.all([getAllPlacesAdmin(), getUsers()]);
+    setPlaces(allPlaces);
+    setUsers(allUsers);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
-    if (role === "admin") getAllPlacesAdmin().then(setPlaces);
-  }, [role]);
+    if (role === "admin") load();
+  }, [role, load]);
 
-  if (role !== "admin") return <PageShell title="ניהול מקומות"><p className="text-center text-muted-foreground py-12">גישה למנהלים בלבד</p></PageShell>;
+  const config = useMemo(
+    () => placesAdminConfig(Array.from(new Set(places.map((p) => p.place_type))).sort()),
+    [places]
+  );
 
-  const filtered = tab === "all" ? places : places.filter((p) => p.status === tab);
+  if (role !== "admin") return null;
 
   return (
-    <PageShell title="ניהול מקומות" subtitle="אישור ועריכת מקומות">
-      <div className="ti-card p-6">
-        <StatusTabs value={tab} onChange={setTab}>
-          {() => (
-            <AdminTable
-              items={filtered}
-              columns={[
-                { key: "name", label: "שם", render: (p) => p.name },
-                { key: "region", label: "אזור", render: (p) => p.region },
-                { key: "type", label: "סוג", render: (p) => p.place_type },
-              ]}
-              onApprove={async (id) => { await updatePlaceStatus(id, "approved"); setPlaces(await getAllPlacesAdmin()); toast({ title: "אושר" }); }}
-              onReject={async (id) => { await updatePlaceStatus(id, "rejected"); setPlaces(await getAllPlacesAdmin()); toast({ title: "נדחה" }); }}
-            />
-          )}
-        </StatusTabs>
-      </div>
-    </PageShell>
+    <AdminEntityListPage
+      config={config}
+      items={places}
+      users={users}
+      loading={loading}
+      onApprove={async (item) => {
+        await updatePlaceStatus(item.id, "approved");
+        await load();
+        toast({ title: "המקום אושר" });
+      }}
+      onReject={async (item, reason) => {
+        await updatePlaceStatus(item.id, "rejected", reason);
+        await load();
+        toast({ title: "המקום נדחה" });
+      }}
+      onDelete={async (item) => {
+        await deletePlace(item.id);
+        await load();
+        toast({ title: "המקום נמחק" });
+      }}
+      onRestore={async (item) => {
+        await restorePlace(item.id);
+        await load();
+        toast({ title: "המקום הוחזר לבדיקה" });
+      }}
+    />
   );
 }

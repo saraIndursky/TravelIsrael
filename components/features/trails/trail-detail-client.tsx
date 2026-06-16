@@ -14,6 +14,7 @@ import {
   upsertRating,
 } from "@/lib/data/social";
 import { createReport } from "@/lib/data/reports";
+import { isFavoriteEntity, toggleFavoriteEntity } from "@/lib/data/favorites";
 import { getStore } from "@/lib/data/store";
 import { useAuthStore } from "@/hooks/use-stores";
 import { toast } from "@/components/ui/use-toast";
@@ -29,6 +30,7 @@ import { TrailDetailGallery } from "@/components/features/trails/detail/trail-de
 import { TrailDetailSidebar } from "@/components/features/trails/detail/trail-detail-sidebar";
 import { TrailDetailNature } from "@/components/features/trails/detail/trail-detail-nature";
 import { TrailDetailActions } from "@/components/features/trails/detail/trail-detail-actions";
+import { CreateAssistantPanel } from "@/components/features/assistant/create-assistant-panel";
 import { TrailDetailRelatedTrips } from "@/components/features/trails/detail/trail-detail-related-trips";
 import type { ReportType } from "@/types";
 
@@ -38,7 +40,7 @@ function computeAvgRating(scores: number[]): number {
 }
 
 export default function TrailDetailClient({ id }: { id: string }) {
-  const { role } = useAuthStore();
+  const { role, userId } = useAuthStore();
   const [trail, setTrail] = useState<Trail | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -70,6 +72,7 @@ export default function TrailDetailClient({ id }: { id: string }) {
       setUserRating(existingRating?.score ?? 0);
       setComments(await getComments("trail", id));
       setHasUserReview(!!(await getUserComment("trail", id)));
+      setIsSaved(await isFavoriteEntity("trail", id));
       setLoading(false);
     }
     load();
@@ -77,18 +80,25 @@ export default function TrailDetailClient({ id }: { id: string }) {
 
   const tagsDisplay = useMemo(() => trail?.tags.join(" · ") ?? "", [trail?.tags]);
 
+  const showOwnerAssistant =
+    trail &&
+    role !== "guest" &&
+    trail.created_by === userId &&
+    (trail.status === "pending" || trail.status === "rejected");
+
   if (loading) {
     return <div className="min-h-screen animate-pulse bg-[#f9fafb] pt-20">טוען...</div>;
   }
   if (!trail) notFound();
 
-  const handleToggleSaved = () => {
+  const handleToggleSaved = async () => {
     if (!canInteract) {
       toast({ title: "יש להתחבר כדי לשמור מסלול" });
       return;
     }
-    setIsSaved((v) => !v);
-    toast({ title: isSaved ? "המסלול הוסר מהשמורים" : "המסלול נשמר" });
+    const next = await toggleFavoriteEntity("trail", id);
+    setIsSaved(next);
+    toast({ title: next ? "המסלול נשמר למועדפים" : "המסלול הוסר מהמועדפים" });
   };
 
   const handleRate = async (score: number) => {
@@ -225,6 +235,15 @@ export default function TrailDetailClient({ id }: { id: string }) {
       )}
 
       <TrailDetailActions />
+
+      {showOwnerAssistant && (
+        <CreateAssistantPanel
+          entity="trail"
+          context="detail"
+          copyOnly
+          getSnapshot={() => ({ ...trail } as Record<string, unknown>)}
+        />
+      )}
     </div>
   );
 }

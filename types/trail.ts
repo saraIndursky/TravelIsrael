@@ -22,5 +22,6 @@ export interface Trail {
   image_url: string;
   created_by: string;
   status: Status;
+  rejection_reason?: string;
   updated_at: string;
 }

@@ -34,6 +34,7 @@ import { formatDuration } from "@/lib/utils";
 import { getStore, generateId } from "@/lib/data/store";
 import { tripFormSchema, type TripFormValues } from "@/lib/validations";
 import { toast } from "@/components/ui/use-toast";
+import { CreateAssistantPanel } from "@/components/features/assistant/create-assistant-panel";
 
 const DEFAULT_IMAGE =
   "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800";
@@ -60,6 +61,7 @@ export function BuildTripForm({ mode, tripId, initialTrip }: BuildTripFormProps)
     watch,
     setValue,
     reset,
+    getValues,
     formState: { errors },
   } = useForm<TripFormValues>({
     resolver: zodResolver(tripFormSchema),
@@ -398,6 +400,15 @@ export function BuildTripForm({ mode, tripId, initialTrip }: BuildTripFormProps)
           </div>
         </div>
       </div>
+
+      <CreateAssistantPanel
+        entity="trip"
+        getSnapshot={() => ({
+          ...getValues(),
+          station_count: normalizedStations.length,
+        })}
+        setValue={setValue}
+      />
 
       <StationPicker
         open={pickerOpen}

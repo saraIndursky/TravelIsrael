@@ -1,45 +1,65 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getAllTrailsAdmin, updateTrailStatus } from "@/lib/data/trails";
-import { AdminTable } from "@/components/features/admin/admin-table";
-import { StatusTabs } from "@/components/features/admin/status-tabs";
-import { PageShell } from "@/components/layout/page-shell";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AdminEntityListPage } from "@/components/features/admin/admin-entity-list-page";
+import { trailsAdminConfig } from "@/components/features/admin/admin-entity-configs";
 import { useAuthStore } from "@/hooks/use-stores";
-import type { Trail, Status } from "@/types";
+import { deleteTrail, getAllTrailsAdmin, restoreTrail, updateTrailStatus } from "@/lib/data/trails";
+import { getUsers } from "@/lib/data/auth";
+import type { Trail, User } from "@/types";
 import { toast } from "@/components/ui/use-toast";
 
 export default function AdminTrailsPage() {
   const { role } = useAuthStore();
   const [trails, setTrails] = useState<Trail[]>([]);
-  const [tab, setTab] = useState<Status | "all">("all");
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const [allTrails, allUsers] = await Promise.all([getAllTrailsAdmin(), getUsers()]);
+    setTrails(allTrails);
+    setUsers(allUsers);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
-    if (role === "admin") getAllTrailsAdmin().then(setTrails);
-  }, [role]);
+    if (role === "admin") load();
+  }, [role, load]);
 
-  if (role !== "admin") return <PageShell title="ניהול מסלולים"><p className="text-center text-muted-foreground py-12">גישה למנהלים בלבד</p></PageShell>;
+  const config = useMemo(
+    () => trailsAdminConfig(Array.from(new Set(trails.map((t) => t.trail_type))).sort()),
+    [trails]
+  );
 
-  const filtered = tab === "all" ? trails : trails.filter((t) => t.status === tab);
+  if (role !== "admin") return null;
 
   return (
-    <PageShell title="ניהול מסלולים" subtitle="אישור ועריכת מסלולים">
-      <div className="ti-card p-6">
-        <StatusTabs value={tab} onChange={setTab}>
-          {() => (
-            <AdminTable
-              items={filtered}
-              columns={[
-                { key: "name", label: "שם", render: (t) => t.name },
-                { key: "region", label: "אזור", render: (t) => t.region },
-                { key: "difficulty", label: "קושי", render: (t) => t.difficulty },
-              ]}
-              onApprove={async (id) => { await updateTrailStatus(id, "approved"); setTrails(await getAllTrailsAdmin()); toast({ title: "אושר" }); }}
-              onReject={async (id) => { await updateTrailStatus(id, "rejected"); setTrails(await getAllTrailsAdmin()); toast({ title: "נדחה" }); }}
-            />
-          )}
-        </StatusTabs>
-      </div>
-    </PageShell>
+    <AdminEntityListPage
+      config={config}
+      items={trails}
+      users={users}
+      loading={loading}
+      onApprove={async (item) => {
+        await updateTrailStatus(item.id, "approved");
+        await load();
+        toast({ title: "המסלול אושר" });
+      }}
+      onReject={async (item, reason) => {
+        await updateTrailStatus(item.id, "rejected", reason);
+        await load();
+        toast({ title: "המסלול נדחה" });
+      }}
+      onDelete={async (item) => {
+        await deleteTrail(item.id);
+        await load();
+        toast({ title: "המסלול נמחק" });
+      }}
+      onRestore={async (item) => {
+        await restoreTrail(item.id);
+        await load();
+        toast({ title: "המסלול הוחזר לבדיקה" });
+      }}
+    />
   );
 }

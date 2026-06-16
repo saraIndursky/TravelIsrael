@@ -13,15 +13,24 @@ import { RatingStars } from "@/components/ui/custom/rating-stars";
 interface TripCardProps {
   trip: Trip;
   showFavorite?: boolean;
+  isFavorite?: boolean;
+  onFavoriteToggle?: () => void | Promise<void>;
+  favoriteLoading?: boolean;
 }
 
-export function TripCard({ trip, showFavorite = false }: TripCardProps) {
+export function TripCard({
+  trip,
+  showFavorite = false,
+  isFavorite = false,
+  onFavoriteToggle,
+  favoriteLoading = false,
+}: TripCardProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const reviewCount = getReviewCount(trip);
 
   return (
     <>
-      <div className="group flex h-full flex-col overflow-hidden rounded-lg border border-[#e5e7eb] bg-white transition-all duration-300 hover:border-[#d1d5db]">
+      <div className="group flex h-full flex-col overflow-hidden rounded border border-[#e5e7eb] bg-white transition-all duration-300 hover:border-[#d1d5db]">
         <button
           type="button"
           className="relative h-[300px] w-full cursor-pointer overflow-hidden bg-[#f3f4f6] text-right"
@@ -42,16 +51,20 @@ export function TripCard({ trip, showFavorite = false }: TripCardProps) {
             {trip.region}
           </span>
           {showFavorite && (
-            <span
-              role="button"
-              tabIndex={0}
-              className="absolute top-3 left-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-colors hover:bg-white"
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-              aria-label="הוסף למועדפים"
+            <button
+              type="button"
+              className="absolute top-3 left-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-colors hover:bg-white disabled:opacity-60"
+              onClick={(e) => {
+                e.stopPropagation();
+                void onFavoriteToggle?.();
+              }}
+              disabled={favoriteLoading}
+              aria-label={isFavorite ? "הסר מהמועדפים" : "הוסף למועדפים"}
             >
-              <Heart className="h-4 w-4 text-[#111827]" />
-            </span>
+              <Heart
+                className={`h-4 w-4 text-[#111827] ${isFavorite ? "fill-current" : ""}`}
+              />
+            </button>
           )}
         </button>
 
@@ -99,7 +112,7 @@ export function TripCard({ trip, showFavorite = false }: TripCardProps) {
             <div className="flex items-center justify-between border-t border-[#e5e7eb] pt-3 text-sm text-gray-600">
               <Link
                 href={`/trips/${trip.id}`}
-                className="w-full rounded-sm border border-[#e5e7eb] bg-[#f9fafb] py-2.5 text-center text-sm font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
+                className="w-full rounded border border-[#e5e7eb] bg-[#f9fafb] py-2.5 text-center text-sm font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
               >
                 לפרטים
               </Link>

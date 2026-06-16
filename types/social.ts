@@ -21,7 +21,8 @@ export interface Comment {
 export interface Favorite {
   id: string;
   user_id: string;
-  trip_id: string;
+  entity_type: EntityType;
+  entity_id: string;
   created_at: string;
 }
 

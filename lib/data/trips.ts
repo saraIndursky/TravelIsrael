@@ -198,7 +198,31 @@ export async function updateTrip(
 export async function updateTripStatus(id: string, status: Status): Promise<Trip | null> {
   const role = await getCurrentRole();
   if (role !== "admin") return null;
-  const result = await updateTrip(id, { status });
+  const patch: Partial<Trip> = { status };
+  if (status === "approved") patch.rejection_reason = undefined;
+  const result = await updateTrip(id, patch);
+  return result;
+}
+
+export async function rejectTrip(id: string, reason?: string): Promise<Trip | null> {
+  const role = await getCurrentRole();
+  if (role !== "admin") return null;
+  return updateTrip(id, { status: "rejected", rejection_reason: reason?.trim() || undefined });
+}
+
+export async function restoreTrip(id: string): Promise<Trip | null> {
+  const role = await getCurrentRole();
+  if (role !== "admin") return null;
+  return updateTrip(id, { status: "pending", rejection_reason: undefined });
+}
+
+export async function submitTripForApproval(id: string): Promise<Trip | null> {
+  const user = await getCurrentUser();
+  const store = getStore();
+  const existing = store.trips.find((t) => t.id === id);
+  if (!existing || existing.created_by !== user?.id) return null;
+  if (existing.status !== "draft" && existing.status !== "rejected") return null;
+  const result = await updateTrip(id, { status: "pending", rejection_reason: undefined });
   return result;
 }
 

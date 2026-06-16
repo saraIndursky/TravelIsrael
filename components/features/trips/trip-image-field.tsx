@@ -20,9 +20,10 @@ interface TripImageFieldProps {
   value: string;
   onChange: (url: string) => void;
   error?: string;
+  label?: string;
 }
 
-export function TripImageField({ value, onChange, error }: TripImageFieldProps) {
+export function TripImageField({ value, onChange, error, label = "תמונת הטיול" }: TripImageFieldProps) {
   const [dragOver, setDragOver] = useState(false);
   const [tab, setTab] = useState<"upload" | "link">("upload");
 
@@ -39,7 +40,7 @@ export function TripImageField({ value, onChange, error }: TripImageFieldProps) 
 
   return (
     <div className="space-y-3">
-      <Label>תמונת הטיול</Label>
+      <Label>{label}</Label>
 
       <div className="flex gap-2">
         {(

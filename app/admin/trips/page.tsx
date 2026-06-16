@@ -1,49 +1,66 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { getAllTripsAdmin, updateTripStatus, deleteTrip } from "@/lib/data/trips";
-import { AdminTable } from "@/components/features/admin/admin-table";
-import { StatusTabs } from "@/components/features/admin/status-tabs";
-import { PageShell } from "@/components/layout/page-shell";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AdminEntityListPage } from "@/components/features/admin/admin-entity-list-page";
+import { tripsAdminConfig } from "@/components/features/admin/admin-entity-configs";
 import { useAuthStore } from "@/hooks/use-stores";
-import type { Trip, Status } from "@/types";
+import {
+  deleteTrip,
+  getAllTripsAdmin,
+  rejectTrip,
+  restoreTrip,
+  updateTripStatus,
+} from "@/lib/data/trips";
+import { getUsers } from "@/lib/data/auth";
+import type { Trip, User } from "@/types";
 import { toast } from "@/components/ui/use-toast";
 
 export default function AdminTripsPage() {
   const { role } = useAuthStore();
-  const router = useRouter();
   const [trips, setTrips] = useState<Trip[]>([]);
-  const [tab, setTab] = useState<Status | "all">("all");
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const [allTrips, allUsers] = await Promise.all([getAllTripsAdmin(), getUsers()]);
+    setTrips(allTrips);
+    setUsers(allUsers);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
-    if (role === "admin") getAllTripsAdmin().then(setTrips);
-  }, [role]);
+    if (role === "admin") load();
+  }, [role, load]);
 
-  if (role !== "admin") return <PageShell title="ניהול טיולים"><p className="text-center text-muted-foreground py-12">גישה למנהלים בלבד</p></PageShell>;
-
-  const filtered = tab === "all" ? trips : trips.filter((t) => t.status === tab);
+  if (role !== "admin") return null;
 
   return (
-    <PageShell title="ניהול טיולים" subtitle="אישור ועריכת טיולים">
-      <div className="ti-card p-6">
-        <StatusTabs value={tab} onChange={setTab}>
-          {() => (
-            <AdminTable
-              items={filtered}
-              columns={[
-                { key: "name", label: "שם", render: (t) => t.name },
-                { key: "region", label: "אזור", render: (t) => t.region },
-                { key: "creator", label: "יוצר", render: (t) => t.created_by },
-              ]}
-              onApprove={async (id) => { await updateTripStatus(id, "approved"); setTrips(await getAllTripsAdmin()); toast({ title: "אושר" }); }}
-              onReject={async (id) => { await updateTripStatus(id, "rejected"); setTrips(await getAllTripsAdmin()); toast({ title: "נדחה" }); }}
-              onEdit={(id) => router.push(`/trips/${id}/edit`)}
-              onDelete={async (id) => { await deleteTrip(id); setTrips(await getAllTripsAdmin()); toast({ title: "נמחק" }); }}
-            />
-          )}
-        </StatusTabs>
-      </div>
-    </PageShell>
+    <AdminEntityListPage
+      config={tripsAdminConfig}
+      items={trips}
+      users={users}
+      loading={loading}
+      onApprove={async (item) => {
+        await updateTripStatus(item.id, "approved");
+        await load();
+        toast({ title: "הטיול אושר" });
+      }}
+      onReject={async (item, reason) => {
+        await rejectTrip(item.id, reason);
+        await load();
+        toast({ title: "הטיול נדחה" });
+      }}
+      onDelete={async (item) => {
+        await deleteTrip(item.id);
+        await load();
+        toast({ title: "הטיול נמחק" });
+      }}
+      onRestore={async (item) => {
+        await restoreTrip(item.id);
+        await load();
+        toast({ title: "הטיול הוחזר לבדיקה" });
+      }}
+    />
   );
 }

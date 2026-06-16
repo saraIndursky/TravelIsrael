@@ -3,7 +3,8 @@ import Link from "next/link";
 const footerLinks = {
   product: [
     { href: "/trips", label: "טיולים" },
-    { href: "/trips", label: "מקומות" },
+    { href: "/places", label: "מקומות" },
+    { href: "/trails", label: "מסלולים" },
     { href: "/wizard", label: "תכנון" },
   ],
   company: [

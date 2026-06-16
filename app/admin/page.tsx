@@ -2,78 +2,65 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Shield, Map, MapPin, Route, Flag, Users } from "lucide-react";
-import { PageShell } from "@/components/layout/page-shell";
+import { Flag, Map, MapPin, Route } from "lucide-react";
+import { AdminPageHeader } from "@/components/features/admin/admin-page-header";
+import { AdminStatCard } from "@/components/features/admin/admin-stat-card";
+import { ADMIN_NAV } from "@/components/features/admin/admin-nav";
 import { useAuthStore } from "@/hooks/use-stores";
-import { getAllTripsAdmin, updateTripStatus } from "@/lib/data/trips";
-import { AdminTable } from "@/components/features/admin/admin-table";
-import { StatusTabs } from "@/components/features/admin/status-tabs";
-import type { Trip, Status } from "@/types";
-import { toast } from "@/components/ui/use-toast";
+import { getAllTripsAdmin } from "@/lib/data/trips";
+import { getAllPlacesAdmin } from "@/lib/data/places";
+import { getAllTrailsAdmin } from "@/lib/data/trails";
+import { getReports } from "@/lib/data/reports";
 
 export default function AdminDashboard() {
   const { role } = useAuthStore();
-  const [trips, setTrips] = useState<Trip[]>([]);
-  const [tab, setTab] = useState<Status | "all">("pending");
+  const [pendingCounts, setPendingCounts] = useState({ trips: 0, places: 0, trails: 0, reports: 0 });
 
   useEffect(() => {
-    if (role === "admin") getAllTripsAdmin().then(setTrips);
+    if (role !== "admin") return;
+
+    Promise.all([getAllTripsAdmin(), getAllPlacesAdmin(), getAllTrailsAdmin(), getReports()]).then(
+      ([allTrips, places, trails, reports]) => {
+        setPendingCounts({
+          trips: allTrips.filter((t) => t.status === "pending").length,
+          places: places.filter((p) => p.status === "pending").length,
+          trails: trails.filter((t) => t.status === "pending").length,
+          reports: reports.filter((r) => r.status === "pending").length,
+        });
+      }
+    );
   }, [role]);
 
-  if (role !== "admin") {
-    return (
-      <PageShell title="פאנל ניהול" subtitle="גישה מוגבלת">
-        <p className="text-center text-muted-foreground py-12">גישה למנהלים בלבד — החלף תפקיד ל״מנהל״ בכותרת</p>
-      </PageShell>
-    );
-  }
+  if (role !== "admin") return null;
 
-  const filtered = tab === "all" ? trips : trips.filter((t) => t.status === tab);
-
-  const links = [
-    { href: "/admin/trips", label: "טיולים", icon: Map },
-    { href: "/admin/places", label: "מקומות", icon: MapPin },
-    { href: "/admin/trails", label: "מסלולים", icon: Route },
-    { href: "/admin/reports", label: "דיווחים", icon: Flag },
-    { href: "/admin/users", label: "משתמשים", icon: Users },
-  ];
+  const quickLinks = ADMIN_NAV.filter((item) => item.href !== "/admin");
 
   return (
-    <PageShell title="פאנל ניהול" subtitle="ניהול תוכן ומשתמשים">
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-5 mb-10">
-        {links.map(({ href, label, icon: Icon }) => (
-          <Link key={href} href={href} className="ti-card p-5 flex flex-col items-center gap-2 hover:shadow-md transition">
-            <Icon className="h-6 w-6 text-primary" />
-            <span className="text-sm font-medium">{label}</span>
+    <div className="px-4 py-6 md:px-8 md:py-8">
+      <AdminPageHeader title="לוח בקרה" subtitle="סקירה וניהול תוכן" />
+
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <AdminStatCard label="טיולים ממתינים" value={pendingCounts.trips} href="/admin/trips" icon={Map} highlight />
+        <AdminStatCard label="מקומות ממתינים" value={pendingCounts.places} href="/admin/places" icon={MapPin} highlight />
+        <AdminStatCard label="מסלולים ממתינים" value={pendingCounts.trails} href="/admin/trails" icon={Route} highlight />
+        <AdminStatCard label="דיווחים פתוחים" value={pendingCounts.reports} href="/admin/reports" icon={Flag} highlight />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+        {quickLinks.map(({ href, label, icon: Icon, description }) => (
+          <Link
+            key={href}
+            href={href}
+            className="ti-card group p-4 transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-primary/5 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
+              <Icon className="h-4 w-4" aria-hidden />
+            </div>
+            <p className="text-sm font-medium text-foreground">{label}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
           </Link>
         ))}
       </div>
-
-      <div className="ti-card p-6">
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><Shield className="h-5 w-5" />טיולים ממתינים לאישור</h2>
-        <StatusTabs value={tab} onChange={setTab}>
-          {() => (
-            <AdminTable
-              items={filtered}
-              columns={[
-                { key: "name", label: "שם", render: (t) => t.name },
-                { key: "region", label: "אזור", render: (t) => t.region },
-                { key: "status", label: "סטטוס", render: (t) => t.status },
-              ]}
-              onApprove={async (id) => {
-                await updateTripStatus(id, "approved");
-                setTrips(await getAllTripsAdmin());
-                toast({ title: "הטיול אושר" });
-              }}
-              onReject={async (id) => {
-                await updateTripStatus(id, "rejected");
-                setTrips(await getAllTripsAdmin());
-                toast({ title: "הטיול נדחה" });
-              }}
-            />
-          )}
-        </StatusTabs>
-      </div>
-    </PageShell>
+    </div>
   );
 }

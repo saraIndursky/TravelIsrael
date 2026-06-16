@@ -53,9 +53,27 @@ export const seedComments: Comment[] = [
 ];
 
 export const seedFavorites: Favorite[] = [
-  { id: "f-1", user_id: "user-1", trip_id: "trip-3", created_at: "2025-03-01T10:00:00Z" },
-  { id: "f-2", user_id: "user-1", trip_id: "trip-1", created_at: "2025-03-15T10:00:00Z" },
-  { id: "f-3", user_id: "user-2", trip_id: "trip-4", created_at: "2025-04-01T10:00:00Z" },
+  {
+    id: "f-1",
+    user_id: "user-1",
+    entity_type: "trip",
+    entity_id: "trip-3",
+    created_at: "2025-03-01T10:00:00Z",
+  },
+  {
+    id: "f-2",
+    user_id: "user-1",
+    entity_type: "trip",
+    entity_id: "trip-1",
+    created_at: "2025-03-15T10:00:00Z",
+  },
+  {
+    id: "f-3",
+    user_id: "user-2",
+    entity_type: "trip",
+    entity_id: "trip-4",
+    created_at: "2025-04-01T10:00:00Z",
+  },
 ];
 
 export const seedReports: Report[] = [

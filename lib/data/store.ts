@@ -25,21 +25,63 @@ import {
 
 function migrateStore(store: DemoStore): DemoStore {
   const trip1Seed = seedTrips.find((t) => t.id === "trip-1");
+  const existingTripIds = new Set(store.trips.map((t) => t.id));
+
+  const trips = store.trips.map((t) => {
+    const seed = seedTrips.find((s) => s.id === t.id);
+    const gallery_images = t.gallery_images ?? seed?.gallery_images ?? [];
+    const full_description =
+      t.id === "trip-1" && trip1Seed?.full_description
+        ? trip1Seed.full_description
+        : t.full_description;
+    if (!seed) {
+      return { ...t, gallery_images, full_description };
+    }
+    const demoProfileTrips = ["trip-11", "trip-13", "trip-14"].includes(t.id);
+    return {
+      ...t,
+      gallery_images,
+      full_description,
+      ...(demoProfileTrips
+        ? {
+            status: seed.status,
+            rejection_reason: seed.rejection_reason,
+            short_description: seed.short_description,
+            name: seed.name,
+          }
+        : { rejection_reason: t.rejection_reason ?? seed.rejection_reason }),
+    };
+  });
+
+  const missingTrips = seedTrips
+    .filter((t) => !existingTripIds.has(t.id))
+    .map((t) => structuredClone(t));
+
   return {
     ...store,
-    trips: store.trips.map((t) => {
-      const seed = seedTrips.find((s) => s.id === t.id);
-      const gallery_images = t.gallery_images ?? seed?.gallery_images ?? [];
-      const full_description =
-        t.id === "trip-1" && trip1Seed?.full_description
-          ? trip1Seed.full_description
-          : t.full_description;
-      return { ...t, gallery_images, full_description };
+    trips: [...trips, ...missingTrips],
+    users: store.users.map((u) => {
+      const seed = seedUsers.find((s) => s.id === u.id);
+      return seed ? { ...u, created_at: u.created_at ?? seed.created_at } : u;
     }),
     reports: store.reports.map((r) => ({
       ...r,
       report_type: r.report_type ?? "problem",
     })),
+    favorites: store.favorites.map((f) => {
+      const legacy = f as Favorite & { trip_id?: string };
+      if (legacy.entity_type && legacy.entity_id) return f;
+      if (legacy.trip_id) {
+        return {
+          id: legacy.id,
+          user_id: legacy.user_id,
+          entity_type: "trip" as const,
+          entity_id: legacy.trip_id,
+          created_at: legacy.created_at,
+        };
+      }
+      return f;
+    }),
   };
 }
 

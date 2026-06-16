@@ -33,6 +33,7 @@ export interface Trip {
   avg_rating: number;
   created_at: string;
   updated_at: string;
+  rejection_reason?: string;
 }
 
 export interface TripWithStations extends Trip {

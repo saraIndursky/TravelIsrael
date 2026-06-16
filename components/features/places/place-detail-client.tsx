@@ -14,6 +14,7 @@ import {
   upsertRating,
 } from "@/lib/data/social";
 import { createReport } from "@/lib/data/reports";
+import { isFavoriteEntity, toggleFavoriteEntity } from "@/lib/data/favorites";
 import { getStore } from "@/lib/data/store";
 import { useAuthStore } from "@/hooks/use-stores";
 import { toast } from "@/components/ui/use-toast";
@@ -24,6 +25,7 @@ import { PlaceDetailGallery } from "@/components/features/places/detail/place-de
 import { PlaceDetailSidebar } from "@/components/features/places/detail/place-detail-sidebar";
 import { PlaceDetailMapSection } from "@/components/features/places/detail/place-detail-map-section";
 import { PlaceDetailActions } from "@/components/features/places/detail/place-detail-actions";
+import { CreateAssistantPanel } from "@/components/features/assistant/create-assistant-panel";
 import { PlaceDetailRelatedTrips } from "@/components/features/places/detail/place-detail-related-trips";
 import { TripDetailDescription } from "@/components/features/trips/detail/trip-detail-description";
 import { TripDetailReport } from "@/components/features/trips/detail/trip-detail-report";
@@ -37,7 +39,7 @@ function computeAvgRating(scores: number[]): number {
 }
 
 export default function PlaceDetailClient({ id }: { id: string }) {
-  const { role } = useAuthStore();
+  const { role, userId } = useAuthStore();
   const [place, setPlace] = useState<Place | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -67,6 +69,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
       setUserRating(existingRating?.score ?? 0);
       setComments(await getComments("place", id));
       setHasUserReview(!!(await getUserComment("place", id)));
+      setIsSaved(await isFavoriteEntity("place", id));
       setLoading(false);
     }
     load();
@@ -79,18 +82,25 @@ export default function PlaceDetailClient({ id }: { id: string }) {
 
   const tagsDisplay = useMemo(() => place?.tags.join(" · ") ?? "", [place?.tags]);
 
+  const showOwnerAssistant =
+    place &&
+    role !== "guest" &&
+    place.created_by === userId &&
+    (place.status === "pending" || place.status === "rejected");
+
   if (loading) {
     return <div className="min-h-screen animate-pulse bg-[#f9fafb] pt-20">טוען...</div>;
   }
   if (!place) notFound();
 
-  const handleToggleSaved = () => {
+  const handleToggleSaved = async () => {
     if (!canInteract) {
       toast({ title: "יש להתחבר כדי לשמור מקום" });
       return;
     }
-    setIsSaved((v) => !v);
-    toast({ title: isSaved ? "המקום הוסר מהשמורים" : "המקום נשמר" });
+    const next = await toggleFavoriteEntity("place", id);
+    setIsSaved(next);
+    toast({ title: next ? "המקום נשמר למועדפים" : "המקום הוסר מהמועדפים" });
   };
 
   const handleRate = async (score: number) => {
@@ -225,6 +235,15 @@ export default function PlaceDetailClient({ id }: { id: string }) {
       )}
 
       <PlaceDetailActions place={place} />
+
+      {showOwnerAssistant && (
+        <CreateAssistantPanel
+          entity="place"
+          context="detail"
+          copyOnly
+          getSnapshot={() => ({ ...place } as Record<string, unknown>)}
+        />
+      )}
     </div>
   );
 }

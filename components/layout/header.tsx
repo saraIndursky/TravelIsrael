@@ -4,12 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { AuthNav } from "@/components/layout/auth-nav";
 import { Logo } from "@/components/layout/logo";
 import { useAuthStore } from "@/hooks/use-stores";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
   { href: "/trips", label: "טיולים" },
+  { href: "/places", label: "מקומות" },
+  { href: "/trails", label: "מסלולים" },
   { href: "/#about", label: "אודות" },
   { href: "/#contact", label: "יצירת קשר" },
 ];
@@ -44,26 +47,24 @@ export function Header() {
             </Link>
           ))}
           {role === "admin" && (
-            <Link href="/admin" className="text-sm font-medium text-foreground/80 hover:text-foreground">
+            <Link
+              href="/admin"
+              className={cn(
+                "rounded-lg px-3 py-1.5 text-sm font-medium transition",
+                pathname.startsWith("/admin")
+                  ? "bg-primary text-primary-foreground"
+                  : "text-foreground/80 hover:bg-muted hover:text-foreground"
+              )}
+            >
               ניהול
             </Link>
           )}
         </nav>
 
         <div className="flex items-center gap-3">
-          {role === "guest" ? (
-            <button
-              type="button"
-              className="ti-btn-login hidden sm:inline-flex"
-              onClick={() => setRole("user")}
-            >
-              התחבר
-            </button>
-          ) : (
-            <Link href="/profile" className="ti-btn-login hidden sm:inline-flex">
-              אזור אישי
-            </Link>
-          )}
+          <div className="hidden sm:block">
+            <AuthNav />
+          </div>
 
           <select
             value={role}
@@ -104,16 +105,8 @@ export function Header() {
               ניהול
             </Link>
           )}
-          <div className="px-6 py-3">
-            {role === "guest" ? (
-              <button type="button" className="ti-btn-login w-full" onClick={() => { setRole("user"); setMobileOpen(false); }}>
-                התחבר
-              </button>
-            ) : (
-              <Link href="/profile" className="ti-btn-login w-full inline-flex justify-center" onClick={() => setMobileOpen(false)}>
-                אזור אישי
-              </Link>
-            )}
+          <div className="px-6 py-3 sm:hidden">
+            <AuthNav className="w-full justify-center" onNavigate={() => setMobileOpen(false)} />
           </div>
         </nav>
       )}
