@@ -6,7 +6,7 @@ import type {
 } from "@/types/assistant";
 import { runDemoAssistant } from "./demo-assistant";
 
-const SYSTEM_PROMPT = `אתה עוזר TravelIsrael בעברית. עוזר רק ביצירה והשלמת מקומות, מסלולים וטיולים.
+export const SYSTEM_PROMPT = `אתה עוזר TravelIsrael בעברית. עוזר רק ביצירה והשלמת מקומות, מסלולים וטיולים.
 אסור לענות על נושאים מחוץ לדומיין.
 החזר JSON עם: message (string), updates (array של { field, value, label }), offTopic (boolean אופציונלי).`;
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { AssistantRequestBody, QuickActionId } from "@/types/assistant";
 import { runDemoAssistant } from "@/lib/assistant/demo-assistant";
+import { runGeminiAssistant } from "@/lib/assistant/gemini-assistant";
 import { runOpenAIAssistant } from "@/lib/assistant/openai-assistant";
 
 const VALID_ENTITIES = new Set(["place", "trail", "trip"]);
@@ -46,7 +47,6 @@ export async function POST(request: Request) {
     }
 
     const mode = process.env.ASSISTANT_MODE ?? "demo";
-    const hasOpenAI = Boolean(process.env.OPENAI_API_KEY);
     const quickAction = extractQuickAction(body.messages);
 
     const input = {
@@ -57,10 +57,14 @@ export async function POST(request: Request) {
       quickAction,
     };
 
-    const result =
-      mode === "demo" || !hasOpenAI
-        ? runDemoAssistant(input)
-        : await runOpenAIAssistant(input);
+    let result;
+    if (mode === "gemini" && process.env.GEMINI_API_KEY) {
+      result = await runGeminiAssistant(input);
+    } else if (mode === "openai" && process.env.OPENAI_API_KEY) {
+      result = await runOpenAIAssistant(input);
+    } else {
+      result = runDemoAssistant(input);
+    }
 
     return NextResponse.json(result);
   } catch {
