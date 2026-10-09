@@ -40,7 +40,7 @@ npm run dev
 
 - **Unit** — `npm run test` (Vitest): חישובי טיול, match score, Zod validations
 - **E2E** — `npm run test:e2e` (Playwright): אשף, התחברות+פרופיל, יצירת טיול, עריכה+אישור מקום
-- **CI** — `.github/workflows/ci.yml` מריץ typecheck, lint, unit, build, ו-E2E
+- **CI** — `.github/workflows/ci.yml` מריץ typecheck, lint, unit ו-build בכל push; E2E רץ ידנית בלבד (Run workflow) ודורש secrets
 
 ### Lint & format
 
