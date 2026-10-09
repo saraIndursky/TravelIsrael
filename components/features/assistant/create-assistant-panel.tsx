@@ -45,6 +45,13 @@ const TRIP_ACTIONS: QuickAction[] = [
   { id: "fill_missing", label: "מלא שדות חסרים" },
 ];
 
+const PROVIDER_LABELS = {
+  none: "עוזר יצירה",
+  gemini: "עוזר AI (Gemini)",
+  openai: "עוזר AI (OpenAI)",
+  demo: "עוזר (דמו)",
+} as const;
+
 function getActions(entity: AssistantEntity): QuickAction[] {
   switch (entity) {
     case "place":
@@ -93,6 +100,7 @@ export function CreateAssistantPanel<T extends FieldValues>({
     applyUpdates,
     copyUpdateValue,
     clearPendingUpdates,
+    provider,
   } = useCreateAssistant({
     entity,
     context,
@@ -175,7 +183,7 @@ export function CreateAssistantPanel<T extends FieldValues>({
             <div className="flex items-center gap-2">
               <Bot className="h-5 w-5" />
               <div>
-                <p className="text-sm font-bold">עוזר (דמו)</p>
+                <p className="text-sm font-bold">{PROVIDER_LABELS[provider ?? "none"]}</p>
                 <p className="text-xs text-[#9ca3af]">לא משנה הטופס ללא אישור</p>
               </div>
             </div>

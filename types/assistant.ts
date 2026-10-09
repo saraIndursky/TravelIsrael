@@ -13,8 +13,12 @@ export interface AssistantFieldUpdate {
   label: string;
 }
 
+export type AssistantProvider = "gemini" | "openai" | "demo";
+
 export interface AssistantResponse {
   message: string;
+  /** Which engine produced this reply; absent means the rule-based demo assistant. */
+  provider?: AssistantProvider;
   updates?: AssistantFieldUpdate[];
   offTopic?: boolean;
 }

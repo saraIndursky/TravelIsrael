@@ -63,7 +63,7 @@ export async function runOpenAIAssistant(input: {
     if (typeof parsed.message !== "string") {
       return runDemoAssistant(input);
     }
-    return parsed;
+    return { ...parsed, provider: "openai" };
   } catch {
     return runDemoAssistant(input);
   }

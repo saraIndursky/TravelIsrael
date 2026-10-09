@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       result = runDemoAssistant(input);
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json({ ...result, provider: result.provider ?? "demo" });
   } catch {
     return NextResponse.json({ message: "שגיאה בעוזר — נסי שוב" }, { status: 500 });
   }

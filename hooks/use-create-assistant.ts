@@ -6,6 +6,7 @@ import type {
   AssistantEntity,
   AssistantFieldUpdate,
   AssistantMessage,
+  AssistantProvider,
   AssistantResponse,
   QuickActionId,
 } from "@/types/assistant";
@@ -33,6 +34,7 @@ export function useCreateAssistant<T extends FieldValues>({
   const [lastAppliedUpdates, setLastAppliedUpdates] = useState<AssistantFieldUpdate[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [provider, setProvider] = useState<AssistantProvider | null>(null);
 
   const sendToApi = useCallback(
     async (nextMessages: AssistantMessage[]): Promise<AssistantResponse | null> => {
@@ -53,7 +55,9 @@ export function useCreateAssistant<T extends FieldValues>({
           setError("שגיאה בשליחה לעוזר");
           return null;
         }
-        return (await res.json()) as AssistantResponse;
+        const data = (await res.json()) as AssistantResponse;
+        setProvider(data.provider ?? "demo");
+        return data;
       } catch {
         setError("שגיאה בחיבור לעוזר");
         return null;
@@ -145,6 +149,7 @@ export function useCreateAssistant<T extends FieldValues>({
     pendingUpdates,
     loading,
     error,
+    provider,
     sendMessage,
     runQuickAction,
     applyUpdates,

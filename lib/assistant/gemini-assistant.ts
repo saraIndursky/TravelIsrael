@@ -7,7 +7,7 @@ import type {
 import { runDemoAssistant } from "./demo-assistant";
 import { SYSTEM_PROMPT } from "./openai-assistant";
 
-const DEFAULT_MODEL = "gemini-2.5-flash";
+const DEFAULT_MODEL = "gemini-flash-latest";
 
 export async function runGeminiAssistant(input: {
   entity: AssistantEntity;
@@ -72,7 +72,7 @@ export async function runGeminiAssistant(input: {
     if (typeof parsed.message !== "string") {
       return runDemoAssistant(input);
     }
-    return parsed;
+    return { ...parsed, provider: "gemini" };
   } catch {
     return runDemoAssistant(input);
   }
