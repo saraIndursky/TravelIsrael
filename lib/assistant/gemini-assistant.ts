@@ -9,6 +9,11 @@ import { SYSTEM_PROMPT } from "./openai-assistant";
 
 const DEFAULT_MODEL = "gemini-flash-latest";
 
+/** The chat panel renders plain text, so drop the markdown Gemini likes to add. */
+function stripMarkdown(text: string): string {
+  return text.replace(/\*\*(.+?)\*\*/g, "$1").replace(/^\s*\*\s+/gm, "• ");
+}
+
 export async function runGeminiAssistant(input: {
   entity: AssistantEntity;
   messages: AssistantMessage[];
@@ -72,7 +77,7 @@ export async function runGeminiAssistant(input: {
     if (typeof parsed.message !== "string") {
       return runDemoAssistant(input);
     }
-    return { ...parsed, provider: "gemini" };
+    return { ...parsed, message: stripMarkdown(parsed.message), provider: "gemini" };
   } catch {
     return runDemoAssistant(input);
   }
