@@ -1,11 +1,18 @@
 import type { Comment, EntityType, Rating } from "@/types";
+import { createClient } from "@/lib/supabase/client";
+import { mapComment, mapRating } from "@/lib/supabase/mappers";
+import { notifySocialActivity } from "@/lib/notifications/client";
 import { getCurrentUser } from "./auth";
-import { generateId, getStore, updateStore } from "./store";
 
 export async function getRatings(entityType: EntityType, entityId: string): Promise<Rating[]> {
-  return getStore().ratings.filter(
-    (r) => r.entity_type === entityType && r.entity_id === entityId
-  );
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("ratings")
+    .select("*")
+    .eq("entity_type", entityType)
+    .eq("entity_id", entityId);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapRating);
 }
 
 export async function getUserRating(
@@ -14,12 +21,30 @@ export async function getUserRating(
 ): Promise<Rating | null> {
   const user = await getCurrentUser();
   if (!user) return null;
-  return (
-    getStore().ratings.find(
-      (r) =>
-        r.user_id === user.id && r.entity_type === entityType && r.entity_id === entityId
-    ) ?? null
-  );
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("ratings")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("entity_type", entityType)
+    .eq("entity_id", entityId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ? mapRating(data) : null;
+}
+
+async function refreshTripAverage(entityId: string): Promise<void> {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("ratings").select("score").eq("entity_type", "trip").eq("entity_id", entityId);
+  if (error) throw new Error(error.message);
+
+  const avg =
+    (data ?? []).length > 0
+      ? (data ?? []).reduce((sum, row) => sum + row.score, 0) / (data ?? []).length
+      : 0;
+
+  await supabase.from("trips").update({ avg_rating: avg }).eq("id", entityId);
 }
 
 export async function upsertRating(
@@ -30,48 +55,42 @@ export async function upsertRating(
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const existing = getStore().ratings.find(
-    (r) =>
-      r.user_id === user.id && r.entity_type === entityType && r.entity_id === entityId
-  );
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("ratings")
+    .upsert(
+      {
+        user_id: user.id,
+        entity_type: entityType,
+        entity_id: entityId,
+        score,
+      },
+      { onConflict: "user_id,entity_type,entity_id" }
+    )
+    .select("*")
+    .single();
 
-  let rating: Rating;
-  if (existing) {
-    rating = { ...existing, score };
-    updateStore((s) => ({
-      ...s,
-      ratings: s.ratings.map((r) => (r.id === existing.id ? rating : r)),
-    }));
-  } else {
-    rating = {
-      id: generateId("r"),
-      user_id: user.id,
-      entity_type: entityType,
-      entity_id: entityId,
-      score,
-      created_at: new Date().toISOString(),
-    };
-    updateStore((s) => ({ ...s, ratings: [...s.ratings, rating] }));
-  }
+  if (error || !data) return null;
 
   if (entityType === "trip") {
-    const tripRatings = getStore().ratings.filter(
-      (r) => r.entity_type === "trip" && r.entity_id === entityId
-    );
-    const avg = tripRatings.reduce((sum, r) => sum + r.score, 0) / tripRatings.length;
-    updateStore((s) => ({
-      ...s,
-      trips: s.trips.map((t) => (t.id === entityId ? { ...t, avg_rating: avg } : t)),
-    }));
+    await refreshTripAverage(entityId);
   }
 
-  return rating;
+  void notifySocialActivity({ entityType, entityId, event: "rating" });
+
+  return mapRating(data);
 }
 
 export async function getComments(entityType: EntityType, entityId: string): Promise<Comment[]> {
-  return getStore().comments.filter(
-    (c) => c.entity_type === entityType && c.entity_id === entityId
-  );
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("comments")
+    .select("*")
+    .eq("entity_type", entityType)
+    .eq("entity_id", entityId)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapComment);
 }
 
 export async function getUserComment(
@@ -80,12 +99,17 @@ export async function getUserComment(
 ): Promise<Comment | null> {
   const user = await getCurrentUser();
   if (!user) return null;
-  return (
-    getStore().comments.find(
-      (c) =>
-        c.user_id === user.id && c.entity_type === entityType && c.entity_id === entityId
-    ) ?? null
-  );
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("comments")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("entity_type", entityType)
+    .eq("entity_id", entityId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ? mapComment(data) : null;
 }
 
 export async function addComment(
@@ -96,33 +120,42 @@ export async function addComment(
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const alreadyCommented = getStore().comments.some(
-    (c) =>
-      c.user_id === user.id && c.entity_type === entityType && c.entity_id === entityId
-  );
-  if (alreadyCommented) return null;
+  const existing = await getUserComment(entityType, entityId);
+  if (existing) return null;
 
-  const comment: Comment = {
-    id: generateId("c"),
-    user_id: user.id,
-    entity_type: entityType,
-    entity_id: entityId,
-    content,
-    created_at: new Date().toISOString(),
-  };
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("comments")
+    .insert({
+      user_id: user.id,
+      entity_type: entityType,
+      entity_id: entityId,
+      content,
+    })
+    .select("*")
+    .single();
 
-  updateStore((s) => ({ ...s, comments: [...s.comments, comment] }));
-  return comment;
+  if (error || !data) return null;
+  void notifySocialActivity({ entityType, entityId, event: "comment" });
+  return mapComment(data);
 }
 
 export async function getUserComments(): Promise<Comment[]> {
   const user = await getCurrentUser();
   if (!user) return [];
-  return getStore().comments.filter((c) => c.user_id === user.id);
+
+  const supabase = createClient();
+  const { data, error } = await supabase.from("comments").select("*").eq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapComment);
 }
 
 export async function getUserRatings(): Promise<Rating[]> {
   const user = await getCurrentUser();
   if (!user) return [];
-  return getStore().ratings.filter((r) => r.user_id === user.id);
+
+  const supabase = createClient();
+  const { data, error } = await supabase.from("ratings").select("*").eq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapRating);
 }

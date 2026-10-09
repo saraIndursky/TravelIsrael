@@ -1,19 +1,44 @@
 "use client";
 
 import { Download } from "lucide-react";
+import type { Place, Trail, Trip, TripStation } from "@/types";
 import { MapView, type MapMarker } from "@/components/ui/custom/map-view";
+import { downloadGpx, gpxFilename, tripToGpx } from "@/lib/utils/gpx";
+import { toast } from "@/components/ui/use-toast";
 
 interface TripDetailMapProps {
   markers: MapMarker[];
   className?: string;
   variant?: "default" | "embedded";
+  trip?: Trip;
+  stations?: TripStation[];
+  places?: Place[];
+  trails?: Trail[];
 }
 
-export function TripDetailMap({ markers, className, variant = "default" }: TripDetailMapProps) {
+export function TripDetailMap({
+  markers,
+  className,
+  variant = "default",
+  trip,
+  stations = [],
+  places = [],
+  trails = [],
+}: TripDetailMapProps) {
   const center: [number, number] | undefined =
     markers.length > 0 ? [markers[0].lat, markers[0].lng] : undefined;
 
   const isEmbedded = variant === "embedded";
+  const canDownloadGpx = Boolean(trip) && stations.length > 0;
+
+  const handleDownloadGpx = () => {
+    if (!trip) return;
+    try {
+      downloadGpx(gpxFilename(trip.name, trip.id), tripToGpx(trip, stations, places, trails));
+    } catch {
+      toast({ title: "שגיאה", description: "לא ניתן להוריד את קובץ ה-GPX", variant: "destructive" });
+    }
+  };
 
   return (
     <section className={className ?? (isEmbedded ? "mt-6" : "mt-12")}>
@@ -42,9 +67,10 @@ export function TripDetailMap({ markers, className, variant = "default" }: TripD
           אין נקודות להצגה על המפה
         </div>
       )}
-      {!isEmbedded && (
+      {!isEmbedded && canDownloadGpx && (
         <button
           type="button"
+          onClick={handleDownloadGpx}
           className="mx-auto mt-3 flex items-center gap-2 text-sm text-[#111827] hover:underline"
         >
           <Download className="h-4 w-4" />

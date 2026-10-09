@@ -1,18 +1,21 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { AlertCircle, CheckCircle2, Eye, EyeOff, User } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { AlertCircle, Camera, CheckCircle2, Eye, EyeOff, Trash2 } from "lucide-react";
+import { UserAvatar } from "@/components/ui/custom/user-avatar";
 import {
   changePassword,
   getCurrentUser,
   getUserStatistics,
+  removeProfileAvatar,
   updateProfile,
+  uploadProfileAvatar,
 } from "@/lib/data/auth";
 import { useAuthStore } from "@/hooks/use-stores";
 import { cn } from "@/lib/utils";
+import { NotificationPreferencesSection } from "@/components/features/profile/notification-preferences-section";
 
 type ProfileState = {
   firstName: string;
@@ -119,12 +122,19 @@ function ProfileHero({
   profile,
   avatarUrl,
   stats,
+  avatarUploading,
+  onAvatarSelect,
+  onAvatarRemove,
 }: {
   profile: ProfileState;
   avatarUrl?: string;
   stats: { joinDate: string; trips: number; views: number };
+  avatarUploading?: boolean;
+  onAvatarSelect: (file: File) => void;
+  onAvatarRemove: () => void;
 }) {
-  const initial = profile.firstName.charAt(0) || profile.email.charAt(0) || "?";
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const displayName = `${profile.firstName} ${profile.lastName}`.trim() || profile.email;
   const statistics = [
     { label: "תאריך הצטרפות", value: stats.joinDate },
     { label: "טיולים שנוצרו", value: stats.trips },
@@ -134,14 +144,51 @@ function ProfileHero({
   return (
     <div className="mb-4 rounded-2xl border border-gray-100 bg-white p-7 shadow-sm">
       <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-gray-200 bg-gray-100">
-          {avatarUrl ? (
-            <Image src={avatarUrl} alt="" width={80} height={80} className="h-full w-full object-cover" />
-          ) : initial !== "?" ? (
-            <span className="text-2xl font-semibold text-gray-600">{initial}</span>
-          ) : (
-            <User className="h-10 w-10 text-gray-400" />
-          )}
+        <div className="flex flex-col items-center gap-3">
+          <div className="relative">
+            <UserAvatar name={displayName} avatarUrl={avatarUrl} size="xl" />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={avatarUploading}
+              className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:opacity-60"
+              aria-label="החלף תמונת פרופיל"
+            >
+              <Camera className="h-4 w-4" />
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) onAvatarSelect(file);
+                event.target.value = "";
+              }}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={avatarUploading}
+              className="text-xs font-medium text-gray-700 transition hover:text-gray-900 disabled:opacity-60"
+            >
+              {avatarUploading ? "מעלה..." : "העלאת תמונה"}
+            </button>
+            {avatarUrl && (
+              <button
+                type="button"
+                onClick={onAvatarRemove}
+                disabled={avatarUploading}
+                className="inline-flex items-center gap-1 text-xs font-medium text-red-600 transition hover:text-red-700 disabled:opacity-60"
+              >
+                <Trash2 className="h-3 w-3" />
+                הסר
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="min-w-0 flex-1">
@@ -166,12 +213,13 @@ function ProfileHero({
 
 export function ProfilePersonalArea() {
   const router = useRouter();
-  const { role } = useAuthStore();
+  const { role, setSession } = useAuthStore();
   const [profile, setProfile] = useState<ProfileState>({ firstName: "", lastName: "", email: "" });
   const [passwords, setPasswords] = useState<PasswordState>({ current: "", newPass: "", confirm: "" });
   const [showPw, setShowPw] = useState<ShowPasswordState>({ current: false, newPass: false, confirm: false });
   const [alert, setAlert] = useState<AlertState | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [stats, setStats] = useState({ joinDate: "", trips: 0, views: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -211,6 +259,42 @@ export function ProfilePersonalArea() {
     return () => clearTimeout(timer);
   }, [alert]);
 
+  async function handleAvatarSelect(file: File) {
+    setAvatarUploading(true);
+    try {
+      const user = await uploadProfileAvatar(file);
+      setAvatarUrl(user.avatar_url);
+      setSession(user);
+      setAlert({ message: "תמונת הפרופיל עודכנה", type: "success", section: "profile" });
+    } catch (error) {
+      setAlert({
+        message: error instanceof Error ? error.message : "העלאת התמונה נכשלה",
+        type: "error",
+        section: "profile",
+      });
+    } finally {
+      setAvatarUploading(false);
+    }
+  }
+
+  async function handleAvatarRemove() {
+    setAvatarUploading(true);
+    try {
+      const user = await removeProfileAvatar();
+      setAvatarUrl(undefined);
+      setSession(user);
+      setAlert({ message: "תמונת הפרופיל הוסרה", type: "success", section: "profile" });
+    } catch (error) {
+      setAlert({
+        message: error instanceof Error ? error.message : "הסרת התמונה נכשלה",
+        type: "error",
+        section: "profile",
+      });
+    } finally {
+      setAvatarUploading(false);
+    }
+  }
+
   async function handleProfileSave() {
     try {
       await updateProfile(profile);
@@ -225,9 +309,9 @@ export function ProfilePersonalArea() {
   }
 
   async function handlePasswordUpdate() {
-    if (passwords.newPass.length < 6) {
+    if (passwords.newPass.length < 8) {
       setAlert({
-        message: "הסיסמה חייבת להכיל לפחות 6 תווים",
+        message: "הסיסמה חייבת להכיל לפחות 8 תווים",
         type: "error",
         section: "password",
       });
@@ -302,7 +386,14 @@ export function ProfilePersonalArea() {
           </Link>
         </div>
 
-        <ProfileHero profile={profile} avatarUrl={avatarUrl} stats={stats} />
+        <ProfileHero
+          profile={profile}
+          avatarUrl={avatarUrl}
+          stats={stats}
+          avatarUploading={avatarUploading}
+          onAvatarSelect={handleAvatarSelect}
+          onAvatarRemove={handleAvatarRemove}
+        />
 
         <div className="mb-4 rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
           <h2 className="mb-6 text-base font-semibold text-gray-800">פרטים אישיים</h2>
@@ -344,6 +435,8 @@ export function ProfilePersonalArea() {
             </button>
           </div>
         </div>
+
+        <NotificationPreferencesSection />
 
         <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
           <h2 className="mb-6 text-base font-semibold text-gray-800">שינוי סיסמה</h2>

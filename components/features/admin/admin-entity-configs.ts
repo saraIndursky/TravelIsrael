@@ -1,6 +1,7 @@
 import type { Place, Trail, Trip } from "@/types";
 import type { AdminEntityListConfig } from "@/components/features/admin/admin-entity-list-page";
 import { computePopularity } from "@/lib/utils/admin-popularity";
+import { placePath, trailPath, tripEditPath, tripPath } from "@/lib/utils/content-path";
 
 export const tripsAdminConfig: AdminEntityListConfig<Trip> = {
   title: "ניהול טיולים",
@@ -22,14 +23,15 @@ export const tripsAdminConfig: AdminEntityListConfig<Trip> = {
   getCreatorId: (t) => t.created_by,
   getRegion: (t) => t.region,
   getRejectionReason: (t) => t.rejection_reason,
+  getRemovalReason: (t) => t.removal_reason,
   getStats: (t) => ({
     rating: t.avg_rating,
     saves: t.favorites_count,
     views: t.views_count,
     popularity: computePopularity(t.views_count, t.favorites_count, t.avg_rating),
   }),
-  viewHref: (t) => `/trips/${t.id}`,
-  editHref: (t) => `/trips/${t.id}/edit`,
+  viewHref: (t) => tripPath(t),
+  editHref: (t) => tripEditPath(t),
   showPopularity: true,
 };
 
@@ -54,7 +56,8 @@ export function placesAdminConfig(types: string[]): AdminEntityListConfig<Place>
     getCreatorId: (p) => p.created_by,
     getRegion: (p) => p.region,
     getRejectionReason: (p) => p.rejection_reason,
-    viewHref: (p) => `/places/${p.id}`,
+    getRemovalReason: (p) => p.removal_reason,
+    viewHref: (p) => placePath(p),
   };
 }
 
@@ -79,6 +82,7 @@ export function trailsAdminConfig(types: string[]): AdminEntityListConfig<Trail>
     getCreatorId: (t) => t.created_by,
     getRegion: (t) => t.region,
     getRejectionReason: (t) => t.rejection_reason,
-    viewHref: (t) => `/trails/${t.id}`,
+    getRemovalReason: (t) => t.removal_reason,
+    viewHref: (t) => trailPath(t),
   };
 }

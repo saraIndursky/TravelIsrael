@@ -7,6 +7,7 @@ const VALID_ENTITIES = new Set(["place", "trail", "trip"]);
 const VALID_CONTEXTS = new Set(["create", "detail"]);
 const VALID_QUICK_ACTIONS = new Set<string>([
   "full_description",
+  "short_description",
   "accessibility",
   "coordinates",
   "tags",

@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { WizardResultActions } from "@/components/features/wizard/wizard-result-actions";
 import { WizardResultHero } from "@/components/features/wizard/wizard-result-hero";
 import { WizardResultMatchPanel } from "@/components/features/wizard/wizard-result-match-panel";
 import { WizardResultNav } from "@/components/features/wizard/wizard-result-nav";
+import { WizardResultsEmptyState } from "@/components/features/wizard/wizard-results-empty-state";
 import { TripDetailDescription } from "@/components/features/trips/detail/trip-detail-description";
 import { TripDetailGallery } from "@/components/features/trips/detail/trip-detail-gallery";
 import { TripDetailHighlights } from "@/components/features/trips/detail/trip-detail-highlights";
@@ -16,6 +17,8 @@ import { TripDetailReport } from "@/components/features/trips/detail/trip-detail
 import { TripDetailReviews } from "@/components/features/trips/detail/trip-detail-reviews";
 import { TripDetailStats } from "@/components/features/trips/detail/trip-detail-stats";
 import { toast } from "@/components/ui/use-toast";
+import { tripPath } from "@/lib/utils/content-path";
+import { ClientPageLoading } from "@/components/layout/page-loading";
 import { useAuthStore, useWizardStore } from "@/hooks/use-stores";
 import {
   addComment,
@@ -27,26 +30,34 @@ import {
 } from "@/lib/data/social";
 import { isFavorite, toggleFavorite } from "@/lib/data/favorites";
 import { createReport } from "@/lib/data/reports";
-import { getStore } from "@/lib/data/store";
-import { addTripGalleryImage, getTripById, getTrips, incrementTripViews } from "@/lib/data/trips";
+import { getProfilesByIds } from "@/lib/data/auth";
+import { usePlacesTrailsCatalog } from "@/hooks/use-catalog";
+import { addEntityGalleryImage, deleteEntityImage, getEntityImages } from "@/lib/data/images";
+import type { GalleryImagePayload } from "@/components/features/content/add-gallery-image-dialog";
+import { getTripById, getTrips, incrementTripViews } from "@/lib/data/trips";
 import { buildTripMapMarkers } from "@/lib/utils/trip-map";
+import { shareTrip } from "@/lib/utils/share";
+import { trackEvent } from "@/lib/analytics";
 import { computeTripSchedule } from "@/lib/utils/trip-schedule";
-import { rankTripsByMatch } from "@/lib/utils/match-score";
+import { calculateMatchScore, MIN_MATCH_SCORE, rankTripsByMatch } from "@/lib/utils/match-score";
 import type { MatchResult } from "@/lib/utils/match-score";
-import type { Comment, ReportType, TripWithStations } from "@/types";
+import type { Comment, EntityImage, ReportType, TripWithStations, User } from "@/types";
 
 const RESULTS_BATCH_SIZE = 5;
 
 export function WizardResultsClient() {
   const prefs = useWizardStore();
-  const { role } = useAuthStore();
+  const { role, userId } = useAuthStore();
+  const { places, trails } = usePlacesTrailsCatalog();
   const canInteract = role !== "guest";
 
   const [allResults, setAllResults] = useState<MatchResult[]>([]);
+  const [hadTripsBelowMin, setHadTripsBelowMin] = useState(false);
   const [batchOffset, setBatchOffset] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [trip, setTrip] = useState<TripWithStations | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [commentUsers, setCommentUsers] = useState<User[]>([]);
   const [ratingsCount, setRatingsCount] = useState(0);
   const [userRating, setUserRating] = useState(0);
   const [favorite, setFavorite] = useState(false);
@@ -56,8 +67,8 @@ export function WizardResultsClient() {
   const [loadingResults, setLoadingResults] = useState(true);
   const [loadingTrip, setLoadingTrip] = useState(false);
   const [savingFavorite, setSavingFavorite] = useState(false);
-
-  const store = getStore();
+  const [communityImages, setCommunityImages] = useState<EntityImage[]>([]);
+  const trackedTripId = useRef<string | null>(null);
 
   const visibleResults = useMemo(
     () => allResults.slice(batchOffset, batchOffset + RESULTS_BATCH_SIZE),
@@ -72,11 +83,22 @@ export function WizardResultsClient() {
 
     getTrips({ status: "approved" }, "numberOfViews", "desc", 0, 100).then(({ trips }) => {
       if (cancelled) return;
+      const rankedAll = trips.map((t) => calculateMatchScore(t, prefs));
       const ranked = rankTripsByMatch(trips, prefs);
+      const filteredOut =
+        trips.length > 0 && ranked.length === 0 && rankedAll.some((r) => r.score < MIN_MATCH_SCORE);
+
       setAllResults(ranked);
+      setHadTripsBelowMin(filteredOut);
       setBatchOffset(0);
       setCurrentIndex(0);
       setLoadingResults(false);
+      trackEvent("wizard_completed", { match_count: ranked.length });
+      trackEvent("wizard_results_viewed", {
+        match_count: ranked.length,
+        candidate_count: trips.length,
+        empty: ranked.length === 0,
+      });
     });
 
     return () => {
@@ -87,6 +109,7 @@ export function WizardResultsClient() {
   useEffect(() => {
     if (!currentResult) {
       setTrip(null);
+      setCommunityImages([]);
       return;
     }
 
@@ -100,17 +123,28 @@ export function WizardResultsClient() {
 
       if (!fullTrip) {
         setTrip(null);
+        setCommunityImages([]);
         setLoadingTrip(false);
         return;
       }
 
       setTrip(fullTrip);
+      if (trackedTripId.current !== tripId) {
+        trackedTripId.current = tripId;
+        trackEvent("wizard_trip_selected", {
+          trip_id: tripId,
+          match_score: currentResult.score,
+        });
+      }
       await incrementTripViews(tripId);
-      setComments(await getComments("trip", tripId));
+      const loadedComments = await getComments("trip", tripId);
+      setComments(loadedComments);
+      setCommentUsers(await getProfilesByIds(loadedComments.map((comment) => comment.user_id)));
       setRatingsCount((await getRatings("trip", tripId)).length);
       setUserRating((await getUserRating("trip", tripId))?.score ?? 0);
       setFavorite(await isFavorite(tripId));
       setHasUserReview(!!(await getUserComment("trip", tripId)));
+      setCommunityImages(await getEntityImages("trip", tripId));
       setShowCommentForm(false);
       setCommentText("");
       setLoadingTrip(false);
@@ -125,13 +159,13 @@ export function WizardResultsClient() {
 
   const totalTravelKm = useMemo(() => {
     if (!trip) return 0;
-    return computeTripSchedule(trip.stations, store.places, store.trails).totalTravelKm;
-  }, [trip, store.places, store.trails]);
+    return computeTripSchedule(trip.stations, places, trails).totalTravelKm;
+  }, [trip, places, trails]);
 
   const mapMarkers = useMemo(() => {
     if (!trip) return [];
-    return buildTripMapMarkers(trip.stations, store.places, store.trails);
-  }, [trip, store.places, store.trails]);
+    return buildTripMapMarkers(trip.stations, places, trails);
+  }, [trip, places, trails]);
 
   const handlePrev = () => {
     if (currentIndex > 0) {
@@ -172,6 +206,22 @@ export function WizardResultsClient() {
     setSavingFavorite(false);
   };
 
+  const handleShare = async () => {
+    if (!trip) return;
+    try {
+      const result = await shareTrip(trip);
+      toast({
+        title: result === "shared" ? "הטיול שותף" : "הקישור הועתק ללוח",
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+      toast({
+        title: error instanceof Error ? error.message : "שגיאה בשיתוף",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleRate = async (score: number) => {
     if (!trip) return;
     if (!canInteract) {
@@ -198,15 +248,25 @@ export function WizardResultsClient() {
     }
   };
 
-  const handleAddGalleryImage = async (url: string) => {
+  const handleAddGalleryImage = async (payload: GalleryImagePayload) => {
     if (!trip) return;
-    const updated = await addTripGalleryImage(trip.id, url);
-    if (updated) {
-      setTrip(updated);
+    const added = await addEntityGalleryImage("trip", trip.id, payload);
+    if (added) {
+      setCommunityImages((prev) => [...prev, added]);
       toast({ title: "התמונה נוספה לגלריה" });
     } else {
-      toast({ title: "יש להתחבר כדי להוסיף תמונה", variant: "destructive" });
+      throw new Error("יש להתחבר כדי להוסיף תמונה");
     }
+  };
+
+  const handleDeleteGalleryImage = async (imageId: string) => {
+    const ok = await deleteEntityImage(imageId);
+    if (!ok) {
+      toast({ title: "מחיקת התמונה נכשלה", variant: "destructive" });
+      throw new Error("מחיקת התמונה נכשלה");
+    }
+    setCommunityImages((prev) => prev.filter((image) => image.id !== imageId));
+    toast({ title: "התמונה נמחקה" });
   };
 
   const handleAddReview = () => {
@@ -230,25 +290,11 @@ export function WizardResultsClient() {
   }
 
   if (allResults.length === 0) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 bg-white px-4" dir="rtl">
-        <p className="text-lg text-[#6b7280]">לא נמצאו טיולים מתאימים להעדפות שלך</p>
-        <Link
-          href="/wizard"
-          className="rounded-sm bg-[#111827] px-6 py-3 text-sm font-medium text-white hover:bg-[#1f2937]"
-        >
-          חזרה לוויזארד
-        </Link>
-      </div>
-    );
+    return <WizardResultsEmptyState filteredOut={hadTripsBelowMin} />;
   }
 
   if (loadingTrip || !trip || !currentResult) {
-    return (
-      <div className="min-h-screen animate-pulse bg-[#f9fafb] pt-20 text-center text-[#6b7280]">
-        טוען פרטי טיול...
-      </div>
-    );
+    return <ClientPageLoading />;
   }
 
   return (
@@ -258,6 +304,7 @@ export function WizardResultsClient() {
         matchScore={currentResult.score}
         isFavorite={favorite}
         onToggleFavorite={handleToggleFavorite}
+        onShare={handleShare}
       />
 
       <WizardResultNav
@@ -282,13 +329,13 @@ export function WizardResultsClient() {
           <div className="hidden space-y-6 lg:sticky lg:top-24 lg:block lg:self-start">
             <WizardResultMatchPanel score={currentResult.score} explanation={currentResult.explanation} />
             <WizardResultActions
-              tripId={trip.id}
+              trip={trip}
               isFavorite={favorite}
               onSave={handleToggleFavorite}
               saving={savingFavorite}
             />
             <Link
-              href={`/trips/${trip.id}`}
+              href={tripPath(trip)}
               className="block text-center text-sm font-medium text-[#111827] underline-offset-4 hover:underline"
             >
               צפייה בעמוד הטיול המלא
@@ -300,9 +347,10 @@ export function WizardResultsClient() {
           <TripDetailReport onSubmit={handleReport} canReport={canInteract} />
 
           <TripDetailItinerary
+            trip={trip}
             stations={trip.stations}
-            places={store.places}
-            trails={store.trails}
+            places={places}
+            trails={trails}
             mapMarkers={mapMarkers}
             mapPlacement="mobile-only"
           />
@@ -310,10 +358,13 @@ export function WizardResultsClient() {
           <TripDetailGallery
             trip={trip}
             stations={trip.stations}
-            places={store.places}
-            trails={store.trails}
+            places={places}
+            trails={trails}
+            communityImages={communityImages}
+            currentUserId={userId}
             canAddImage={canInteract}
             onAddImage={handleAddGalleryImage}
+            onDeleteImage={handleDeleteGalleryImage}
           />
         </div>
 
@@ -333,7 +384,7 @@ export function WizardResultsClient() {
 
           <TripDetailReviews
             comments={comments}
-            users={store.users}
+            users={commentUsers}
             onAddReview={handleAddReview}
             canAddReview={canInteract && !hasUserReview}
           />
@@ -383,13 +434,13 @@ export function WizardResultsClient() {
 
         <div className="mt-8 pb-8 lg:hidden">
           <WizardResultActions
-            tripId={trip.id}
+            trip={trip}
             isFavorite={favorite}
             onSave={handleToggleFavorite}
             saving={savingFavorite}
           />
           <Link
-            href={`/trips/${trip.id}`}
+            href={tripPath(trip)}
             className="mt-4 block text-center text-sm font-medium text-[#111827] underline-offset-4 hover:underline"
           >
             צפייה בעמוד הטיול המלא

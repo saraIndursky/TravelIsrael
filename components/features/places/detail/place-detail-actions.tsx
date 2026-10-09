@@ -1,16 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { Navigation, Phone, Plus } from "lucide-react";
+import { Navigation, Pencil, Phone, Plus } from "lucide-react";
 import type { Place } from "@/types";
 import { getNavigationUrl } from "@/lib/utils/place-detail-content";
+import { canEditPlace } from "@/lib/data/places";
+import { placeEditPath } from "@/lib/utils/content-path";
+import { useAuthStore } from "@/hooks/use-stores";
 
 interface PlaceDetailActionsProps {
   place: Place;
 }
 
 export function PlaceDetailActions({ place }: PlaceDetailActionsProps) {
+  const { role, userId } = useAuthStore();
   const navUrl = getNavigationUrl(place);
+  const showEdit = canEditPlace(place, role, userId || null);
 
   return (
     <section className="mx-auto max-w-7xl px-4 pb-16 pt-4 md:px-6">
@@ -42,6 +47,15 @@ export function PlaceDetailActions({ place }: PlaceDetailActionsProps) {
             <Plus className="h-4 w-4" />
             הוסף לטיול
           </Link>
+          {showEdit && (
+            <Link
+              href={placeEditPath(place)}
+              className="flex w-full items-center justify-center gap-2 rounded-[2px] border border-[#d1d5db] bg-white py-3.5 text-sm font-medium text-[#111827] transition-colors hover:bg-[#f9fafb]"
+            >
+              <Pencil className="h-4 w-4" />
+              עריכת המקום
+            </Link>
+          )}
         </div>
       </div>
     </section>

@@ -28,6 +28,7 @@ export interface AssistantRequestBody {
 
 export type QuickActionId =
   | "full_description"
+  | "short_description"
   | "accessibility"
   | "coordinates"
   | "tags"

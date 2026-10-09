@@ -10,6 +10,10 @@ import type {
   QuickActionId,
 } from "@/types/assistant";
 import type { FieldValues, Path, PathValue, UseFormSetValue } from "react-hook-form";
+import {
+  buildChangesStatusReply,
+  isChangesStatusQuery,
+} from "@/lib/assistant/format-update-preview";
 
 interface UseCreateAssistantOptions<T extends FieldValues> {
   entity: AssistantEntity;
@@ -26,6 +30,7 @@ export function useCreateAssistant<T extends FieldValues>({
 }: UseCreateAssistantOptions<T>) {
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
   const [pendingUpdates, setPendingUpdates] = useState<AssistantFieldUpdate[]>([]);
+  const [lastAppliedUpdates, setLastAppliedUpdates] = useState<AssistantFieldUpdate[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,6 +73,12 @@ export function useCreateAssistant<T extends FieldValues>({
       const nextMessages = [...messages, userMsg];
       setMessages(nextMessages);
 
+      if (isChangesStatusQuery(trimmed)) {
+        const reply = buildChangesStatusReply(pendingUpdates, lastAppliedUpdates);
+        setMessages([...nextMessages, { role: "assistant", content: reply }]);
+        return;
+      }
+
       const response = await sendToApi(nextMessages);
       if (!response) return;
 
@@ -78,7 +89,7 @@ export function useCreateAssistant<T extends FieldValues>({
         setPendingUpdates([]);
       }
     },
-    [messages, sendToApi]
+    [messages, sendToApi, pendingUpdates, lastAppliedUpdates]
   );
 
   const runQuickAction = useCallback(
@@ -110,6 +121,7 @@ export function useCreateAssistant<T extends FieldValues>({
         { shouldValidate: true, shouldDirty: true }
       );
     }
+    setLastAppliedUpdates(pendingUpdates);
     setPendingUpdates([]);
   }, [setValue, pendingUpdates]);
 

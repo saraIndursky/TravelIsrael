@@ -17,6 +17,7 @@ interface CreatePlacePreviewDialogProps {
   place: Place;
   onSave: () => void;
   saving?: boolean;
+  saveLabel?: string;
 }
 
 export function CreatePlacePreviewDialog({
@@ -25,6 +26,7 @@ export function CreatePlacePreviewDialog({
   place,
   onSave,
   saving = false,
+  saveLabel = "שמור ושלח לאישור",
 }: CreatePlacePreviewDialogProps) {
   if (!open) return null;
 
@@ -99,7 +101,7 @@ export function CreatePlacePreviewDialog({
             onClick={onSave}
             className="flex-1 rounded-lg bg-[#111827] py-3 text-sm font-bold text-white hover:bg-[#1f2937] disabled:opacity-50"
           >
-            {saving ? "שומר..." : "שמור ושלח לאישור"}
+            {saving ? "שומר..." : saveLabel}
           </button>
         </div>
       </div>

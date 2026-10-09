@@ -1,8 +1,8 @@
 "use client";
 
-import type { TripStation } from "@/types";
+import type { Place, Trail, TripStation } from "@/types";
 import { resolveStationDetails } from "@/lib/utils/trip-calculations";
-import { getStore } from "@/lib/data/store";
+import { usePlacesTrailsCatalog } from "@/hooks/use-catalog";
 import { GripVertical, MapPin, Route } from "lucide-react";
 import { formatDuration } from "@/lib/utils";
 
@@ -13,7 +13,7 @@ interface StationListProps {
 }
 
 export function StationList({ stations, readOnly = true }: StationListProps) {
-  const store = getStore();
+  const { places, trails } = usePlacesTrailsCatalog();
   const sorted = [...stations].sort((a, b) => a.order_index - b.order_index);
 
   if (sorted.length === 0) {
@@ -23,7 +23,7 @@ export function StationList({ stations, readOnly = true }: StationListProps) {
   return (
     <ol className="space-y-2">
       {sorted.map((station, i) => {
-        const details = resolveStationDetails(station, store.places, store.trails);
+        const details = resolveStationDetails(station, places, trails);
         if (!details) return null;
         return (
           <li key={station.id} className="flex items-center gap-3 rounded-lg border p-3 bg-card">

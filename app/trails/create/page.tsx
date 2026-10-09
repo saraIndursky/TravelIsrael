@@ -1,6 +1,7 @@
 "use client";
 
-import { CreateTrailForm } from "@/components/features/trails/create-trail-form";
+import { TrailGpxImport } from "@/components/features/trails/trail-gpx-import";
+import { TrailForm } from "@/components/features/trails/trail-form";
 import { useAuthStore } from "@/hooks/use-stores";
 
 export default function CreateTrailPage() {
@@ -19,7 +20,8 @@ export default function CreateTrailPage() {
       <div className="mx-auto max-w-7xl px-4">
         <h1 className="mb-2 text-3xl font-light text-[#111827]">הוסף מסלול חדש</h1>
         <p className="mb-8 text-sm text-[#6b7280]">המסלול יישלח לאישור מנהל לפני פרסום</p>
-        <CreateTrailForm />
+        <TrailGpxImport />
+        <TrailForm />
       </div>
     </div>
   );

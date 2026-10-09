@@ -1,19 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { Heart, LogOut, User } from "lucide-react";
-import { getStore } from "@/lib/data/store";
+import { UserAvatar } from "@/components/ui/custom/user-avatar";
 import { useAuthStore } from "@/hooks/use-stores";
+import { signOutUser } from "@/lib/data/auth";
 import { cn } from "@/lib/utils";
 
 interface LoginButtonProps {
   className?: string;
   onNavigate?: () => void;
+  compact?: boolean;
 }
 
-export function LoginButton({ className, onNavigate }: LoginButtonProps) {
+export function LoginButton({ className, onNavigate, compact = false }: LoginButtonProps) {
   const router = useRouter();
 
   return (
@@ -24,7 +25,8 @@ export function LoginButton({ className, onNavigate }: LoginButtonProps) {
         router.push("/login");
       }}
       className={cn(
-        "group inline-flex items-center gap-3 rounded border border-gray-300 bg-white/90 px-6 py-3 text-sm font-medium text-gray-900 transition-all hover:scale-105 hover:bg-gray-50 hover:shadow-lg",
+        "group inline-flex items-center gap-2 rounded border border-gray-300 bg-white/90 text-sm font-medium text-gray-900 transition-all hover:bg-gray-50 hover:shadow-md",
+        compact ? "px-3 py-2" : "gap-3 px-6 py-3 hover:scale-105 hover:shadow-lg",
         className
       )}
     >
@@ -33,33 +35,13 @@ export function LoginButton({ className, onNavigate }: LoginButtonProps) {
   );
 }
 
-function UserAvatar({ name, size = "md" }: { name: string; size?: "md" | "lg" }) {
-  const initial = name.trim().charAt(0) || "?";
-  const sizeClass = size === "lg" ? "h-12 w-12 text-lg" : "h-10 w-10 text-base";
-
-  return (
-    <div
-      className={cn(
-        "flex select-none items-center justify-center rounded-full bg-gray-900 font-semibold text-white",
-        sizeClass
-      )}
-    >
-      {initial !== "?" ? initial : <User className="h-5 w-5 text-white" />}
-    </div>
-  );
-}
-
 export function UserMenu() {
   const router = useRouter();
-  const { userId, logout } = useAuthStore();
+  const { userName, userEmail, avatarUrl, logout } = useAuthStore();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const user = getStore().users.find((u) => u.id === userId);
-  const displayName = user?.name ?? "משתמש";
-  const nameParts = displayName.trim().split(/\s+/);
-  const firstName = nameParts[0] ?? "";
-  const lastName = nameParts.slice(1).join(" ");
+  const displayName = userName || "משתמש";
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -76,9 +58,11 @@ export function UserMenu() {
     setOpen(false);
   }
 
-  function handleLogout() {
+  async function handleLogout() {
+    await signOutUser();
     logout();
     setOpen(false);
+    router.push("/");
   }
 
   return (
@@ -90,48 +74,53 @@ export function UserMenu() {
         onClick={() => setOpen((prev) => !prev)}
         className="cursor-pointer rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
-        <UserAvatar name={displayName} />
+        <UserAvatar name={displayName} avatarUrl={avatarUrl} />
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-48 rounded-md border border-gray-200 bg-white shadow-lg">
-          <div className="mt-2 flex flex-col items-center px-2 py-3">
-            <UserAvatar name={displayName} size="lg" />
-            <span className="mt-2 text-sm font-medium text-gray-900">
-              {firstName} {lastName}
-            </span>
+        <div className="absolute end-0 top-full z-50 mt-2 w-60 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
+          <div className="flex items-center gap-3 border-b border-gray-200 px-4 py-4">
+            <UserAvatar name={displayName} avatarUrl={avatarUrl} size="md" className="shrink-0" />
+            <div className="min-w-0 flex-1 text-right">
+              <p className="truncate text-base font-semibold leading-relaxed text-gray-900">{displayName}</p>
+              {userEmail ? (
+                <p className="mt-2.5 break-all text-sm leading-relaxed text-gray-500" dir="ltr">
+                  {userEmail}
+                </p>
+              ) : null}
+            </div>
           </div>
 
-          <div className="my-2 border-t border-gray-200" />
+          <div className="space-y-0.5 py-3">
+            <button
+              type="button"
+              onClick={() => navigate("/profile")}
+              className="flex w-full items-center justify-between px-4 py-3 text-right text-[17px] text-gray-900 transition-colors hover:bg-gray-50 hover:text-gray-950 focus-visible:outline-none"
+            >
+              <span>האזור האישי</span>
+              <User className="h-[18px] w-[18px] shrink-0 text-gray-500" />
+            </button>
 
-          <button
-            type="button"
-            onClick={() => navigate("/profile")}
-            className="flex w-full items-center justify-between px-4 py-2 text-right text-sm hover:bg-gray-100"
-          >
-            האזור האישי
-            <User className="h-5 w-5 text-gray-500" />
-          </button>
+            <button
+              type="button"
+              onClick={() => navigate("/profile/content")}
+              className="flex w-full items-center justify-between px-4 py-3 text-right text-[17px] text-gray-900 transition-colors hover:bg-gray-50 hover:text-gray-950 focus-visible:outline-none"
+            >
+              <span>הטיולים שלי</span>
+              <Heart className="h-[18px] w-[18px] shrink-0 text-gray-500" />
+            </button>
+          </div>
 
-          <button
-            type="button"
-            onClick={() => navigate("/profile/content")}
-            className="flex w-full items-center justify-between px-4 py-2 text-right text-sm hover:bg-gray-100"
-          >
-            הטיולים שלי
-            <Heart className="h-5 w-5 text-gray-500" />
-          </button>
-
-          <div className="my-1 border-t" />
-
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex w-full items-center justify-between px-4 py-2 text-right text-sm text-red-600 hover:bg-red-50"
-          >
-            התנתקות
-            <LogOut className="h-4 w-4 text-red-600" />
-          </button>
+          <div className="border-t border-gray-200 py-3">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex w-full items-center justify-between px-4 py-3 text-right text-[17px] text-red-600 transition-colors hover:bg-red-50/70 hover:text-red-700 focus-visible:outline-none"
+            >
+              <span>התנתקות</span>
+              <LogOut className="h-[18px] w-[18px] shrink-0 text-red-600" />
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -141,14 +130,19 @@ export function UserMenu() {
 interface AuthNavProps {
   className?: string;
   onNavigate?: () => void;
+  compact?: boolean;
 }
 
-export function AuthNav({ className, onNavigate }: AuthNavProps) {
+export function AuthNav({ className, onNavigate, compact = false }: AuthNavProps) {
   const { role } = useAuthStore();
 
   if (role === "guest") {
-    return <LoginButton className={className} onNavigate={onNavigate} />;
+    return <LoginButton className={className} onNavigate={onNavigate} compact={compact} />;
   }
 
-  return <UserMenu />;
+  return (
+    <div className={cn("shrink-0", className)}>
+      <UserMenu />
+    </div>
+  );
 }

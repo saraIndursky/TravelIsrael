@@ -13,7 +13,7 @@ export function HomeFeaturedTrips({ trips }: HomeFeaturedTripsProps) {
         <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">
             <p className="ti-section-subtitle">טיולים נבחרים</p>
-            <h2 className="ti-section-title">מומלצים השבוע</h2>
+            <h2 className="ti-section-title">פופולריים</h2>
           </div>
           <Link href="/trips" className="text-sm font-medium text-foreground hover:text-primary transition">
             צפה בכל הטיולים

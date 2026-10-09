@@ -4,12 +4,14 @@ import type { PlaceFormValues } from "@/lib/validations";
 const DEFAULT_PLACE_IMAGE =
   "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800";
 
-export function buildPreviewPlace(values: PlaceFormValues): Place {
+type PreviewPlaceBase = Pick<Place, "id" | "created_by" | "status">;
+
+export function buildPreviewPlace(values: PlaceFormValues, base?: PreviewPlaceBase): Place {
   const now = new Date().toISOString();
   const imageUrl = values.image_url?.trim() || DEFAULT_PLACE_IMAGE;
 
   return {
-    id: "preview",
+    id: base?.id ?? "preview",
     name: values.name.trim() || "מקום ללא שם",
     short_description: values.short_description.trim(),
     full_description: values.full_description.trim(),
@@ -27,8 +29,8 @@ export function buildPreviewPlace(values: PlaceFormValues): Place {
     phone: values.phone?.trim() || undefined,
     website: values.website?.trim() || undefined,
     image_url: imageUrl,
-    created_by: "",
-    status: "pending",
+    created_by: base?.created_by ?? "",
+    status: base?.status ?? "pending",
     updated_at: now,
   };
 }

@@ -1,11 +1,10 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PlacesClient } from "@/components/features/places/places-client";
+import { LIST_PAGE_METADATA } from "@/lib/seo/metadata";
 
-export const metadata = {
-  title: "מקומות — TravelIsrael",
-  description: "גלה מקומות לביקור בישראל",
-};
+export const metadata: Metadata = LIST_PAGE_METADATA.places;
 
 export default function PlacesPage() {
   return (

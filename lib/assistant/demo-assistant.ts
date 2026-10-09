@@ -9,6 +9,12 @@ import type {
 import { COMMON_TAGS } from "@/types/enums";
 import type { Accessibility } from "@/types";
 import { getFieldLabel } from "./field-labels";
+import {
+  formatUpdatesSummary,
+  getDefaultTripImage,
+  scanMissingFieldsMessage,
+  suggestTripShortDescription,
+} from "./format-update-preview";
 import { isOffTopicMessage, offTopicResponse } from "./scope-guard";
 import {
   describeRegionSource,
@@ -503,17 +509,170 @@ function scanMissingTrailFields(snapshot: Record<string, unknown>): MissingField
 }
 
 function scanMissingTripFields(snapshot: Record<string, unknown>): MissingField[] {
-  const checks = ["full_description", "tags", "main_image"];
+  const checks = [
+    "name",
+    "short_description",
+    "full_description",
+    "tags",
+    "main_image",
+  ];
   return checks
     .filter((field) => isEmpty(snapshot[field]))
     .map((field) => ({ field, label: getFieldLabel("trip", field) }));
 }
 
-function helpMessage(entity: AssistantEntity): AssistantResponse {
+function wantsFillFromAction(action?: QuickActionId): boolean {
+  return action === "fill_missing";
+}
+
+function isTripMissingQuery(text: string, action?: QuickActionId): boolean {
+  if (wantsFillFromAction(action)) return false;
+  return matches(text, [
+    /שדות.*חסר/,
+    /מה.*חסר/,
+    /מה עוד/,
+    /עוד.*חסר/,
+    /חסר(?:ים)?/,
+    /לא מלא/,
+    /מה.*(צריך|נותר)/,
+  ]);
+}
+
+function isTripShortDescriptionRequest(text: string, action?: QuickActionId): boolean {
+  if (action === "short_description") return true;
+  return matches(text, [
+    /תיאור קצר/,
+    /תיאור לכרטיס/,
+    /שור[הא].*תיאור/,
+    /תיאור.*שור[הא]/,
+    /תכניס.*תיאור קצר/,
+    /הכנס.*תיאור קצר/,
+    /(?:תכניס|הכנס).*תיאור(?=\s*קצר)/,
+  ]);
+}
+
+function isTripFullDescriptionRequest(text: string, action?: QuickActionId): boolean {
+  if (action === "full_description") return true;
+  if (isTripShortDescriptionRequest(text)) return false;
+  return matches(text, [
+    /תיאור מלא/,
+    /מלא תיאור/,
+    /הרחב/,
+    /תוסיפ.*תיאור/,
+    /תוסף.*תיאור/,
+    /כתוב.*תיאור/,
+    /עזור.*תיאור/,
+  ]);
+}
+
+function buildTripFieldSuggestions(
+  snapshot: Record<string, unknown>,
+  missing: MissingField[]
+): AssistantFieldUpdate[] {
+  const name = str(snapshot.name);
+  const shortDesc = str(snapshot.short_description);
+  const fullDesc = str(snapshot.full_description);
+  const tags = (snapshot.tags as string[]) ?? [];
+  const updates: AssistantFieldUpdate[] = [];
+
+  if (!name) return updates;
+
+  if (missing.some((m) => m.field === "short_description")) {
+    updates.push({
+      field: "short_description",
+      value: suggestTripShortDescription(name, fullDesc, tags),
+      label: getFieldLabel("trip", "short_description"),
+    });
+  }
+  if (missing.some((m) => m.field === "full_description")) {
+    updates.push({
+      field: "full_description",
+      value: expandFullDescription(name, shortDesc, "טיול", ""),
+      label: getFieldLabel("trip", "full_description"),
+    });
+  }
+  if (missing.some((m) => m.field === "tags")) {
+    const suggested = suggestTags("trip", "", "", tags);
+    updates.push({
+      field: "tags",
+      value: Array.from(new Set([...tags, ...suggested])),
+      label: getFieldLabel("trip", "tags"),
+    });
+  }
+  if (missing.some((m) => m.field === "main_image")) {
+    updates.push({
+      field: "main_image",
+      value: getDefaultTripImage(),
+      label: getFieldLabel("trip", "main_image"),
+    });
+  }
+
+  return updates;
+}
+
+function buildTripMissingReply(
+  snapshot: Record<string, unknown>,
+  stationCount: number,
+  withSuggestions: boolean
+): AssistantResponse {
+  const missing = scanMissingTripFields(snapshot);
+  const name = str(snapshot.name);
+
+  if (missing.length === 0) {
+    if (stationCount === 0) {
+      return {
+        message:
+          "כל השדות בטופס מלאים — אבל עדיין אין תחנות במסלול. לחצי «הוסף תחנה» כדי לבנות את הטיול.",
+      };
+    }
+    return { message: "כל השדות העיקריים של הטיול מלאים." };
+  }
+
+  const intro = scanMissingFieldsMessage(
+    "trip",
+    missing.map((m) => m.label)
+  );
+  const stationNote =
+    stationCount === 0 ? "\n\nשימי לב: עדיין אין תחנות במסלול." : "";
+
+  if (!withSuggestions || !name) {
+    return {
+      message: name
+        ? `${intro}${stationNote}\n\nכתבי «מלא שדות חסרים» כדי שאציע תוכן.`
+        : `${intro} הזיני שם טיול כדי שאוכל להציע תוכן.${stationNote}`,
+    };
+  }
+
+  const updates = buildTripFieldSuggestions(snapshot, missing);
+  if (updates.length === 0) {
+    return { message: `${intro}${stationNote}` };
+  }
+
+  return {
+    message: `${intro}\n\nהצעות:${formatUpdatesSummary(updates)}${stationNote}\n\nלחצי «אשר והחל על הטופס» כדי להחיל.`,
+    updates,
+  };
+}
+
+function helpMessage(
+  entity: AssistantEntity,
+  snapshot?: Record<string, unknown>
+): AssistantResponse {
   const entityName =
     entity === "place" ? "מקום" : entity === "trail" ? "מסלול" : "טיול";
+
+  if (entity === "trip" && snapshot) {
+    const missing = scanMissingTripFields(snapshot);
+    if (missing.length > 0) {
+      const list = missing.map((m) => m.label).join(", ");
+      return {
+        message: `אפשר לעזור עם: תיאור קצר, תיאור מלא, תגיות, תמונה, או מילוי כל השדות החסרים. כרגע חסר: ${list}. כתבי למשל «הכנסי תיאור קצר» או «מלא שדות חסרים».`,
+      };
+    }
+  }
+
   return {
-    message: `שלום! אני עוזר (דמו) ליצירת ${entityName}. נסי כפתור מהיר או שאלי על תיאור, נגישות, קואורדינטות, תגיות, משך או מחיר.`,
+    message: `שלום! אני עוזר (דמו) ליצירת ${entityName}. כתבי מה צריך — למשל «תוסיפי תיאור מלא» או «מה חסר?» — בלי חובה להשתמש בכפתורים.`,
   };
 }
 
@@ -806,6 +965,73 @@ function handleTrail(
   return helpMessage("trail");
 }
 
+function buildTripFillUpdates(snapshot: Record<string, unknown>): {
+  updates: AssistantFieldUpdate[];
+  message: string;
+} {
+  const name = str(snapshot.name);
+  const shortDesc = str(snapshot.short_description);
+  const tags = (snapshot.tags as string[]) ?? [];
+  const updates: AssistantFieldUpdate[] = [];
+
+  if (!name) {
+    return {
+      updates: [],
+      message:
+        "הזיני שם טיול בטופס — ואז אוכל להציע תיאור קצר, תיאור מלא, תגיות ותמונה.",
+    };
+  }
+
+  pushIfEmpty(
+    updates,
+    snapshot,
+    "short_description",
+    suggestTripShortDescription(name, str(snapshot.full_description), tags),
+    "trip"
+  );
+
+  pushIfEmpty(
+    updates,
+    snapshot,
+    "full_description",
+    expandFullDescription(name, shortDesc, "טיול", ""),
+    "trip"
+  );
+
+  const suggested = suggestTags("trip", "", "", tags);
+  if (isEmpty(snapshot.tags) && suggested.length > 0) {
+    pushIfEmpty(
+      updates,
+      snapshot,
+      "tags",
+      Array.from(new Set([...tags, ...suggested])),
+      "trip"
+    );
+  }
+
+  pushIfEmpty(updates, snapshot, "main_image", getDefaultTripImage(), "trip");
+
+  const missing = scanMissingTripFields(snapshot);
+  const stillMissing = missing.filter(
+    (m) => !updates.some((u) => u.field === m.field)
+  );
+
+  const parts = [`בסיס: שם הטיול «${name}».`];
+
+  if (updates.length > 0) {
+    parts.push(
+      `הכנתי ${updates.length} הצעות — בדקי את התוכן למטה ולחצי «אשר והחל על הטופס».`
+    );
+    parts.push(formatUpdatesSummary(updates).trim());
+  } else if (stillMissing.length === 0) {
+    parts.push("כל השדות העיקריים כבר מלאים.");
+  } else {
+    parts.push(scanMissingFieldsMessage("trip", stillMissing.map((m) => m.label)));
+  }
+
+  return { updates, message: parts.join("\n\n") };
+}
+
 function handleTrip(
   text: string,
   snapshot: Record<string, unknown>,
@@ -814,16 +1040,20 @@ function handleTrip(
 ): AssistantResponse {
   const name = str(snapshot.name);
   const shortDesc = str(snapshot.short_description);
+  const fullDesc = str(snapshot.full_description);
   const tags = (snapshot.tags as string[]) ?? [];
   const stationCount = num(snapshot.station_count) ?? 0;
   const updates: AssistantFieldUpdate[] = [];
 
-  const wantsFull =
-    action === "full_description" ||
-    matches(text, [/תיאור מלא/, /מלא תיאור/, /הרחב/]);
-  const wantsTags = action === "tags" || matches(text, [/תגית/, /תגיות/]);
+  const wantsShort = isTripShortDescriptionRequest(text, action);
+  const wantsFull = isTripFullDescriptionRequest(text, action);
+  const wantsTags =
+    action === "tags" || matches(text, [/תגית/, /תגיות/, /תוסיפ.*תג/]);
+  const wantsImage =
+    matches(text, [/תמונה/, /תצלום/, /image/i, /main_image/i]);
   const wantsStations =
     action === "stations_hint" || matches(text, [/תחנה/, /תחנות/, /station/i]);
+  const wantsMissingList = isTripMissingQuery(text, action);
   const wantsFill = wantsHelpWithFields(text, action);
 
   if (wantsStations) {
@@ -835,22 +1065,50 @@ function handleTrip(
     };
   }
 
-  if (wantsFill || context === "detail") {
-    const missing = scanMissingTripFields(snapshot);
-    if (missing.length === 0 && !wantsFill) {
-      return helpMessage("trip");
+  if (wantsFill) {
+    const result = buildTripFillUpdates(snapshot);
+    return {
+      message: result.message,
+      updates: result.updates.length > 0 ? result.updates : undefined,
+    };
+  }
+
+  if (wantsMissingList || (context === "detail" && !wantsShort && !wantsFull && !wantsTags && !wantsImage)) {
+    return buildTripMissingReply(snapshot, stationCount, true);
+  }
+
+  if (wantsShort) {
+    if (!name) {
+      return { message: "הזיני שם טיול בטופס — ואז אוכל לכתוב תיאור קצר (שורה אחת)." };
     }
-    if (missing.length === 0) {
-      return { message: "השדות העיקריים של הטיול מלאים." };
+    if (!isEmpty(snapshot.short_description)) {
+      return {
+        message: `כבר יש תיאור קצר: «${str(snapshot.short_description)}». אפשר לערוך ידנית בטופס.`,
+      };
     }
-    if (name && missing.some((m) => m.field === "full_description")) {
+    updates.push({
+      field: "short_description",
+      value: suggestTripShortDescription(name, fullDesc, tags),
+      label: getFieldLabel("trip", "short_description"),
+    });
+    return {
+      message: `הכנתי תיאור קצר (שורה אחת, עד 80 תווים):${formatUpdatesSummary(updates)}\n\nלחצי «אשר והחל על הטופס» לפני השליחה.`,
+      updates,
+    };
+  }
+
+  if (wantsFull) {
+    if (!name) {
+      return { message: "הזיני שם טיול בטופס — ואז אוכל לכתוב תיאור מלא." };
+    }
+    if (isEmpty(snapshot.full_description)) {
       updates.push({
         field: "full_description",
         value: expandFullDescription(name, shortDesc, "טיול", ""),
         label: getFieldLabel("trip", "full_description"),
       });
     }
-    if (missing.some((m) => m.field === "tags")) {
+    if (matches(text, [/תג/]) && isEmpty(snapshot.tags)) {
       const suggested = suggestTags("trip", "", "", tags);
       updates.push({
         field: "tags",
@@ -858,23 +1116,28 @@ function handleTrip(
         label: getFieldLabel("trip", "tags"),
       });
     }
-    const list = missing.map((m) => m.label).join(", ");
-    return {
-      message: `שדות שחסרים: ${list}.`,
-      updates: updates.length > 0 ? updates : undefined,
-    };
-  }
-
-  if (wantsFull) {
-    if (!name) {
-      return { message: "הזיני שם טיול קודם." };
+    if (matches(text, [/תמונה|תצלום/]) && isEmpty(snapshot.main_image)) {
+      updates.push({
+        field: "main_image",
+        value: getDefaultTripImage(),
+        label: getFieldLabel("trip", "main_image"),
+      });
     }
-    updates.push({
-      field: "full_description",
-      value: expandFullDescription(name, shortDesc, "טיול", ""),
-      label: getFieldLabel("trip", "full_description"),
-    });
-    return { message: "הרחבתי תיאור הטיול.", updates };
+    const nameMatch = text.match(/(?:שם|name)\s*[:：]\s*(.+)/i);
+    if (nameMatch?.[1]?.trim() && isEmpty(snapshot.name)) {
+      updates.push({
+        field: "name",
+        value: nameMatch[1].trim(),
+        label: getFieldLabel("trip", "name"),
+      });
+    }
+    if (updates.length === 0) {
+      return { message: "התיאור המלא כבר קיים. אפשר לבקש «תיאור קצר» או לערוך ידנית." };
+    }
+    return {
+      message: `הכנתי ${updates.length} הצעות:${formatUpdatesSummary(updates)}\n\nלחצי «אשר והחל על הטופס» לפני השליחה.`,
+      updates,
+    };
   }
 
   if (wantsTags) {
@@ -884,10 +1147,86 @@ function handleTrip(
       value: Array.from(new Set([...tags, ...suggested])),
       label: getFieldLabel("trip", "tags"),
     });
-    return { message: `תגיות: ${suggested.join(", ")}.`, updates };
+    return {
+      message: `הצעתי תגיות:${formatUpdatesSummary(updates)}`,
+      updates,
+    };
   }
 
-  return helpMessage("trip");
+  if (wantsImage) {
+    updates.push({
+      field: "main_image",
+      value: getDefaultTripImage(),
+      label: getFieldLabel("trip", "main_image"),
+    });
+    return {
+      message: `הצעתי תמונת ברירת מחדל:${formatUpdatesSummary(updates)}\n\nאפשר להחליף ידנית בשדה התמונה בטופס.`,
+      updates,
+    };
+  }
+
+  const nameMatch = text.match(/(?:שם|name)\s*[:：]\s*(.+)/i);
+  if (nameMatch?.[1]?.trim()) {
+    updates.push({
+      field: "name",
+      value: nameMatch[1].trim(),
+      label: getFieldLabel("trip", "name"),
+    });
+    return {
+      message: `הצעתי שם:${formatUpdatesSummary(updates)}`,
+      updates,
+    };
+  }
+
+  const compoundUpdates: AssistantFieldUpdate[] = [];
+  if (matches(text, [/תכניס|הכנס|תוסיפ|תוסף|מלא|השלם|תעדכן|עדכן/])) {
+    if (matches(text, [/תיאור קצר/]) && name && isEmpty(snapshot.short_description)) {
+      compoundUpdates.push({
+        field: "short_description",
+        value: suggestTripShortDescription(name, fullDesc, tags),
+        label: getFieldLabel("trip", "short_description"),
+      });
+    }
+    if (
+      matches(text, [/תיאור/]) &&
+      !matches(text, [/תיאור קצר/]) &&
+      name &&
+      isEmpty(snapshot.full_description)
+    ) {
+      compoundUpdates.push({
+        field: "full_description",
+        value: expandFullDescription(name, shortDesc, "טיול", ""),
+        label: getFieldLabel("trip", "full_description"),
+      });
+    }
+    if (matches(text, [/תג/]) && isEmpty(snapshot.tags)) {
+      const suggested = suggestTags("trip", "", "", tags);
+      compoundUpdates.push({
+        field: "tags",
+        value: Array.from(new Set([...tags, ...suggested])),
+        label: getFieldLabel("trip", "tags"),
+      });
+    }
+    if (matches(text, [/תמונה|תצלום/]) && isEmpty(snapshot.main_image)) {
+      compoundUpdates.push({
+        field: "main_image",
+        value: getDefaultTripImage(),
+        label: getFieldLabel("trip", "main_image"),
+      });
+    }
+    if (compoundUpdates.length > 0) {
+      return {
+        message: `הכנתי ${compoundUpdates.length} הצעות:${formatUpdatesSummary(compoundUpdates)}\n\nלחצי «אשר והחל על הטופס» כדי להחיל.`,
+        updates: compoundUpdates,
+      };
+    }
+  }
+
+  if (matches(text, [/מה עוד/, /עוד משהו/, /נשאר/])) {
+    return buildTripMissingReply(snapshot, stationCount, false);
+  }
+
+  return helpMessage("trip", snapshot);
 }
 
 export interface DemoAssistantInput {
@@ -908,7 +1247,7 @@ export function runDemoAssistant(input: DemoAssistantInput): AssistantResponse {
   }
 
   if (!text && !input.quickAction) {
-    return helpMessage(input.entity);
+    return helpMessage(input.entity, input.formSnapshot);
   }
 
   switch (input.entity) {

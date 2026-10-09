@@ -210,3 +210,8 @@ export function getTrailGalleryImages(trail: Trail): string[] {
   ];
   return Array.from(new Set([trail.image_url, ...extras].filter(Boolean)));
 }
+
+/** Google Maps directions to the trail start (trailhead). */
+export function getTrailNavigationUrl(trail: Trail): string {
+  return `https://www.google.com/maps/dir/?api=1&destination=${trail.start_lat},${trail.start_lng}`;
+}

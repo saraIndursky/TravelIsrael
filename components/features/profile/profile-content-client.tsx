@@ -14,6 +14,8 @@ import { MyPlaceCard, PLACE_TRAIL_STATUS_TABS } from "@/components/features/prof
 import { MyTrailCard } from "@/components/features/profile/my-trail-card";
 import { MyTripsEmptyState } from "@/components/features/profile/my-trips-empty-state";
 import { toast } from "@/components/ui/use-toast";
+import { tripEditPath } from "@/lib/utils/content-path";
+import { ClientPageLoading } from "@/components/layout/page-loading";
 import { useAuthStore } from "@/hooks/use-stores";
 import {
   getFavoritePlaces,
@@ -21,8 +23,8 @@ import {
   getFavoriteTrips,
   toggleFavoriteEntity,
 } from "@/lib/data/favorites";
-import { deletePlace, getPlaces } from "@/lib/data/places";
-import { deleteTrail, getTrails } from "@/lib/data/trails";
+import { deletePlace, getPlaces, resubmitPlaceForApproval } from "@/lib/data/places";
+import { deleteTrail, getTrails, resubmitTrailForApproval } from "@/lib/data/trails";
 import {
   deleteTrip,
   duplicateTrip,
@@ -95,6 +97,7 @@ export function ProfileContentClient() {
       pending: myTrips.filter((t) => t.status === "pending").length,
       approved: myTrips.filter((t) => t.status === "approved").length,
       rejected: myTrips.filter((t) => t.status === "rejected").length,
+      removed: myTrips.filter((t) => t.status === "removed").length,
     }),
     [myTrips]
   );
@@ -104,6 +107,7 @@ export function ProfileContentClient() {
       pending: myPlaces.filter((p) => p.status === "pending").length,
       approved: myPlaces.filter((p) => p.status === "approved").length,
       rejected: myPlaces.filter((p) => p.status === "rejected").length,
+      removed: myPlaces.filter((p) => p.status === "removed").length,
     }),
     [myPlaces]
   );
@@ -113,6 +117,7 @@ export function ProfileContentClient() {
       pending: myTrails.filter((t) => t.status === "pending").length,
       approved: myTrails.filter((t) => t.status === "approved").length,
       rejected: myTrails.filter((t) => t.status === "rejected").length,
+      removed: myTrails.filter((t) => t.status === "removed").length,
     }),
     [myTrails]
   );
@@ -142,6 +147,38 @@ export function ProfileContentClient() {
     }
   }
 
+  async function handleSubmitPlace(placeId: string) {
+    setBusyId(placeId);
+    try {
+      const result = await resubmitPlaceForApproval(placeId);
+      if (!result) {
+        toast({ title: "שליחה לאישור נכשלה", variant: "destructive" });
+        return;
+      }
+      toast({ title: "המקום נשלח לאישור" });
+      await loadData();
+      setStatusTab("pending");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleSubmitTrail(trailId: string) {
+    setBusyId(trailId);
+    try {
+      const result = await resubmitTrailForApproval(trailId);
+      if (!result) {
+        toast({ title: "שליחה לאישור נכשלה", variant: "destructive" });
+        return;
+      }
+      toast({ title: "המסלול נשלח לאישור" });
+      await loadData();
+      setStatusTab("pending");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   async function handleDeleteTrip(tripId: string) {
     setBusyId(tripId);
     try {
@@ -152,6 +189,12 @@ export function ProfileContentClient() {
       }
       toast({ title: "הטיול נמחק" });
       await loadData();
+    } catch (error) {
+      toast({
+        title: "מחיקת הטיול נכשלה",
+        description: error instanceof Error ? error.message : undefined,
+        variant: "destructive",
+      });
     } finally {
       setBusyId(null);
     }
@@ -166,7 +209,7 @@ export function ProfileContentClient() {
         return;
       }
       toast({ title: "הטיול שוכפל כטיוטה" });
-      router.push(`/trips/${copy.id}/edit`);
+      router.push(tripEditPath(copy));
     } finally {
       setBusyId(null);
     }
@@ -182,6 +225,12 @@ export function ProfileContentClient() {
       }
       toast({ title: "המקום נמחק" });
       await loadData();
+    } catch (error) {
+      toast({
+        title: "מחיקת המקום נכשלה",
+        description: error instanceof Error ? error.message : undefined,
+        variant: "destructive",
+      });
     } finally {
       setBusyId(null);
     }
@@ -197,6 +246,12 @@ export function ProfileContentClient() {
       }
       toast({ title: "המסלול נמחק" });
       await loadData();
+    } catch (error) {
+      toast({
+        title: "מחיקת המסלול נכשלה",
+        description: error instanceof Error ? error.message : undefined,
+        variant: "destructive",
+      });
     } finally {
       setBusyId(null);
     }
@@ -243,7 +298,7 @@ export function ProfileContentClient() {
   }
 
   if (loading) {
-    return <div className="min-h-screen animate-pulse bg-white pt-20">טוען...</div>;
+    return <ClientPageLoading className="bg-white" />;
   }
 
   const statusTabs =
@@ -379,6 +434,7 @@ export function ProfileContentClient() {
                       place={place}
                       busy={busyId === place.id}
                       onDelete={() => handleDeletePlace(place.id)}
+                      onResubmit={() => handleSubmitPlace(place.id)}
                     />
                   ))}
                 </div>
@@ -393,6 +449,7 @@ export function ProfileContentClient() {
                     trail={trail}
                     busy={busyId === trail.id}
                     onDelete={() => handleDeleteTrail(trail.id)}
+                    onResubmit={() => handleSubmitTrail(trail.id)}
                   />
                 ))}
               </div>

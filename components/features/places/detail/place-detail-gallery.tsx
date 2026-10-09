@@ -1,55 +1,119 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
-import { Camera, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ImagePlus } from "lucide-react";
+import type { EntityImage } from "@/types";
+import {
+  AddGalleryImageDialog,
+  type GalleryImagePayload,
+} from "@/components/features/content/add-gallery-image-dialog";
+import { GalleryImageCard } from "@/components/features/content/gallery-image-card";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
+import { mergeGalleryDisplayItems } from "@/lib/utils/gallery-display";
 
 interface PlaceDetailGalleryProps {
   images: string[];
+  communityImages?: EntityImage[];
+  currentUserId?: string;
+  canAddImage?: boolean;
+  onAddImage?: (payload: GalleryImagePayload) => Promise<void>;
+  onDeleteImage?: (imageId: string) => Promise<void>;
 }
 
-export function PlaceDetailGallery({ images }: PlaceDetailGalleryProps) {
+export function PlaceDetailGallery({
+  images,
+  communityImages = [],
+  currentUserId = "",
+  canAddImage,
+  onAddImage,
+  onDeleteImage,
+}: PlaceDetailGalleryProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [addOpen, setAddOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  if (images.length === 0) return null;
+  const items = useMemo(
+    () => mergeGalleryDisplayItems(images, communityImages, currentUserId),
+    [images, communityImages, currentUserId]
+  );
 
   const openAt = (index: number) => {
     setCurrentIndex(index);
     setIsOpen(true);
   };
 
-  const close = () => setIsOpen(false);
+  const handleAdd = async (payload: GalleryImagePayload) => {
+    if (!onAddImage) return;
+    await onAddImage(payload);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!pendingDeleteId || !onDeleteImage) return;
+    setDeleting(true);
+    try {
+      await onDeleteImage(pendingDeleteId);
+      setPendingDeleteId(null);
+      if (isOpen && currentIndex >= items.length - 1) {
+        setIsOpen(false);
+      }
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  if (items.length === 0 && !canAddImage) return null;
 
   return (
     <section>
-      <h2 className="mb-6 text-3xl font-light text-[#111827]">גלריה</h2>
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-        {images.map((img, index) => (
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-3xl font-light text-[#111827]">גלריה</h2>
+        {canAddImage && (
           <button
-            key={`${img}-${index}`}
             type="button"
-            className="group relative aspect-square cursor-pointer overflow-hidden rounded-sm"
-            onClick={() => openAt(index)}
+            onClick={() => setAddOpen(true)}
+            className="inline-flex items-center gap-2 rounded-sm border border-[#e5e7eb] px-4 py-2 text-sm text-[#111827] transition-colors hover:bg-[#f9fafb]"
           >
-            <Image
-              src={img}
-              alt={`תמונה ${index + 1}`}
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-110"
-              sizes="(max-width: 768px) 50vw, 33vw"
-            />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">
-              <Camera className="h-8 w-8 text-white opacity-0 transition-opacity group-hover:opacity-100" />
-            </div>
+            <ImagePlus className="h-4 w-4" />
+            הוסף תמונה לגלריה
           </button>
-        ))}
+        )}
       </div>
 
-      {isOpen && (
+      {onAddImage && (
+        <AddGalleryImageDialog open={addOpen} onOpenChange={setAddOpen} onAdd={handleAdd} />
+      )}
+
+      {items.length > 0 && (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+          {items.map((item, index) => (
+            <GalleryImageCard
+              key={`${item.imageId ?? item.url}-${index}`}
+              src={item.url}
+              alt={`תמונה ${index + 1}`}
+              aspect="square"
+              canDelete={item.canDelete}
+              onOpen={() => openAt(index)}
+              onDeleteRequest={item.imageId ? () => setPendingDeleteId(item.imageId ?? null) : undefined}
+            />
+          ))}
+        </div>
+      )}
+
+      <ConfirmDeleteDialog
+        open={Boolean(pendingDeleteId)}
+        description="למחוק את התמונה מהגלריה? פעולה זו לא ניתנת לביטול."
+        confirming={deleting}
+        onConfirm={handleConfirmDelete}
+        onClose={() => !deleting && setPendingDeleteId(null)}
+      />
+
+      {isOpen && items[currentIndex] && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
-          onClick={close}
+          onClick={() => setIsOpen(false)}
           role="presentation"
         >
           <div className="relative w-full max-w-4xl px-4">
@@ -59,7 +123,7 @@ export function PlaceDetailGallery({ images }: PlaceDetailGalleryProps) {
               role="presentation"
             >
               <Image
-                src={images[currentIndex]}
+                src={items[currentIndex].url}
                 alt=""
                 fill
                 className="object-contain"
@@ -68,7 +132,7 @@ export function PlaceDetailGallery({ images }: PlaceDetailGalleryProps) {
 
               <button
                 type="button"
-                onClick={close}
+                onClick={() => setIsOpen(false)}
                 className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-xl text-white shadow-lg backdrop-blur-sm transition hover:bg-black/60"
                 aria-label="סגור"
               >
@@ -77,7 +141,7 @@ export function PlaceDetailGallery({ images }: PlaceDetailGalleryProps) {
 
               <button
                 type="button"
-                onClick={() => setCurrentIndex((prev) => (prev + 1) % images.length)}
+                onClick={() => setCurrentIndex((prev) => (prev + 1) % items.length)}
                 className="absolute left-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/60"
                 aria-label="תמונה הבאה"
               >
@@ -87,7 +151,7 @@ export function PlaceDetailGallery({ images }: PlaceDetailGalleryProps) {
               <button
                 type="button"
                 onClick={() =>
-                  setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
+                  setCurrentIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1))
                 }
                 className="absolute right-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/60"
                 aria-label="תמונה קודמת"
@@ -96,7 +160,7 @@ export function PlaceDetailGallery({ images }: PlaceDetailGalleryProps) {
               </button>
 
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-4 py-1 text-sm text-white">
-                {currentIndex + 1} / {images.length}
+                {currentIndex + 1} / {items.length}
               </div>
             </div>
           </div>

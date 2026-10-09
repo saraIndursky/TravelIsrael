@@ -1,0 +1,2 @@
+-- Demo pending content for admin approve/reject testing.
+-- Source of truth: supabase/schema/13_demo_pending_review_seed.sql

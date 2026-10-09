@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { notFound } from "next/navigation";
-import type { Comment, Place, Trip } from "@/types";
-import { getPlaceById } from "@/lib/data/places";
+import type { Comment, EntityImage, Place, ReportType, Trip, User } from "@/types";
+import { getPlaceById, resubmitPlaceForApproval } from "@/lib/data/places";
 import { getTripsContainingEntity } from "@/lib/data/trips";
 import {
   addComment,
@@ -15,10 +15,17 @@ import {
 } from "@/lib/data/social";
 import { createReport } from "@/lib/data/reports";
 import { isFavoriteEntity, toggleFavoriteEntity } from "@/lib/data/favorites";
-import { getStore } from "@/lib/data/store";
+import { getProfilesByIds } from "@/lib/data/auth";
 import { useAuthStore } from "@/hooks/use-stores";
+import { useCanonicalContentPath } from "@/hooks/use-canonical-content-path";
+import { useSessionReady } from "@/hooks/use-session-ready";
+import { placePath } from "@/lib/utils/content-path";
 import { toast } from "@/components/ui/use-toast";
+import { ClientPageLoading } from "@/components/layout/page-loading";
+import { ContentRemovedBanner } from "@/components/features/content/content-removed-banner";
 import { getPlaceGalleryImages } from "@/lib/utils/place-detail-content";
+import { addEntityGalleryImage, deleteEntityImage, getEntityImages } from "@/lib/data/images";
+import type { GalleryImagePayload } from "@/components/features/content/add-gallery-image-dialog";
 import { PlaceDetailHero } from "@/components/features/places/detail/place-detail-hero";
 import { PlaceDetailHighlights } from "@/components/features/places/detail/place-detail-highlights";
 import { PlaceDetailGallery } from "@/components/features/places/detail/place-detail-gallery";
@@ -31,7 +38,6 @@ import { TripDetailDescription } from "@/components/features/trips/detail/trip-d
 import { TripDetailReport } from "@/components/features/trips/detail/trip-detail-report";
 import { TripDetailRating } from "@/components/features/trips/detail/trip-detail-rating";
 import { TripDetailReviews } from "@/components/features/trips/detail/trip-detail-reviews";
-import type { ReportType } from "@/types";
 
 function computeAvgRating(scores: number[]): number {
   if (scores.length === 0) return 0;
@@ -43,6 +49,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
   const [place, setPlace] = useState<Place | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [commentUsers, setCommentUsers] = useState<User[]>([]);
   const [avgRating, setAvgRating] = useState(0);
   const [userRating, setUserRating] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
@@ -50,30 +57,55 @@ export default function PlaceDetailClient({ id }: { id: string }) {
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [hasUserReview, setHasUserReview] = useState(false);
+  const [resubmitting, setResubmitting] = useState(false);
+  const [communityImages, setCommunityImages] = useState<EntityImage[]>([]);
 
   const canInteract = role !== "guest";
-  const store = getStore();
+  const { ready: sessionReady } = useSessionReady();
+  useCanonicalContentPath(id, place ? placePath(place) : null);
 
   useEffect(() => {
+    if (!sessionReady) return;
+    let cancelled = false;
+
     async function load() {
       const p = await getPlaceById(id);
+      if (cancelled) return;
       if (!p) {
         setLoading(false);
         return;
       }
       setPlace(p);
-      setTrips(await getTripsContainingEntity("place", id));
-      const ratings = await getRatings("place", id);
-      setAvgRating(computeAvgRating(ratings.map((r) => r.score)));
-      const existingRating = await getUserRating("place", id);
-      setUserRating(existingRating?.score ?? 0);
-      setComments(await getComments("place", id));
-      setHasUserReview(!!(await getUserComment("place", id)));
-      setIsSaved(await isFavoriteEntity("place", id));
       setLoading(false);
+
+      const [relatedTrips, ratings, existingRating, loadedComments, userComment, saved, images] =
+        await Promise.all([
+          getTripsContainingEntity("place", p.id),
+          getRatings("place", p.id),
+          getUserRating("place", p.id),
+          getComments("place", p.id),
+          getUserComment("place", p.id),
+          isFavoriteEntity("place", p.id),
+          getEntityImages("place", p.id),
+        ]);
+      if (cancelled) return;
+
+      setTrips(relatedTrips);
+      setAvgRating(computeAvgRating(ratings.map((r) => r.score)));
+      setUserRating(existingRating?.score ?? 0);
+      setComments(loadedComments);
+      setHasUserReview(Boolean(userComment));
+      setIsSaved(saved);
+      setCommunityImages(images);
+      const authors = await getProfilesByIds(loadedComments.map((comment) => comment.user_id));
+      if (!cancelled) setCommentUsers(authors);
     }
-    load();
-  }, [id]);
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, sessionReady]);
 
   const galleryImages = useMemo(
     () => (place ? getPlaceGalleryImages(place) : []),
@@ -89,18 +121,39 @@ export default function PlaceDetailClient({ id }: { id: string }) {
     (place.status === "pending" || place.status === "rejected");
 
   if (loading) {
-    return <div className="min-h-screen animate-pulse bg-[#f9fafb] pt-20">טוען...</div>;
+    return <ClientPageLoading />;
   }
   if (!place) notFound();
+  const entityId = place.id;
 
   const handleToggleSaved = async () => {
     if (!canInteract) {
       toast({ title: "יש להתחבר כדי לשמור מקום" });
       return;
     }
-    const next = await toggleFavoriteEntity("place", id);
+    const next = await toggleFavoriteEntity("place", entityId);
     setIsSaved(next);
+    const refreshed = await getPlaceById(entityId);
+    if (!refreshed) {
+      toast({ title: "המקום הוסר מהמועדפים — אין גישה לתוכן שהוסר" });
+      notFound();
+      return;
+    }
+    setPlace(refreshed);
     toast({ title: next ? "המקום נשמר למועדפים" : "המקום הוסר מהמועדפים" });
+  };
+
+  const handleResubmit = async () => {
+    setResubmitting(true);
+    const result = await resubmitPlaceForApproval(entityId);
+    setResubmitting(false);
+    if (!result) {
+      toast({ title: "שליחה לאישור נכשלה", variant: "destructive" });
+      return;
+    }
+    const refreshed = await getPlaceById(entityId);
+    if (refreshed) setPlace(refreshed);
+    toast({ title: "המקום נשלח לאישור" });
   };
 
   const handleRate = async (score: number) => {
@@ -108,22 +161,42 @@ export default function PlaceDetailClient({ id }: { id: string }) {
       toast({ title: "יש להתחבר כדי לדרג" });
       return;
     }
-    const rating = await upsertRating("place", id, score);
+    const rating = await upsertRating("place", entityId, score);
     if (rating) {
       setUserRating(score);
-      const ratings = await getRatings("place", id);
+      const ratings = await getRatings("place", entityId);
       setAvgRating(computeAvgRating(ratings.map((r) => r.score)));
       toast({ title: "הדירוג נשמר" });
     }
   };
 
   const handleReport = async (reportType: ReportType, reason: string) => {
-    const report = await createReport("place", id, reportType, reason);
+    const report = await createReport("place", entityId, reportType, reason);
     if (report) {
       toast({ title: "הדיווח נשלח — תודה!" });
     } else {
       toast({ title: "יש להתחבר כדי לדווח", variant: "destructive" });
     }
+  };
+
+  const handleAddGalleryImage = async (payload: GalleryImagePayload) => {
+    const added = await addEntityGalleryImage("place", entityId, payload);
+    if (added) {
+      setCommunityImages((prev) => [...prev, added]);
+      toast({ title: "התמונה נוספה לגלריה" });
+    } else {
+      throw new Error("יש להתחבר כדי להוסיף תמונה");
+    }
+  };
+
+  const handleDeleteGalleryImage = async (imageId: string) => {
+    const ok = await deleteEntityImage(imageId);
+    if (!ok) {
+      toast({ title: "מחיקת התמונה נכשלה", variant: "destructive" });
+      throw new Error("מחיקת התמונה נכשלה");
+    }
+    setCommunityImages((prev) => prev.filter((image) => image.id !== imageId));
+    toast({ title: "התמונה נמחקה" });
   };
 
   const handleAddReview = () => {
@@ -147,6 +220,15 @@ export default function PlaceDetailClient({ id }: { id: string }) {
         isSaved={isSaved}
         onToggleSaved={handleToggleSaved}
       />
+      {place.status === "removed" && (
+        <ContentRemovedBanner
+          removalReason={place.removal_reason}
+          isOwner={Boolean(userId && place.created_by === userId)}
+          favoriterNote={Boolean(userId && place.created_by !== userId && isSaved)}
+          onResubmit={userId && place.created_by === userId ? handleResubmit : undefined}
+          resubmitting={resubmitting}
+        />
+      )}
       <PlaceDetailHighlights place={place} avgRating={avgRating} />
 
       <div className="mx-auto max-w-7xl px-4 pb-12 pt-16 md:px-6">
@@ -165,7 +247,14 @@ export default function PlaceDetailClient({ id }: { id: string }) {
             )}
             <TripDetailReport onSubmit={handleReport} canReport={canInteract} />
             <PlaceDetailMapSection place={place} />
-            <PlaceDetailGallery images={galleryImages} />
+            <PlaceDetailGallery
+              images={galleryImages}
+              communityImages={communityImages}
+              currentUserId={userId}
+              canAddImage={canInteract}
+              onAddImage={handleAddGalleryImage}
+              onDeleteImage={handleDeleteGalleryImage}
+            />
           </div>
           <PlaceDetailSidebar place={place} />
         </div>
@@ -185,7 +274,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
 
       <TripDetailReviews
         comments={comments}
-        users={store.users}
+        users={commentUsers}
         onAddReview={handleAddReview}
         canAddReview={canInteract && !hasUserReview}
       />
@@ -196,7 +285,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
             className="rounded-sm border border-[#e5e7eb] bg-[#f9fafb] p-6"
             onSubmit={async (e) => {
               e.preventDefault();
-              const comment = await addComment("place", id, commentText);
+              const comment = await addComment("place", entityId, commentText);
               if (comment) {
                 setComments([...comments, comment]);
                 setCommentText("");

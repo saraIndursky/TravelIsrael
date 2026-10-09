@@ -5,11 +5,12 @@ import Link from "next/link";
 import { Check, ExternalLink, Filter, Search, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { EntityType, Report } from "@/types";
-import { ENTITY_TYPE_LABELS, REPORT_TYPE_LABELS } from "@/components/features/admin/admin-report-labels";
+import type { EntityType, ReportWithEntityName } from "@/types";
+import { ENTITY_TYPE_LABELS, REPORT_TYPE_LABELS, entityHref } from "@/components/features/admin/admin-report-labels";
+import { CenteredPageLoading } from "@/components/layout/page-loading";
 
 interface AdminReportsListPageProps {
-  reports: Report[];
+  reports: ReportWithEntityName[];
   loading?: boolean;
   onResolve: (id: string) => Promise<void>;
   onReject: (id: string) => Promise<void>;
@@ -47,6 +48,7 @@ export function AdminReportsListPage({ reports, loading, onResolve, onReject }: 
       const matchesSearch =
         !q ||
         r.reason.includes(q) ||
+        r.entity_name.includes(q) ||
         r.entity_id.includes(q) ||
         (REPORT_TYPE_LABELS[r.report_type] ?? "").includes(q);
       const matchesEntity = !filterEntity || r.entity_type === filterEntity;
@@ -55,7 +57,7 @@ export function AdminReportsListPage({ reports, loading, onResolve, onReject }: 
   }, [reports, activeTab, searchTerm, filterEntity]);
 
   if (loading) {
-    return <div className="py-20 text-center text-muted-foreground">טוען...</div>;
+    return <CenteredPageLoading />;
   }
 
   return (
@@ -104,7 +106,7 @@ export function AdminReportsListPage({ reports, loading, onResolve, onReject }: 
               <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
               <input
                 type="search"
-                placeholder="חפש לפי סיבה, מזהה או סוג..."
+                placeholder="חפש לפי שם, סיבה או סוג..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="ti-input pr-10"
@@ -154,9 +156,7 @@ export function AdminReportsListPage({ reports, loading, onResolve, onReject }: 
                       <Badge variant={statusVariant[r.status]}>{statusLabel[r.status]}</Badge>
                       <Badge variant="outline">{REPORT_TYPE_LABELS[r.report_type] ?? r.report_type}</Badge>
                     </div>
-                    <p className="font-medium text-foreground">
-                      {ENTITY_TYPE_LABELS[r.entity_type]} — {r.entity_id}
-                    </p>
+                    <p className="text-lg font-semibold text-foreground">{r.entity_name}</p>
                     <p className="text-sm leading-relaxed text-foreground/90">{r.reason}</p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(r.created_at).toLocaleDateString("he-IL", {
@@ -196,12 +196,6 @@ export function AdminReportsListPage({ reports, loading, onResolve, onReject }: 
       </div>
     </div>
   );
-}
-
-function entityHref(type: EntityType, id: string): string {
-  if (type === "trip") return `/trips/${id}`;
-  if (type === "place") return `/places/${id}`;
-  return `/trails/${id}`;
 }
 
 function StatBox({

@@ -2,30 +2,44 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { UserRole } from "@/types";
+import type { User, UserRole } from "@/types";
 import type { WizardPreferences } from "@/lib/utils/match-score";
-import { DEMO_USER_ID } from "@/data/seed";
 
 interface AuthState {
   role: UserRole;
   userId: string;
-  setRole: (role: UserRole) => void;
-  login: (userId: string, role: UserRole) => void;
+  userName: string;
+  userEmail: string;
+  avatarUrl?: string;
+  setSession: (user: User | null) => void;
   logout: () => void;
 }
+
+const guestState = {
+  role: "guest" as UserRole,
+  userId: "",
+  userName: "",
+  userEmail: "",
+  avatarUrl: undefined,
+};
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      role: "user",
-      userId: DEMO_USER_ID,
-      setRole: (role) =>
-        set({
-          role,
-          userId: role === "admin" ? "admin-1" : role === "user" ? DEMO_USER_ID : "",
-        }),
-      login: (userId, role) => set({ userId, role }),
-      logout: () => set({ role: "guest", userId: "" }),
+      ...guestState,
+      setSession: (user) =>
+        set(
+          user
+            ? {
+                role: user.role,
+                userId: user.id,
+                userName: user.name,
+                userEmail: user.email,
+                avatarUrl: user.avatar_url,
+              }
+            : guestState
+        ),
+      logout: () => set(guestState),
     }),
     { name: "travel-israel-auth" }
   )

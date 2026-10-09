@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import {
   DndContext,
   closestCenter,
@@ -18,10 +17,10 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { TripStation } from "@/types";
+import type { Place, Trail, TripStation } from "@/types";
 import { GripVertical, MapPin, Route, X } from "lucide-react";
 import { resolveStationDetails } from "@/lib/utils/trip-calculations";
-import { getStore } from "@/lib/data/store";
+import { usePlacesTrailsCatalog } from "@/hooks/use-catalog";
 import { formatDuration } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -30,10 +29,21 @@ interface StationListDnDProps {
   onChange: (stations: TripStation[]) => void;
 }
 
-function SortableStation({ station, index, onRemove }: { station: TripStation; index: number; onRemove: () => void }) {
+function SortableStation({
+  station,
+  index,
+  onRemove,
+  places,
+  trails,
+}: {
+  station: TripStation;
+  index: number;
+  onRemove: () => void;
+  places: Place[];
+  trails: Trail[];
+}) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: station.id });
-  const store = getStore();
-  const details = resolveStationDetails(station, store.places, store.trails);
+  const details = resolveStationDetails(station, places, trails);
 
   const style = { transform: CSS.Transform.toString(transform), transition };
 
@@ -52,6 +62,7 @@ function SortableStation({ station, index, onRemove }: { station: TripStation; i
 }
 
 export function StationListDnD({ stations, onChange }: StationListDnDProps) {
+  const { places, trails } = usePlacesTrailsCatalog();
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -79,6 +90,8 @@ export function StationListDnD({ stations, onChange }: StationListDnDProps) {
               key={station.id}
               station={station}
               index={i}
+              places={places}
+              trails={trails}
               onRemove={() => onChange(stations.filter((s) => s.id !== station.id).map((s, idx) => ({ ...s, order_index: idx })))}
             />
           ))}

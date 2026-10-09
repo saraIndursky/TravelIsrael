@@ -1,7 +1,16 @@
-import type { Difficulty, Region, Status, Trip, TripStation, TripWithStations } from "@/types";
+import type { Difficulty, Region, Status, Trip, TripStation, TripWithStations, UserRole } from "@/types";
 import { computeTripStats } from "@/lib/utils/trip-calculations";
+import { createClient } from "@/lib/supabase/client";
+import { mapTrip, mapTripStation } from "@/lib/supabase/mappers";
+import { notifyFavoriteEntityUpdated } from "@/lib/notifications/client";
+import { canHardDeleteContent, HARD_DELETE_APPROVED_MESSAGE } from "./content-delete";
+import { insertWithUniqueSlug } from "./slugs";
+import { slugOrIdColumn } from "@/lib/utils/slug";
+import { isVisibleInDiscoveryList } from "./content-access";
 import { canViewStatus, getCurrentRole, getCurrentUser } from "./auth";
-import { generateId, getStore, updateStore } from "./store";
+import { isFavoriteEntity } from "./favorites";
+import { getPlaces } from "./places";
+import { getTrails } from "./trails";
 
 export type TripSort =
   | "createAt"
@@ -27,57 +36,6 @@ export interface TripFilters {
   search?: string;
   status?: Status;
   createdBy?: string;
-}
-
-export async function getTrips(
-  filters?: TripFilters,
-  sort: TripSort = "createAt",
-  direction: SortDirection = "desc",
-  page = 0,
-  pageSize = 20
-): Promise<{ trips: Trip[]; total: number }> {
-  const store = getStore();
-  const user = await getCurrentUser();
-  const role = await getCurrentRole();
-
-  let trips = store.trips.filter((t) =>
-    canViewStatus(t.status, t.created_by, role, user?.id ?? null)
-  );
-
-  if (filters?.status) trips = trips.filter((t) => t.status === filters.status);
-  if (filters?.createdBy) trips = trips.filter((t) => t.created_by === filters.createdBy);
-  if (filters?.region) trips = trips.filter((t) => t.region === filters.region);
-  if (filters?.difficulty) trips = trips.filter((t) => t.difficulty === filters.difficulty);
-  if (filters?.accessibility)
-    trips = trips.filter((t) => t.accessibility >= filters.accessibility!);
-  if (filters?.tags?.length)
-    trips = trips.filter((t) => filters.tags!.some((tag) => t.tags.includes(tag)));
-  if (filters?.tripType)
-    trips = trips.filter((t) => t.tags.includes(filters.tripType!));
-  if (filters?.stationCount)
-    trips = trips.filter((t) => t.station_count >= filters.stationCount!);
-  if (filters?.maxDistance)
-    trips = trips.filter((t) => t.total_distance_km <= filters.maxDistance!);
-  if (filters?.maxPrice !== undefined && filters.maxPrice > 0)
-    trips = trips.filter((t) => t.estimated_price <= filters.maxPrice!);
-  if (filters?.minDuration)
-    trips = trips.filter((t) => t.total_duration_minutes >= filters.minDuration!);
-  if (filters?.maxDuration)
-    trips = trips.filter((t) => t.total_duration_minutes <= filters.maxDuration!);
-  if (filters?.search) {
-    const q = filters.search.toLowerCase();
-    trips = trips.filter(
-      (t) =>
-        t.name.toLowerCase().includes(q) ||
-        t.short_description.toLowerCase().includes(q) ||
-        t.tags.some((tag) => tag.includes(q))
-    );
-  }
-
-  trips = sortTrips(trips, sort, direction);
-  const total = trips.length;
-  const paginated = trips.slice(page * pageSize, (page + 1) * pageSize);
-  return { trips: paginated, total };
 }
 
 function sortTrips(trips: Trip[], sort: TripSort, direction: SortDirection): Trip[] {
@@ -110,57 +68,170 @@ function sortTrips(trips: Trip[], sort: TripSort, direction: SortDirection): Tri
   }
 }
 
-export async function getTripById(id: string): Promise<TripWithStations | null> {
-  const { trips } = await getTrips();
-  const trip = trips.find((t) => t.id === id);
-  if (!trip) {
-    const role = await getCurrentRole();
-    const user = await getCurrentUser();
-    const store = getStore();
-    const raw = store.trips.find((t) => t.id === id);
-    if (!raw || !canViewStatus(raw.status, raw.created_by, role, user?.id ?? null)) return null;
-    return { ...raw, stations: store.tripStations.filter((s) => s.trip_id === id) };
+async function fetchTripStations(tripId: string): Promise<TripStation[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("trip_stations")
+    .select("*")
+    .eq("trip_id", tripId)
+    .order("order_index", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapTripStation);
+}
+
+export async function getTrips(
+  filters?: TripFilters,
+  sort: TripSort = "createAt",
+  direction: SortDirection = "desc",
+  page = 0,
+  pageSize = 20
+): Promise<{ trips: Trip[]; total: number }> {
+  const supabase = createClient();
+  let query = supabase.from("trips").select("*");
+
+  if (filters?.status) query = query.eq("status", filters.status);
+  if (filters?.createdBy) query = query.eq("created_by", filters.createdBy);
+  if (filters?.region) query = query.eq("region", filters.region);
+  if (filters?.difficulty) query = query.eq("difficulty", filters.difficulty);
+  if (filters?.accessibility) query = query.gte("accessibility", filters.accessibility);
+  if (filters?.stationCount) query = query.gte("station_count", filters.stationCount);
+  if (filters?.maxDistance) query = query.lte("total_distance_km", filters.maxDistance);
+  if (filters?.maxPrice !== undefined && filters.maxPrice > 0) {
+    query = query.lte("estimated_price", filters.maxPrice);
   }
-  const store = getStore();
-  return { ...trip, stations: store.tripStations.filter((s) => s.trip_id === id) };
+  if (filters?.minDuration) query = query.gte("total_duration_minutes", filters.minDuration);
+  if (filters?.maxDuration) query = query.lte("total_duration_minutes", filters.maxDuration);
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+
+  const user = await getCurrentUser();
+  const role = await getCurrentRole();
+  let trips = (data ?? [])
+    .map(mapTrip)
+    .filter((trip) => isVisibleInDiscoveryList(trip.status, Boolean(filters?.createdBy)))
+    .filter((trip) => canViewStatus(trip.status, trip.created_by, role, user?.id ?? null));
+
+  if (filters?.tags?.length) {
+    trips = trips.filter((trip) => filters.tags!.some((tag) => trip.tags.includes(tag)));
+  }
+  if (filters?.tripType) {
+    trips = trips.filter((trip) => trip.tags.includes(filters.tripType!));
+  }
+  if (filters?.search) {
+    const q = filters.search.toLowerCase();
+    trips = trips.filter(
+      (trip) =>
+        trip.name.toLowerCase().includes(q) ||
+        trip.short_description.toLowerCase().includes(q) ||
+        trip.tags.some((tag) => tag.includes(q))
+    );
+  }
+
+  trips = sortTrips(trips, sort, direction);
+  const total = trips.length;
+  const paginated = trips.slice(page * pageSize, (page + 1) * pageSize);
+  return { trips: paginated, total };
+}
+
+export async function getTripById(id: string): Promise<TripWithStations | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("trips")
+    .select("*")
+    .eq(slugOrIdColumn(id), id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+
+  const trip = mapTrip(data);
+  const user = await getCurrentUser();
+  const role = await getCurrentRole();
+  const favorited = user ? await isFavoriteEntity("trip", trip.id) : false;
+  if (!canViewStatus(trip.status, trip.created_by, role, user?.id ?? null, favorited)) return null;
+
+  const stations = await fetchTripStations(trip.id);
+  return { ...trip, stations };
 }
 
 export async function createTrip(
-  data: Omit<Trip, "id" | "created_at" | "updated_at" | "views_count" | "favorites_count" | "avg_rating" | "created_by"> & {
+  data: Omit<
+    Trip,
+    "id" | "created_at" | "updated_at" | "views_count" | "favorites_count" | "avg_rating" | "created_by" | "slug"
+  > & {
     stations?: Omit<TripStation, "id" | "trip_id">[];
   }
 ): Promise<TripWithStations> {
   const user = await getCurrentUser();
   if (!user) throw new Error("יש להתחבר כדי ליצור טיול");
 
-  const id = generateId("trip");
-  const now = new Date().toISOString();
-  const trip: Trip = {
-    ...data,
-    gallery_images: data.gallery_images ?? [],
-    id,
-    created_by: user.id,
-    views_count: 0,
-    favorites_count: 0,
-    avg_rating: 0,
-    created_at: now,
-    updated_at: now,
-  };
+  const supabase = createClient();
+  const row = await insertWithUniqueSlug(data.name, async (slug) => {
+    const result = await supabase
+      .from("trips")
+      .insert({
+        name: data.name,
+        slug,
+        short_description: data.short_description,
+        full_description: data.full_description,
+        main_image: data.main_image,
+        gallery_images: data.gallery_images ?? [],
+        tags: data.tags,
+        created_by: user.id,
+        status: data.status,
+        total_duration_minutes: data.total_duration_minutes,
+        total_distance_km: data.total_distance_km,
+        estimated_price: data.estimated_price,
+        difficulty: data.difficulty,
+        accessibility: data.accessibility,
+        region: data.region,
+        station_count: data.station_count,
+      })
+      .select("*")
+      .single();
+    return { data: result.data, error: result.error };
+  });
 
-  const stations: TripStation[] = (data.stations ?? []).map((s, i) => ({
-    ...s,
-    id: generateId("ts"),
-    trip_id: id,
-    order_index: i,
+  const stationsInput = (data.stations ?? []).map((station, index) => ({
+    trip_id: row.id,
+    order_index: index,
+    station_type: station.station_type,
+    place_id: station.place_id,
+    trail_id: station.trail_id,
+    travel_mode: station.travel_mode ?? null,
   }));
 
-  updateStore((store) => ({
-    ...store,
-    trips: [...store.trips, trip],
-    tripStations: [...store.tripStations, ...stations],
-  }));
+  let stations: TripStation[] = [];
+  if (stationsInput.length > 0) {
+    const { data: stationRows, error: stationError } = await supabase
+      .from("trip_stations")
+      .insert(stationsInput)
+      .select("*");
+    if (stationError) throw new Error(stationError.message);
+    stations = (stationRows ?? []).map(mapTripStation);
+  }
 
-  return { ...trip, stations };
+  return { ...mapTrip(row), stations };
+}
+
+export function canEditTrip(trip: Trip, role: UserRole, userId: string | null): boolean {
+  if (role === "admin") return true;
+  if (!userId || trip.created_by !== userId) return false;
+  return trip.status === "draft" || trip.status === "pending" || trip.status === "rejected";
+}
+
+function resolveOwnerStatusOnUpdate(
+  existing: Trip,
+  requestedStatus?: Status
+): Partial<Pick<Trip, "status" | "rejection_reason">> {
+  if (existing.status === "draft") {
+    if (requestedStatus === "pending") {
+      return { status: "pending", rejection_reason: undefined };
+    }
+    return { status: "draft" };
+  }
+
+  return { status: "pending", rejection_reason: undefined };
 }
 
 export async function updateTrip(
@@ -169,133 +240,235 @@ export async function updateTrip(
 ): Promise<TripWithStations | null> {
   const user = await getCurrentUser();
   const role = await getCurrentRole();
-  const store = getStore();
-  const existing = store.trips.find((t) => t.id === id);
+  const existing = await getTripById(id);
   if (!existing) return null;
-  if (role !== "admin" && existing.created_by !== user?.id) return null;
+  if (!canEditTrip(existing, role, user?.id ?? null)) return null;
 
-  const { stations, ...tripData } = data;
-  const updated: Trip = { ...existing, ...tripData, updated_at: new Date().toISOString() };
+  const {
+    stations,
+    status: requestedStatus,
+    rejection_reason,
+    slug: _slug,
+    ...tripData
+  } = data;
+  const isAdmin = role === "admin";
+  const supabase = createClient();
 
-  updateStore((s) => {
-    let tripStations = s.tripStations;
-    if (stations) {
-      tripStations = [
-        ...s.tripStations.filter((st) => st.trip_id !== id),
-        ...stations.map((st, i) => ({ ...st, trip_id: id, order_index: i })),
-      ];
+  const statusPatch = isAdmin
+    ? requestedStatus !== undefined
+      ? {
+          status: requestedStatus,
+          rejection_reason:
+            requestedStatus === "rejected"
+              ? rejection_reason?.trim() || null
+              : requestedStatus === "approved" || requestedStatus === "pending"
+                ? null
+                : existing.rejection_reason,
+        }
+      : {}
+    : resolveOwnerStatusOnUpdate(existing, requestedStatus);
+
+  const { error } = await supabase
+    .from("trips")
+    .update({
+      ...tripData,
+      ...statusPatch,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+
+  if (stations) {
+    await supabase.from("trip_stations").delete().eq("trip_id", id);
+    if (stations.length > 0) {
+      const { error: stationError } = await supabase.from("trip_stations").insert(
+        stations.map((station, index) => ({
+          trip_id: id,
+          order_index: index,
+          station_type: station.station_type,
+          place_id: station.place_id,
+          trail_id: station.trail_id,
+          travel_mode: station.travel_mode ?? null,
+        }))
+      );
+      if (stationError) throw new Error(stationError.message);
     }
-    return {
-      ...s,
-      trips: s.trips.map((t) => (t.id === id ? updated : t)),
-      tripStations,
-    };
-  });
+  }
 
-  return getTripById(id);
+  const result = await getTripById(id);
+  if (result && !isAdmin) {
+    void notifyFavoriteEntityUpdated({ entityType: "trip", entityId: id });
+  }
+  return result;
 }
 
 export async function updateTripStatus(id: string, status: Status): Promise<Trip | null> {
   const role = await getCurrentRole();
   if (role !== "admin") return null;
-  const patch: Partial<Trip> = { status };
-  if (status === "approved") patch.rejection_reason = undefined;
-  const result = await updateTrip(id, patch);
-  return result;
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("trips")
+    .update({
+      status,
+      rejection_reason: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error || !data) return null;
+  return mapTrip(data);
+}
+
+export async function removeTripFromSite(id: string, reason?: string | null): Promise<Trip | null> {
+  const role = await getCurrentRole();
+  if (role !== "admin") return null;
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("trips")
+    .update({
+      status: "removed",
+      removal_reason: reason?.trim() || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error || !data) return null;
+  return mapTrip(data);
 }
 
 export async function rejectTrip(id: string, reason?: string): Promise<Trip | null> {
   const role = await getCurrentRole();
   if (role !== "admin") return null;
-  return updateTrip(id, { status: "rejected", rejection_reason: reason?.trim() || undefined });
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("trips")
+    .update({
+      status: "rejected",
+      rejection_reason: reason?.trim() || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error || !data) return null;
+  return mapTrip(data);
 }
 
 export async function restoreTrip(id: string): Promise<Trip | null> {
   const role = await getCurrentRole();
   if (role !== "admin") return null;
-  return updateTrip(id, { status: "pending", rejection_reason: undefined });
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("trips")
+    .update({
+      status: "pending",
+      rejection_reason: null,
+      removal_reason: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error || !data) return null;
+  return mapTrip(data);
 }
 
 export async function submitTripForApproval(id: string): Promise<Trip | null> {
   const user = await getCurrentUser();
-  const store = getStore();
-  const existing = store.trips.find((t) => t.id === id);
+  const existing = await getTripById(id);
   if (!existing || existing.created_by !== user?.id) return null;
-  if (existing.status !== "draft" && existing.status !== "rejected") return null;
-  const result = await updateTrip(id, { status: "pending", rejection_reason: undefined });
-  return result;
+  if (existing.status !== "draft" && existing.status !== "rejected" && existing.status !== "removed") {
+    return null;
+  }
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("trips")
+    .update({
+      status: "pending",
+      rejection_reason: null,
+      removal_reason: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error || !data) return null;
+  return mapTrip(data);
 }
 
 export async function deleteTrip(id: string): Promise<boolean> {
   const user = await getCurrentUser();
   const role = await getCurrentRole();
-  const store = getStore();
-  const existing = store.trips.find((t) => t.id === id);
+  const existing = await getTripById(id);
   if (!existing) return false;
-  if (role !== "admin" && existing.created_by !== user?.id) return false;
+  if (!canHardDeleteContent(existing.status, existing.created_by, role, user?.id ?? null)) {
+    throw new Error(HARD_DELETE_APPROVED_MESSAGE);
+  }
 
-  updateStore((s) => ({
-    ...s,
-    trips: s.trips.filter((t) => t.id !== id),
-    tripStations: s.tripStations.filter((st) => st.trip_id !== id),
-  }));
+  const supabase = createClient();
+  const { error } = await supabase.from("trips").delete().eq("id", id);
+  if (error) throw new Error(error.message);
   return true;
 }
 
 export async function recalculateTripStats(tripId: string): Promise<Trip | null> {
-  const store = getStore();
-  const stations = store.tripStations.filter((s) => s.trip_id === tripId);
-  const stats = computeTripStats(stations, store.places, store.trails);
+  const [stations, places, trails] = await Promise.all([
+    fetchTripStations(tripId),
+    getPlaces(),
+    getTrails(),
+  ]);
+  const stats = computeTripStats(stations, places, trails);
   return updateTrip(tripId, stats);
 }
 
 export async function getAllTripsAdmin(): Promise<Trip[]> {
   const role = await getCurrentRole();
   if (role !== "admin") return [];
-  return getStore().trips;
+
+  const supabase = createClient();
+  const { data, error } = await supabase.from("trips").select("*").order("updated_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapTrip);
 }
 
 export async function incrementTripViews(id: string): Promise<void> {
-  updateStore((s) => ({
-    ...s,
-    trips: s.trips.map((t) => (t.id === id ? { ...t, views_count: t.views_count + 1 } : t)),
-  }));
+  const trip = await getTripById(id);
+  if (!trip) return;
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("trips")
+    .update({ views_count: trip.views_count + 1 })
+    .eq("id", trip.id);
+  if (error) throw new Error(error.message);
 }
 
 export async function getTripsContainingEntity(
   entityType: "place" | "trail",
   entityId: string
 ): Promise<Trip[]> {
-  const store = getStore();
-  const stationTripIds = store.tripStations
-    .filter((s) =>
-      entityType === "place" ? s.place_id === entityId : s.trail_id === entityId
-    )
-    .map((s) => s.trip_id);
+  const supabase = createClient();
+  const column = entityType === "place" ? "place_id" : "trail_id";
+  const { data, error } = await supabase.from("trip_stations").select("trip_id").eq(column, entityId);
+  if (error) throw new Error(error.message);
+
+  const tripIds = Array.from(new Set((data ?? []).map((row) => row.trip_id)));
+  if (tripIds.length === 0) return [];
+
   const { trips } = await getTrips();
-  return trips.filter((t) => stationTripIds.includes(t.id));
-}
-
-export async function addTripGalleryImage(
-  tripId: string,
-  imageUrl: string
-): Promise<TripWithStations | null> {
-  const user = await getCurrentUser();
-  if (!user || !imageUrl.trim()) return null;
-
-  const store = getStore();
-  const existing = store.trips.find((t) => t.id === tripId);
-  if (!existing) return null;
-
-  const gallery_images = [...(existing.gallery_images ?? []), imageUrl.trim()];
-  updateStore((s) => ({
-    ...s,
-    trips: s.trips.map((t) =>
-      t.id === tripId ? { ...t, gallery_images, updated_at: new Date().toISOString() } : t
-    ),
-  }));
-
-  return getTripById(tripId);
+  return trips.filter((trip) => tripIds.includes(trip.id));
 }
 
 export async function duplicateTrip(id: string): Promise<TripWithStations | null> {
@@ -309,25 +482,25 @@ export async function duplicateTrip(id: string): Promise<TripWithStations | null
 
   return createTrip({
     name: `${original.name} (עותק)`,
-    short_description: original.short_description,
-    full_description: original.full_description,
-    main_image: original.main_image,
-    gallery_images: [...(original.gallery_images ?? [])],
-    tags: [...original.tags],
+    short_description: tripData.short_description,
+    full_description: tripData.full_description,
+    main_image: tripData.main_image,
+    gallery_images: [...(tripData.gallery_images ?? [])],
+    tags: [...tripData.tags],
     status: "draft",
-    total_duration_minutes: original.total_duration_minutes,
-    total_distance_km: original.total_distance_km,
-    estimated_price: original.estimated_price,
-    difficulty: original.difficulty,
-    accessibility: original.accessibility,
-    region: original.region,
-    station_count: original.station_count,
-    stations: stations.map((s) => ({
-      order_index: s.order_index,
-      station_type: s.station_type,
-      place_id: s.place_id,
-      trail_id: s.trail_id,
-      travel_mode: s.travel_mode,
+    total_duration_minutes: tripData.total_duration_minutes,
+    total_distance_km: tripData.total_distance_km,
+    estimated_price: tripData.estimated_price,
+    difficulty: tripData.difficulty,
+    accessibility: tripData.accessibility,
+    region: tripData.region,
+    station_count: tripData.station_count,
+    stations: stations.map((station) => ({
+      order_index: station.order_index,
+      station_type: station.station_type,
+      place_id: station.place_id,
+      trail_id: station.trail_id,
+      travel_mode: station.travel_mode,
     })),
   });
 }

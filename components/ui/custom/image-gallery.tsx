@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -14,7 +14,21 @@ interface ImageGalleryProps {
 
 export function ImageGallery({ images, alt, className }: ImageGalleryProps) {
   const [index, setIndex] = useState(0);
-  const imgs = images.length > 0 ? images : ["/placeholder.jpg"];
+  const imgs = images;
+
+  if (imgs.length === 0) {
+    return (
+      <div
+        className={cn(
+          "flex aspect-video flex-col items-center justify-center gap-2 rounded-lg bg-muted text-muted-foreground",
+          className,
+        )}
+      >
+        <ImageOff className="h-8 w-8" aria-hidden />
+        <p className="text-sm">אין תמונות זמינות</p>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("relative aspect-video overflow-hidden rounded-lg bg-muted", className)}>

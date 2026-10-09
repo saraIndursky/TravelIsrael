@@ -6,10 +6,11 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import type { Accessibility, Difficulty, Region } from "@/types";
+import type { Accessibility, Difficulty, Region, Trail } from "@/types";
 import { DIFFICULTY_LABELS, REGIONS } from "@/types/enums";
 import { toast } from "@/components/ui/use-toast";
-import { createTrail, TRAIL_TYPE_OPTIONS } from "@/lib/data/trails";
+import { createTrail, updateTrail, TRAIL_TYPE_OPTIONS } from "@/lib/data/trails";
+import { trailPath } from "@/lib/utils/content-path";
 import { trailFormSchema, type TrailFormValues } from "@/lib/validations";
 import { CreateTrailPreviewDialog } from "@/components/features/trails/create-trail-preview-dialog";
 import { CommonTagsField } from "@/components/features/shared/common-tags-field";
@@ -18,6 +19,11 @@ import { TripImageField } from "@/components/features/trips/trip-image-field";
 import { getAccessibilityLabel } from "@/lib/utils";
 import { buildPreviewTrail } from "@/lib/utils/preview-trail";
 import { CreateAssistantPanel } from "@/components/features/assistant/create-assistant-panel";
+import { useAuthStore } from "@/hooks/use-stores";
+import {
+  buildTripReturnUrl,
+  sanitizeReturnPath,
+} from "@/lib/utils/trip-create-draft";
 
 const inputClass =
   "w-full rounded-sm border border-[#d1d5db] bg-white px-4 py-2.5 text-sm text-[#111827] focus:border-[#111827] focus:outline-none";
@@ -36,10 +42,69 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-export function CreateTrailForm() {
+const emptyValues: TrailFormValues = {
+  name: "",
+  short_description: "",
+  full_description: "",
+  region: "",
+  trail_type: "",
+  length_km: 5,
+  duration_minutes: 120,
+  difficulty: "medium",
+  accessibility: 3,
+  tags: [],
+  estimated_price: 0,
+  operating_hours: "",
+  start_lat: 32.0853,
+  start_lng: 34.7818,
+  end_lat: 32.0853,
+  end_lng: 34.7818,
+  waypoints: [],
+  image_url: "",
+};
+
+function toFormValues(trail: Trail): TrailFormValues {
+  return {
+    name: trail.name,
+    short_description: trail.short_description,
+    full_description: trail.full_description,
+    region: trail.region,
+    trail_type: trail.trail_type,
+    length_km: trail.length_km,
+    duration_minutes: trail.duration_minutes,
+    difficulty: trail.difficulty,
+    accessibility: trail.accessibility,
+    tags: trail.tags,
+    estimated_price: trail.estimated_price,
+    operating_hours: trail.operating_hours ?? "",
+    start_lat: trail.start_lat,
+    start_lng: trail.start_lng,
+    end_lat: trail.end_lat,
+    end_lng: trail.end_lng,
+    waypoints: trail.waypoints.map((w) => ({
+      name: w.name ?? "",
+      lat: w.lat,
+      lng: w.lng,
+    })),
+    image_url: trail.image_url,
+  };
+}
+
+interface TrailFormProps {
+  mode?: "create" | "edit";
+  trailId?: string;
+  initialTrail?: Trail;
+}
+
+export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormProps) {
   const router = useRouter();
+  const { role } = useAuthStore();
   const [submitting, setSubmitting] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+
+  const isEdit = mode === "edit";
+  const keepsStatus = isEdit && role === "admin";
+  const saveLabel = keepsStatus ? "שמור שינויים" : "שמור ושלח לאישור";
 
   const {
     register,
@@ -52,26 +117,7 @@ export function CreateTrailForm() {
     formState: { errors },
   } = useForm<TrailFormValues>({
     resolver: zodResolver(trailFormSchema),
-    defaultValues: {
-      name: "",
-      short_description: "",
-      full_description: "",
-      region: "",
-      trail_type: "",
-      length_km: 5,
-      duration_minutes: 120,
-      difficulty: "medium",
-      accessibility: 3,
-      tags: [],
-      estimated_price: 0,
-      operating_hours: "",
-      start_lat: 32.0853,
-      start_lng: 34.7818,
-      end_lat: 32.0853,
-      end_lng: 34.7818,
-      waypoints: [],
-      image_url: "",
-    },
+    defaultValues: initialTrail ? toFormValues(initialTrail) : emptyValues,
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "waypoints" });
@@ -81,7 +127,7 @@ export function CreateTrailForm() {
   async function onSubmit(values: TrailFormValues) {
     setSubmitting(true);
     try {
-      const trail = await createTrail({
+      const payload = {
         name: values.name,
         short_description: values.short_description,
         full_description: values.full_description,
@@ -100,12 +146,37 @@ export function CreateTrailForm() {
         end_lng: values.end_lng,
         waypoints: values.waypoints ?? [],
         image_url: values.image_url ?? "",
-      });
+      };
+
+      if (isEdit && trailId) {
+        const updated = await updateTrail(trailId, payload);
+        if (!updated) {
+          toast({ title: "אין הרשאה לערוך מסלול זה", variant: "destructive" });
+          return;
+        }
+        toast({ title: keepsStatus ? "השינויים נשמרו" : "המסלול עודכן ונשלח לאישור" });
+        router.push(trailPath(updated));
+        return;
+      }
+
+      const trail = await createTrail(payload);
       toast({ title: "המסלול נשלח לאישור" });
-      router.push(`/trails/${trail.id}`);
+      const returnTo = sanitizeReturnPath(
+        new URLSearchParams(window.location.search).get("returnTo")
+      );
+      if (returnTo) {
+        router.push(buildTripReturnUrl(returnTo, { type: "trail", id: trail.id }));
+      } else {
+        router.push(trailPath(trail));
+      }
     } catch (error) {
       toast({
-        title: error instanceof Error ? error.message : "שגיאה ביצירת המסלול",
+        title:
+          error instanceof Error
+            ? error.message
+            : isEdit
+              ? "שגיאה בעדכון המסלול"
+              : "שגיאה ביצירת המסלול",
         variant: "destructive",
       });
     } finally {
@@ -122,7 +193,7 @@ export function CreateTrailForm() {
     setPreviewOpen(true);
   }
 
-  const previewTrail = buildPreviewTrail(getValues());
+  const previewTrail = buildPreviewTrail(getValues(), initialTrail);
 
   return (
     <>
@@ -307,7 +378,11 @@ export function CreateTrailForm() {
           </div>
 
           <div>
-            <CreateFormActions onPreview={() => void openPreview()} submitting={submitting} />
+            <CreateFormActions
+              onPreview={() => void openPreview()}
+              submitting={submitting}
+              saveLabel={saveLabel}
+            />
           </div>
         </div>
       </form>
@@ -323,6 +398,7 @@ export function CreateTrailForm() {
         onClose={() => setPreviewOpen(false)}
         trail={previewTrail}
         saving={submitting}
+        saveLabel={saveLabel}
         onSave={() => void handleSubmit(onSubmit)()}
       />
     </>

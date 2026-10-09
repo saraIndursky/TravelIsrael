@@ -7,6 +7,7 @@ import type { Trail } from "@/types";
 import { DIFFICULTY_LABELS } from "@/types/enums";
 import { formatTripCardDuration } from "@/lib/utils";
 import { getDifficultyColor } from "@/lib/utils/trip-display";
+import { trailPath } from "@/lib/utils/content-path";
 
 interface TrailCardProps {
   trail: Trail;
@@ -71,7 +72,7 @@ export function TrailCard({
         <p className="mt-3 line-clamp-2 text-sm text-[#6b7280]">{trail.short_description}</p>
         <div className="mt-4 border-t border-[#e5e7eb] pt-3">
           <Link
-            href={`/trails/${trail.id}`}
+            href={trailPath(trail)}
             className="block w-full rounded border border-[#e5e7eb] bg-[#f9fafb] py-2.5 text-center text-sm font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
           >
             לפרטים

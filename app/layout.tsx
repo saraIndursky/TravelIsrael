@@ -4,6 +4,7 @@ import "./globals.css";
 import { SiteChrome } from "@/components/layout/site-chrome";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthSyncProvider } from "@/components/providers/auth-sync";
+import { AnalyticsScripts } from "@/components/analytics/analytics-scripts";
 
 const rubik = Rubik({
   subsets: ["hebrew", "latin"],
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SiteChrome>{children}</SiteChrome>
           <Toaster />
         </AuthSyncProvider>
+        <AnalyticsScripts />
       </body>
     </html>
   );

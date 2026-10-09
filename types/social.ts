@@ -39,7 +39,16 @@ export interface Report {
   resolved_by?: string;
 }
 
-export interface Image {
+export interface ReportWithEntityName extends Report {
+  entity_name: string;
+}
+
+/**
+ * Row in the Postgres `images` table (community gallery assets).
+ * Cover/owner galleries still live on the entity row (`image_url` / `gallery_images`);
+ * user-added photos are stored here and merged in the detail UI.
+ */
+export interface EntityImage {
   id: string;
   user_id: string;
   entity_type: EntityType;
@@ -48,3 +57,6 @@ export interface Image {
   storage_path: string;
   created_at: string;
 }
+
+/** @deprecated use EntityImage */
+export type Image = EntityImage;

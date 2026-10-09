@@ -1,10 +1,16 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowRight, Shield, X } from "lucide-react";
 import { ADMIN_NAV } from "@/components/features/admin/admin-nav";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/hooks/use-stores";
+import {
+  getUnseenModerationCount,
+  MODERATION_QUEUE_CHANGED_EVENT,
+} from "@/lib/data/moderation";
 
 interface AdminSidebarProps {
   mobileOpen?: boolean;
@@ -13,6 +19,38 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ mobileOpen, onMobileClose }: AdminSidebarProps) {
   const pathname = usePathname();
+  const { role } = useAuthStore();
+  const [moderationCount, setModerationCount] = useState(0);
+
+  useEffect(() => {
+    if (role !== "admin") {
+      setModerationCount(0);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadCount() {
+      try {
+        const count = await getUnseenModerationCount();
+        if (!cancelled) setModerationCount(count);
+      } catch {
+        if (!cancelled) setModerationCount(0);
+      }
+    }
+
+    void loadCount();
+    const onChange = () => {
+      void loadCount();
+    };
+    window.addEventListener(MODERATION_QUEUE_CHANGED_EVENT, onChange);
+    window.addEventListener("focus", onChange);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(MODERATION_QUEUE_CHANGED_EVENT, onChange);
+      window.removeEventListener("focus", onChange);
+    };
+  }, [role, pathname]);
 
   const isActive = (href: string) =>
     href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
@@ -54,7 +92,19 @@ export function AdminSidebar({ mobileOpen, onMobileClose }: AdminSidebarProps) {
             aria-current={isActive(href) ? "page" : undefined}
           >
             <Icon className="h-4 w-4 shrink-0" aria-hidden />
-            {label}
+            <span className="flex-1">{label}</span>
+            {href === "/admin/moderation" && moderationCount > 0 && (
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
+                  isActive(href)
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-amber-500 text-white"
+                )}
+              >
+                {moderationCount > 99 ? "99+" : moderationCount}
+              </span>
+            )}
           </Link>
         ))}
       </nav>

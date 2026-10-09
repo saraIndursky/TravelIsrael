@@ -12,6 +12,7 @@ import {
   type TripFilterValues,
 } from "@/components/features/trips/trip-filters";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LazyList } from "@/components/ui/custom/lazy-list";
 import { getTrips, type SortDirection, type TripSort } from "@/lib/data/trips";
 
 function parseFiltersFromParams(params: URLSearchParams): TripFilterValues {
@@ -73,7 +74,6 @@ export function TripsClient() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [trips, setTrips] = useState<Trip[]>([]);
-  const [visibleCount, setVisibleCount] = useState(12);
   const [loading, setLoading] = useState(true);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
@@ -117,7 +117,6 @@ export function TripsClient() {
       100
     );
     setTrips(result.trips);
-    setVisibleCount(12);
     setLoading(false);
   }, [appliedFilters, sortBy, sortDirection]);
 
@@ -146,7 +145,6 @@ export function TripsClient() {
     setMobileFiltersOpen(false);
   };
 
-  const visibleTrips = trips.slice(0, visibleCount);
 
   return (
     <div className="min-h-screen bg-[#f9fafb]">
@@ -224,26 +222,13 @@ export function TripsClient() {
                   <Skeleton key={i} className="h-[520px] rounded-lg" />
                 ))}
               </div>
-            ) : visibleTrips.length > 0 ? (
-              <>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3">
-                  {visibleTrips.map((trip) => (
-                    <TripCard key={trip.id} trip={trip} showFavorite />
-                  ))}
-                </div>
-
-                {visibleCount < trips.length && (
-                  <div className="pt-6 text-center">
-                    <button
-                      type="button"
-                      onClick={() => setVisibleCount((count) => count + 12)}
-                      className="rounded-sm bg-[#111827] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1f2937]"
-                    >
-                      טען עוד...
-                    </button>
-                  </div>
-                )}
-              </>
+            ) : trips.length > 0 ? (
+              <LazyList
+                items={trips}
+                pageSize={20}
+                className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3"
+                renderItem={(trip) => <TripCard key={trip.id} trip={trip} showFavorite />}
+              />
             ) : (
               <div className="py-16 text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#f3f4f6]">

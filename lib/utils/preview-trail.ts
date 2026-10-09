@@ -4,12 +4,14 @@ import type { TrailFormValues } from "@/lib/validations";
 const DEFAULT_TRAIL_IMAGE =
   "https://images.unsplash.com/photo-1551632811-561732b1c4e9?w=800";
 
-export function buildPreviewTrail(values: TrailFormValues): Trail {
+type PreviewTrailBase = Pick<Trail, "id" | "created_by" | "status">;
+
+export function buildPreviewTrail(values: TrailFormValues, base?: PreviewTrailBase): Trail {
   const now = new Date().toISOString();
   const imageUrl = values.image_url?.trim() || DEFAULT_TRAIL_IMAGE;
 
   return {
-    id: "preview",
+    id: base?.id ?? "preview",
     name: values.name.trim() || "מסלול ללא שם",
     short_description: values.short_description.trim(),
     full_description: values.full_description.trim(),
@@ -32,8 +34,8 @@ export function buildPreviewTrail(values: TrailFormValues): Trail {
       name: w.name?.trim() || undefined,
     })),
     image_url: imageUrl,
-    created_by: "",
-    status: "pending",
+    created_by: base?.created_by ?? "",
+    status: base?.status ?? "pending",
     updated_at: now,
   };
 }

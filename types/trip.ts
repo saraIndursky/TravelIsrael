@@ -13,6 +13,7 @@ export interface TripStation {
 
 export interface Trip {
   id: string;
+  slug?: string;
   name: string;
   short_description: string;
   full_description: string;
@@ -27,6 +28,7 @@ export interface Trip {
   difficulty: Difficulty;
   accessibility: Accessibility;
   region: Region;
+  region_id?: string;
   station_count: number;
   views_count: number;
   favorites_count: number;
@@ -34,6 +36,7 @@ export interface Trip {
   created_at: string;
   updated_at: string;
   rejection_reason?: string;
+  removal_reason?: string;
 }
 
 export interface TripWithStations extends Trip {

@@ -12,14 +12,16 @@ import {
   authInputClassName,
   authSubmitClassName,
 } from "@/components/features/auth/auth-page-shell";
+import { AuthDivider } from "@/components/features/auth/auth-divider";
+import { GoogleSignInButton } from "@/components/features/auth/google-sign-in-button";
 import { toast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/hooks/use-stores";
-import { loginDemo } from "@/lib/data/auth";
+import { loginWithEmail } from "@/lib/data/auth";
 import { loginSchema, type LoginFormValues } from "@/lib/validations";
 
 export function LoginForm() {
   const router = useRouter();
-  const { login } = useAuthStore();
+  const { setSession } = useAuthStore();
   const [submitting, setSubmitting] = useState(false);
 
   const {
@@ -34,11 +36,11 @@ export function LoginForm() {
   async function onSubmit(values: LoginFormValues) {
     setSubmitting(true);
     try {
-      const user = await loginDemo({
+      const user = await loginWithEmail({
         email: values.email,
         password: values.password,
       });
-      login(user.id, user.role);
+      setSession(user);
       toast({ title: "התחברת בהצלחה" });
       router.push(user.role === "admin" ? "/admin" : "/");
     } catch (error) {
@@ -93,12 +95,17 @@ export function LoginForm() {
             <input type="checkbox" className="h-4 w-4 rounded-sm border-gray-300" {...register("rememberMe")} />
             זכור אותי
           </label>
-          <span className="text-gray-600">שכחתי סיסמה</span>
+          <Link href="/forgot-password" className="text-gray-600 hover:text-gray-900 hover:underline">
+            שכחתי סיסמה
+          </Link>
         </div>
 
         <button type="submit" disabled={submitting} className={authSubmitClassName}>
           {submitting ? "מתחבר..." : "התחברות"}
         </button>
+
+        <AuthDivider />
+        <GoogleSignInButton nextPath="/" />
       </form>
     </AuthPageShell>
   );

@@ -2,11 +2,12 @@ import type { Difficulty, Status } from "@/types";
 import { DIFFICULTY_LABELS, STATUS_LABELS } from "@/types/enums";
 import { Badge } from "@/components/ui/badge";
 
-const statusVariant: Record<Status, "secondary" | "warning" | "success" | "danger"> = {
+const statusVariant: Record<Status, "secondary" | "warning" | "success" | "danger" | "outline"> = {
   draft: "secondary",
   pending: "warning",
   approved: "success",
   rejected: "danger",
+  removed: "outline",
 };
 
 export function StatusBadge({ status }: { status: Status }) {

@@ -50,6 +50,9 @@ interface RejectModalProps {
   name: string;
   entityLabel: string;
   reason: string;
+  submitting?: boolean;
+  /** When unpublishing approved content — different copy */
+  mode?: "review" | "unpublish";
   onReasonChange: (value: string) => void;
   onConfirm: () => void;
   onClose: () => void;
@@ -60,12 +63,15 @@ export function AdminRejectModal({
   name,
   entityLabel,
   reason,
+  submitting = false,
+  mode = "review",
   onReasonChange,
   onConfirm,
   onClose,
 }: RejectModalProps) {
+  const isUnpublish = mode === "unpublish";
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+    <Dialog open={open} onOpenChange={(v) => !v && !submitting && onClose()}>
       <DialogContent className="max-w-md">
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100">
@@ -73,17 +79,27 @@ export function AdminRejectModal({
           </div>
           <div className="flex-1 space-y-3">
             <DialogHeader>
-              <DialogTitle>דחיית {entityLabel}</DialogTitle>
+              <DialogTitle>{isUnpublish ? `הסרת ${entityLabel} מהאתר` : `דחיית ${entityLabel}`}</DialogTitle>
             </DialogHeader>
             <p className="text-sm text-muted-foreground">
-              אתה עומד לדחות את {entityLabel} &quot;{name}&quot;
+              {isUnpublish ? (
+                <>
+                  {entityLabel} &quot;{name}&quot; יסומן כ״הוסר מהאתר״ — לא כנדחה. התוכן נשמר במערכת.
+                  <br />
+                  היוצר יוכל לשלוח שוב לאישור. משתמשים ששמרו במועדפים יראו אותו כל עוד השמירה פעילה.
+                </>
+              ) : (
+                <>
+                  {entityLabel} &quot;{name}&quot; יסומן כנדחה. ניתן לציין סיבה לבעלים.
+                </>
+              )}
             </p>
             <label className="block text-sm font-medium text-muted-foreground">
-              סיבת הדחייה (אופציונלי)
+              {isUnpublish ? "סיבה להסרה (אופציונלי)" : "סיבת הדחייה (אופציונלי)"}
               <textarea
                 value={reason}
                 onChange={(e) => onReasonChange(e.target.value)}
-                placeholder="הסבר למשתמש מדוע נדחה..."
+                placeholder={isUnpublish ? "הסבר למה הוסר מהאתר..." : "הסבר למשתמש מדוע נדחה..."}
                 rows={4}
                 className="mt-2 w-full resize-none rounded-xl border border-border px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
@@ -91,10 +107,10 @@ export function AdminRejectModal({
           </div>
         </div>
         <div className="flex gap-3 pt-2">
-          <Button variant="danger" className="flex-1 rounded-xl" onClick={onConfirm}>
-            דחה
+          <Button variant="danger" className="flex-1 rounded-xl" onClick={onConfirm} disabled={submitting}>
+            {submitting ? "שולח..." : isUnpublish ? "הסר מהאתר" : "דחה"}
           </Button>
-          <Button variant="outline" className="flex-1 rounded-xl" onClick={onClose}>
+          <Button variant="outline" className="flex-1 rounded-xl" onClick={onClose} disabled={submitting}>
             ביטול
           </Button>
         </div>
@@ -110,6 +126,7 @@ interface RejectReasonModalProps {
   region: string;
   typeLabel: string;
   reason?: string;
+  variant?: "rejection" | "removal";
   onClose: () => void;
 }
 
@@ -120,13 +137,15 @@ export function AdminRejectReasonModal({
   region,
   typeLabel,
   reason,
+  variant = "rejection",
   onClose,
 }: RejectReasonModalProps) {
+  const isRemoval = variant === "removal";
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>סיבת הדחייה — {name}</DialogTitle>
+          <DialogTitle>{isRemoval ? `סיבת ההסרה — ${name}` : `סיבת הדחייה — ${name}`}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 text-sm">
           <div className="space-y-1 text-muted-foreground">
@@ -141,7 +160,9 @@ export function AdminRejectReasonModal({
             </p>
           </div>
           <div className="rounded-xl border border-red-100 bg-red-50 p-4">
-            <p className="mb-2 text-sm font-semibold text-red-600">סיבת הדחייה</p>
+            <p className="mb-2 text-sm font-semibold text-red-600">
+              {isRemoval ? "סיבת ההסרה מהאתר" : "סיבת הדחייה"}
+            </p>
             <p className="text-foreground/90">{reason || "לא צוינה סיבה"}</p>
           </div>
         </div>
@@ -236,6 +257,109 @@ export function AdminStatsModal({ open, name, region, typeLabel, stats, onClose 
           <X className="h-4 w-4" aria-hidden />
           סגור
         </Button>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface TripPendingItem {
+  id: string;
+  name: string;
+  href: string;
+  typeLabel: string;
+}
+
+interface TripApproveModalProps {
+  open: boolean;
+  tripName: string;
+  places: TripPendingItem[];
+  trails: TripPendingItem[];
+  loading?: boolean;
+  onConfirm: () => void;
+  onClose: () => void;
+}
+
+export function AdminTripApproveModal({
+  open,
+  tripName,
+  places,
+  trails,
+  loading,
+  onConfirm,
+  onClose,
+}: TripApproveModalProps) {
+  const totalPending = places.length + trails.length;
+
+  return (
+    <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>אישור טיול — תוכן ממתין</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 text-sm">
+          <p className="text-muted-foreground">
+            הטיול &quot;{tripName}&quot; כולל {totalPending} פריטים שממתינים לאישור. לאחר אישור הטיול, גם הם
+            יאושרו אוטומטית.
+          </p>
+
+          {places.length > 0 && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <p className="mb-2 font-semibold text-amber-900">מקומות ממתינים ({places.length})</p>
+              <ul className="space-y-2">
+                {places.map((place) => (
+                  <li key={place.id} className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-foreground">{place.name}</p>
+                      <p className="text-xs text-muted-foreground">{place.typeLabel}</p>
+                    </div>
+                    <a
+                      href={place.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 text-xs font-medium text-primary hover:underline"
+                    >
+                      צפייה
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {trails.length > 0 && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <p className="mb-2 font-semibold text-amber-900">מסלולים ממתינים ({trails.length})</p>
+              <ul className="space-y-2">
+                {trails.map((trail) => (
+                  <li key={trail.id} className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-foreground">{trail.name}</p>
+                      <p className="text-xs text-muted-foreground">{trail.typeLabel}</p>
+                    </div>
+                    <a
+                      href={trail.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 text-xs font-medium text-primary hover:underline"
+                    >
+                      צפייה
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-3 pt-2">
+          <Button className="flex-1 rounded-xl" onClick={onConfirm} disabled={loading}>
+            {loading ? "מאשר..." : "אשר טיול ותוכן"}
+          </Button>
+          <Button variant="outline" className="flex-1 rounded-xl" onClick={onClose} disabled={loading}>
+            ביטול
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

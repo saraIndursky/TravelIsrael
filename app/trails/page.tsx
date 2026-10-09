@@ -1,11 +1,10 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrailsClient } from "@/components/features/trails/trails-client";
+import { LIST_PAGE_METADATA } from "@/lib/seo/metadata";
 
-export const metadata = {
-  title: "מסלולים — TravelIsrael",
-  description: "גלה מסלולי הליכה וטיול בישראל",
-};
+export const metadata: Metadata = LIST_PAGE_METADATA.trails;
 
 export default function TrailsPage() {
   return (

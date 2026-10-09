@@ -2,16 +2,17 @@
 
 import Link from "next/link";
 import { Bookmark, Edit3, RefreshCw } from "lucide-react";
+import { tripEditPath, type ContentRef } from "@/lib/utils/content-path";
 
 interface WizardResultActionsProps {
-  tripId: string;
+  trip: ContentRef;
   isFavorite: boolean;
   onSave: () => void;
   saving?: boolean;
 }
 
 export function WizardResultActions({
-  tripId,
+  trip,
   isFavorite,
   onSave,
   saving,
@@ -29,7 +30,7 @@ export function WizardResultActions({
       </button>
 
       <Link
-        href={`/trips/${tripId}/edit`}
+        href={tripEditPath(trip)}
         className="flex w-full items-center justify-center gap-2 rounded-sm border-2 border-[#111827] py-3.5 text-sm font-bold text-[#111827] transition-colors hover:bg-[#f9fafb]"
       >
         <Edit3 className="h-4 w-4" />

@@ -2,6 +2,7 @@ import type { Accessibility, Difficulty, Region, Status } from "./enums";
 
 export interface Place {
   id: string;
+  slug?: string;
   name: string;
   short_description: string;
   full_description: string;
@@ -9,6 +10,7 @@ export interface Place {
   lat: number;
   lng: number;
   region: Region;
+  region_id?: string;
   place_type: string;
   accessibility: Accessibility;
   tags: string[];
@@ -22,5 +24,6 @@ export interface Place {
   created_by: string;
   status: Status;
   rejection_reason?: string;
+  removal_reason?: string;
   updated_at: string;
 }

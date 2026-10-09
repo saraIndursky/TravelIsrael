@@ -1,4 +1,4 @@
-export type Status = "draft" | "pending" | "approved" | "rejected";
+export type Status = "draft" | "pending" | "approved" | "rejected" | "removed";
 export type Difficulty = "easy" | "medium" | "hard";
 export type StationType = "place" | "trail";
 export type TravelMode = "walking" | "car" | "bike";
@@ -50,6 +50,7 @@ export const STATUS_LABELS: Record<Status, string> = {
   pending: "ממתין",
   approved: "מאושר",
   rejected: "נדחה",
+  removed: "הוסר מהאתר",
 };
 
 export const REPORT_TYPE_LABELS: Record<ReportType, string> = {

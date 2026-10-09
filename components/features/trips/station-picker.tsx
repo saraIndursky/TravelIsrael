@@ -14,17 +14,27 @@ import type { Place, Trail } from "@/types";
 import { REGIONS } from "@/types/enums";
 import { formatStopDuration } from "@/lib/utils/trip-time";
 import { getDifficultyColor, getDifficultyLabel, getTypeStyle } from "@/lib/utils/trip-display";
+import { PageLoadingSpinner } from "@/components/layout/page-loading";
 
 interface StationPickerProps {
   open: boolean;
   onClose: () => void;
   onSelect: (type: "place" | "trail", id: string) => void;
   variant?: "list" | "grid";
+  onCreatePlace?: () => void;
+  onCreateTrail?: () => void;
 }
 
 type StationItem = { type: "place" | "trail"; item: Place | Trail };
 
-export function StationPicker({ open, onClose, onSelect, variant = "list" }: StationPickerProps) {
+export function StationPicker({
+  open,
+  onClose,
+  onSelect,
+  variant = "list",
+  onCreatePlace,
+  onCreateTrail,
+}: StationPickerProps) {
   const [search, setSearch] = useState("");
   const [region, setRegion] = useState("");
   const [items, setItems] = useState<StationItem[]>([]);
@@ -107,11 +117,39 @@ export function StationPicker({ open, onClose, onSelect, variant = "list" }: Sta
 
             <div className="max-h-[calc(90vh-220px)] overflow-y-auto p-6">
               {loading ? (
-                <div className="py-8 text-center text-gray-500">טוען המלצות...</div>
+                <PageLoadingSpinner size="sm" className="py-8" />
               ) : filtered.length === 0 ? (
                 <div className="py-12 text-center">
                   <Filter className="mx-auto mb-3 h-12 w-12 text-[#9ca3af]" />
-                  <p className="text-[#6b7280]">לא נמצאו תוצאות</p>
+                  <p className="mb-4 text-[#6b7280]">לא נמצאו תוצאות</p>
+                  {(onCreatePlace || onCreateTrail) && (
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      {onCreatePlace && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onCreatePlace();
+                            onClose();
+                          }}
+                          className="rounded-lg border border-[#d1d5db] bg-white px-4 py-2 text-sm font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
+                        >
+                          + צור מקום חדש
+                        </button>
+                      )}
+                      {onCreateTrail && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onCreateTrail();
+                            onClose();
+                          }}
+                          className="rounded-lg border border-[#d1d5db] bg-white px-4 py-2 text-sm font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
+                        >
+                          + צור מסלול חדש
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -178,6 +216,38 @@ export function StationPicker({ open, onClose, onSelect, variant = "list" }: Sta
                 </div>
               )}
             </div>
+
+            {(onCreatePlace || onCreateTrail) && (
+              <div className="flex flex-wrap gap-2 border-t border-[#e5e7eb] bg-[#f9fafb] p-4">
+                <p className="w-full text-xs text-[#6b7280]">לא מצאת? צרי חדש ויחזור אוטומטית לטיול:</p>
+                {onCreatePlace && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onCreatePlace();
+                      onClose();
+                    }}
+                    className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-[#d1d5db] bg-white px-3 py-2.5 text-sm font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
+                  >
+                    <Plus className="h-4 w-4" />
+                    מקום חדש
+                  </button>
+                )}
+                {onCreateTrail && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onCreateTrail();
+                      onClose();
+                    }}
+                    className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-[#d1d5db] bg-white px-3 py-2.5 text-sm font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
+                  >
+                    <Plus className="h-4 w-4" />
+                    מסלול חדש
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )
@@ -217,7 +287,7 @@ export function StationPicker({ open, onClose, onSelect, variant = "list" }: Sta
             ))}
           </div>
           {loading ? (
-            <p className="text-sm text-muted-foreground">טוען...</p>
+            <PageLoadingSpinner size="sm" className="py-4" />
           ) : (
             <LazyList
               items={filtered}

@@ -3,7 +3,7 @@ description: TravelIsrael data model, enums, and access control
 alwaysApply: true
 ---
 # Entities
-places, trails, trips, trip_stations, ratings, comments, images, favorites, reports
+profiles, regions, places, trails, trips, trip_stations, ratings, comments, images, favorites, reports, app_config
 
 # Key Enums
 - Status: draft | pending | approved | rejected
@@ -15,7 +15,9 @@ places, trails, trips, trip_stations, ratings, comments, images, favorites, repo
 # Trip Computed Fields
 total_duration_minutes, total_distance_km, estimated_price, difficulty, accessibility, region, station_count
 
-# Access Control (enforce in lib/data/)
+# Access Control
+Enforced by RLS in Postgres. lib/data/ mirrors the same rules so the UI can
+hide what the DB would reject — never as the only line of defense.
 - guest: read approved content only
 - user: CRUD own content, ratings, comments, favorites
 - admin: full access, approve/reject content, manage reports
@@ -24,7 +26,15 @@ total_duration_minutes, total_distance_km, estimated_price, difficulty, accessib
 draft → pending → approved
                 → rejected → (edit) → pending
 
-# Demo Mode
-- Seed data in data/seed/
-- Mutations persist to localStorage via Zustand
-- Mock auth with role switcher (guest/user/admin)
+Owners may edit only while pending or rejected, and every owner edit returns
+the row to pending. Only an admin can set approved.
+
+# Schemas
+Two schemas in one Supabase project, switched by NEXT_PUBLIC_SUPABASE_SCHEMA:
+- public — the real environment
+- demo — full mirror with rich test data; shares auth.users and Storage
+Baseline DDL and demo seed live in supabase/. See supabase/README.md.
+
+# RPCs
+resolve_bootstrap_role, sync_bootstrap_admin, admin_update_user_role,
+approve_trip_cascade — SECURITY DEFINER, each re-checks is_admin() internally.

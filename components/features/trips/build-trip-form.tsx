@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,10 +31,21 @@ import {
   normalizeTravelModes,
 } from "@/lib/utils/trip-time";
 import { formatDuration } from "@/lib/utils";
-import { getStore, generateId } from "@/lib/data/store";
+import { generateId } from "@/lib/utils/generate-id";
+import { tripEditPath, tripPath } from "@/lib/utils/content-path";
+import { usePlacesTrailsCatalog } from "@/hooks/use-catalog";
 import { tripFormSchema, type TripFormValues } from "@/lib/validations";
 import { toast } from "@/components/ui/use-toast";
+import { trackEvent } from "@/lib/analytics";
 import { CreateAssistantPanel } from "@/components/features/assistant/create-assistant-panel";
+import { TripGpxImport } from "@/components/features/trips/trip-gpx-import";
+import {
+  buildCreateEntityUrl,
+  clearTripCreateDraft,
+  loadTripCreateDraft,
+  readAddStationFromLocation,
+  saveTripCreateDraft,
+} from "@/lib/utils/trip-create-draft";
 
 const DEFAULT_IMAGE =
   "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800";
@@ -43,17 +54,23 @@ interface BuildTripFormProps {
   mode: "create" | "edit";
   tripId?: string;
   initialTrip?: TripWithStations;
+  editHint?: string;
 }
 
-export function BuildTripForm({ mode, tripId, initialTrip }: BuildTripFormProps) {
+export function BuildTripForm({ mode, tripId, initialTrip, editHint }: BuildTripFormProps) {
   const router = useRouter();
-  const store = getStore();
+  const { places, trails, loading: catalogLoading, refresh } = usePlacesTrailsCatalog();
   const [stations, setStations] = useState<TripStation[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [startTime, setStartTime] = useState("09:00");
   const [imagePreview, setImagePreview] = useState("");
+  const bootstrappedRef = useRef(false);
+  const pendingAddRef = useRef<{ type: "place" | "trail"; id: string } | null>(null);
+
+  const returnPath =
+    mode === "create" ? "/trips/create" : tripEditPath({ id: tripId ?? "", slug: initialTrip?.slug });
 
   const {
     register,
@@ -75,7 +92,19 @@ export function BuildTripForm({ mode, tripId, initialTrip }: BuildTripFormProps)
   });
 
   useEffect(() => {
-    if (mode === "edit" && initialTrip) {
+    if (bootstrappedRef.current) return;
+    bootstrappedRef.current = true;
+
+    const draft = loadTripCreateDraft();
+    const addStation = readAddStationFromLocation();
+
+    if (draft) {
+      reset(draft.form);
+      setStations(normalizeTravelModes(draft.stations));
+      setStartTime(draft.startTime);
+      setImagePreview(draft.imagePreview);
+      clearTripCreateDraft();
+    } else if (mode === "edit" && initialTrip) {
       reset({
         name: initialTrip.name,
         short_description: initialTrip.short_description,
@@ -86,7 +115,63 @@ export function BuildTripForm({ mode, tripId, initialTrip }: BuildTripFormProps)
       setStations(normalizeTravelModes(initialTrip.stations));
       setImagePreview(initialTrip.main_image);
     }
-  }, [mode, initialTrip, reset]);
+
+    if (addStation) {
+      pendingAddRef.current = addStation;
+      refresh();
+      window.history.replaceState(null, "", draft?.returnPath ?? returnPath);
+    }
+  }, [mode, initialTrip, reset, refresh, returnPath]);
+
+  useEffect(() => {
+    const pending = pendingAddRef.current;
+    if (!pending || catalogLoading) return;
+
+    setStations((prev) => {
+      const exists = prev.some((station) =>
+        pending.type === "place"
+          ? station.place_id === pending.id
+          : station.trail_id === pending.id
+      );
+      if (exists) {
+        pendingAddRef.current = null;
+        return prev;
+      }
+
+      const station: TripStation = {
+        id: generateId(),
+        trip_id: tripId ?? "",
+        order_index: prev.length,
+        station_type: pending.type,
+        place_id: pending.type === "place" ? pending.id : null,
+        trail_id: pending.type === "trail" ? pending.id : null,
+        travel_mode: "car",
+      };
+      pendingAddRef.current = null;
+      toast({
+        title:
+          pending.type === "place"
+            ? "המקום החדש נוסף לטיול"
+            : "המסלול החדש נוסף לטיול",
+      });
+      return normalizeTravelModes([...prev, station]);
+    });
+  }, [catalogLoading, places, trails, tripId]);
+
+  const saveDraftAndNavigate = useCallback(
+    (entity: "place" | "trail") => {
+      saveTripCreateDraft({
+        form: getValues(),
+        stations,
+        startTime,
+        imagePreview,
+        returnPath,
+      });
+      setPickerOpen(false);
+      router.push(buildCreateEntityUrl(entity, returnPath));
+    },
+    [getValues, stations, startTime, imagePreview, returnPath, router]
+  );
 
   const selectedTags = watch("tags") ?? [];
   const mainImage = watch("main_image") ?? "";
@@ -101,25 +186,25 @@ export function BuildTripForm({ mode, tripId, initialTrip }: BuildTripFormProps)
   );
 
   const totalMinutes = useMemo(
-    () => calculateTotalTripMinutes(normalizedStations, store.places, store.trails),
-    [normalizedStations, store.places, store.trails]
+    () => calculateTotalTripMinutes(normalizedStations, places, trails),
+    [normalizedStations, places, trails]
   );
 
   const segmentDistances = useMemo(
-    () => calculateSegmentDistances(normalizedStations, store.places, store.trails),
-    [normalizedStations, store.places, store.trails]
+    () => calculateSegmentDistances(normalizedStations, places, trails),
+    [normalizedStations, places, trails]
   );
 
   const mapMarkers = useMemo(
-    () => buildTripMapMarkers(normalizedStations, store.places, store.trails),
-    [normalizedStations, store.places, store.trails]
+    () => buildTripMapMarkers(normalizedStations, places, trails),
+    [normalizedStations, places, trails]
   );
 
-  const stats = computeTripStats(normalizedStations, store.places, store.trails);
+  const stats = computeTripStats(normalizedStations, places, trails);
 
   const addStation = (type: "place" | "trail", id: string) => {
     const station: TripStation = {
-      id: generateId("ts"),
+      id: generateId(),
       trip_id: tripId ?? "",
       order_index: stations.length,
       station_type: type,
@@ -160,18 +245,27 @@ export function BuildTripForm({ mode, tripId, initialTrip }: BuildTripFormProps)
 
       if (mode === "create") {
         const trip = await createTrip(payload);
+        clearTripCreateDraft();
+        trackEvent("trip_created", { status, mode: "create" });
         toast({
           title: status === "draft" ? "הטיול נשמר כטיוטה" : "הטיול נשלח לאישור",
         });
-        router.push(`/trips/${trip.id}`);
+        router.push(tripPath(trip));
       } else if (tripId) {
         const result = await updateTrip(tripId, {
           ...payload,
           stations: normalizedStations.map((s, i) => ({ ...s, order_index: i })),
         });
         if (result) {
-          toast({ title: "הטיול עודכן בהצלחה" });
-          router.push(`/trips/${tripId}`);
+          toast({
+            title:
+              status === "draft" && initialTrip?.status === "draft"
+                ? "הטיול נשמר כטיוטה"
+                : status === "pending"
+                  ? "הטיול עודכן ונשלח לאישור"
+                  : "הטיול עודכן בהצלחה",
+          });
+          router.push(tripPath(result));
         } else {
           toast({ title: "שגיאה בעדכון", variant: "destructive" });
         }
@@ -193,7 +287,11 @@ export function BuildTripForm({ mode, tripId, initialTrip }: BuildTripFormProps)
           <div className="flex items-center justify-between">
             <div>
               <h1 className="mb-1 text-3xl font-light text-[#111827]">{pageTitle}</h1>
-              <p className="text-[#6b7280]">הוסף, הסר ושנה את סדר התחנות כרצונך</p>
+              {editHint ? (
+                <p className="text-sm text-[#6b7280]">{editHint}</p>
+              ) : (
+                <p className="text-[#6b7280]">הוסף, הסר ושנה את סדר התחנות כרצונך</p>
+              )}
             </div>
           </div>
 
@@ -213,6 +311,7 @@ export function BuildTripForm({ mode, tripId, initialTrip }: BuildTripFormProps)
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-8 md:px-6">
+        {mode === "create" ? <TripGpxImport /> : null}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
             <div className="rounded-lg border border-[#e5e7eb] bg-white p-6">
@@ -324,19 +423,37 @@ export function BuildTripForm({ mode, tripId, initialTrip }: BuildTripFormProps)
                 <div className="rounded-lg border-2 border-dashed border-[#e5e7eb] py-12 text-center">
                   <MapPin className="mx-auto mb-3 h-12 w-12 text-[#9ca3af]" />
                   <p className="mb-4 text-[#6b7280]">עדיין אין תחנות במסלול</p>
-                  <button
-                    type="button"
-                    onClick={() => setPickerOpen(true)}
-                    className="rounded-lg bg-[#111827] px-6 py-3 font-medium text-white transition-colors hover:bg-[#1f2937]"
-                  >
-                    התחל להוסיף תחנות
-                  </button>
+                  <div className="flex flex-col items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setPickerOpen(true)}
+                      className="rounded-lg bg-[#111827] px-6 py-3 font-medium text-white transition-colors hover:bg-[#1f2937]"
+                    >
+                      התחל להוסיף תחנות
+                    </button>
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => saveDraftAndNavigate("place")}
+                        className="rounded-lg border border-[#d1d5db] bg-white px-4 py-2 text-sm font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
+                      >
+                        + צור מקום חדש
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => saveDraftAndNavigate("trail")}
+                        className="rounded-lg border border-[#d1d5db] bg-white px-4 py-2 text-sm font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
+                      >
+                        + צור מסלול חדש
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <BuildStationList
                   stations={normalizedStations}
-                  places={store.places}
-                  trails={store.trails}
+                  places={places}
+                  trails={trails}
                   segmentDistances={segmentDistances}
                   onChange={setStations}
                 />
@@ -415,6 +532,8 @@ export function BuildTripForm({ mode, tripId, initialTrip }: BuildTripFormProps)
         onClose={() => setPickerOpen(false)}
         onSelect={addStation}
         variant="grid"
+        onCreatePlace={() => saveDraftAndNavigate("place")}
+        onCreateTrail={() => saveDraftAndNavigate("trail")}
       />
 
       <BuildTripPreviewDialog
@@ -426,9 +545,9 @@ export function BuildTripForm({ mode, tripId, initialTrip }: BuildTripFormProps)
         tags={selectedTags}
         imageUrl={displayImage || DEFAULT_IMAGE}
         stations={normalizedStations}
-        places={store.places}
-        trails={store.trails}
-        users={store.users}
+        places={places}
+        trails={trails}
+        users={[]}
         stats={stats}
         startTime={startTime}
       />

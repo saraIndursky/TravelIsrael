@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Clock, Heart, MapPin } from "lucide-react";
 import type { Place } from "@/types";
 import { formatTripCardDuration } from "@/lib/utils";
+import { placePath } from "@/lib/utils/content-path";
 
 interface PlaceCardProps {
   place: Place;
@@ -63,7 +64,7 @@ export function PlaceCard({
         <p className="mt-3 line-clamp-2 text-sm text-[#6b7280]">{place.short_description}</p>
         <div className="mt-4 border-t border-[#e5e7eb] pt-3">
           <Link
-            href={`/places/${place.id}`}
+            href={placePath(place)}
             className="block w-full rounded border border-[#e5e7eb] bg-[#f9fafb] py-2.5 text-center text-sm font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
           >
             לפרטים

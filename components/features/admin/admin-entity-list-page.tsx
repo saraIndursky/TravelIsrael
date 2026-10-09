@@ -15,10 +15,12 @@ import {
 import { getAdminActionsByStatus, getAdminMobileActions } from "@/components/features/admin/admin-list-actions";
 import { AdminStatusBadgeInline } from "@/components/features/admin/admin-status-badge-inline";
 import { POPULARITY_LABELS } from "@/lib/utils/admin-popularity";
+import { adminListShowsE2eContent, isE2eTestContentName } from "@/lib/utils/e2e-content";
 import type { Status, User as AppUser } from "@/types";
 import { REGIONS } from "@/types/enums";
+import { CenteredPageLoading } from "@/components/layout/page-loading";
 
-type ListTab = "approved" | "pending" | "rejected";
+type ListTab = "approved" | "pending" | "rejected" | "removed";
 
 export interface AdminEntityListConfig<T extends { id: string; status: Status }> {
   title: string;
@@ -40,6 +42,7 @@ export interface AdminEntityListConfig<T extends { id: string; status: Status }>
   getCreatorId: (item: T) => string;
   getRegion: (item: T) => string;
   getRejectionReason?: (item: T) => string | undefined;
+  getRemovalReason?: (item: T) => string | undefined;
   getStats?: (item: T) => AdminItemStats;
   viewHref: (item: T) => string;
   editHref?: (item: T) => string;
@@ -53,6 +56,7 @@ interface AdminEntityListPageProps<T extends { id: string; status: Status }> {
   loading?: boolean;
   onApprove: (item: T) => Promise<void>;
   onReject: (item: T, reason: string) => Promise<void>;
+  onUnpublish: (item: T, reason: string) => Promise<void>;
   onDelete: (item: T) => Promise<void>;
   onRestore: (item: T) => Promise<void>;
 }
@@ -61,6 +65,7 @@ const TABS: { label: string; value: ListTab }[] = [
   { label: "מאושרים", value: "approved" },
   { label: "ממתינים לאישור", value: "pending" },
   { label: "נדחו", value: "rejected" },
+  { label: "הוסרו", value: "removed" },
 ];
 
 export function AdminEntityListPage<T extends { id: string; status: Status }>({
@@ -70,6 +75,7 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
   loading,
   onApprove,
   onReject,
+  onUnpublish,
   onDelete,
   onRestore,
 }: AdminEntityListPageProps<T>) {
@@ -82,6 +88,8 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
   const [rejectItem, setRejectItem] = useState<T | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectReasonItem, setRejectReasonItem] = useState<T | null>(null);
+  const [removalReasonItem, setRemovalReasonItem] = useState<T | null>(null);
+  const [rejectSubmitting, setRejectSubmitting] = useState(false);
   const [statsItem, setStatsItem] = useState<T | null>(null);
 
   const userMap = useMemo(() => new Map(users.map((u) => [u.id, u])), [users]);
@@ -104,7 +112,9 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
         creatorName.includes(q);
       const matchesType = !filterType || !config.typeFilter || config.typeFilter.getValue(item) === filterType;
       const matchesRegion = !filterRegion || config.getRegion(item) === filterRegion;
-      return matchesStatus && matchesSearch && matchesType && matchesRegion;
+      const matchesE2e =
+        !isE2eTestContentName(config.getName(item)) || adminListShowsE2eContent(searchTerm);
+      return matchesStatus && matchesSearch && matchesType && matchesRegion && matchesE2e;
     });
   }, [items, activeTab, searchTerm, filterType, filterRegion, config, userMap]);
 
@@ -119,6 +129,10 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
       setRejectItem(item);
       setRejectReason("");
     },
+    onUnpublish: (item: T) => {
+      setRejectItem(item);
+      setRejectReason("");
+    },
     onEdit: config.editHref ? (item: T) => router.push(config.editHref!(item)) : undefined,
     onDelete: (item: T) => setDeleteItem(item),
     onRestore: async (item: T) => {
@@ -126,10 +140,11 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
     },
     onStats: config.getStats ? (item: T) => setStatsItem(item) : undefined,
     onViewReject: (item: T) => setRejectReasonItem(item),
+    onViewRemoval: (item: T) => setRemovalReasonItem(item),
   };
 
   if (loading) {
-    return <div className="py-20 text-center text-muted-foreground">טוען...</div>;
+    return <CenteredPageLoading />;
   }
 
   return (
@@ -154,6 +169,7 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
             <StatBox value={items.filter((i) => i.status === "approved").length} label={`${config.entityLabelPlural} מאושרים`} variant="success" />
             <StatBox value={items.filter((i) => i.status === "pending").length} label="ממתינים לאישור" variant="warning" />
             <StatBox value={items.filter((i) => i.status === "rejected").length} label="נדחו" variant="danger" />
+            <StatBox value={items.filter((i) => i.status === "removed").length} label="הוסרו" variant="danger" />
             <StatBox value={items.length} label={`סה״כ ${config.entityLabelPlural}`} variant="info" />
           </div>
         </div>
@@ -264,7 +280,7 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        <p className="font-medium">{config.getName(item)}</p>
+                        <p className="max-w-[12rem] truncate font-medium">{config.getName(item)}</p>
                         <p className="mt-0.5 text-xs text-muted-foreground">{config.getTypeLabel(item)}</p>
                       </td>
                       <td className="px-4 py-4">
@@ -328,7 +344,7 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
                       <Image src={config.getImageUrl(item)} alt="" fill className="object-cover" sizes="80px" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold">{config.getName(item)}</p>
+                      <p className="truncate font-semibold">{config.getName(item)}</p>
                       <div className="mt-1 flex flex-wrap items-center gap-2">
                         <AdminStatusBadgeInline status={item.status} />
                         <span className="text-xs text-muted-foreground">{config.getTypeLabel(item)}</span>
@@ -406,16 +422,42 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
           name={config.getName(rejectItem)}
           entityLabel={config.entityLabel}
           reason={rejectReason}
+          mode={rejectItem.status === "approved" ? "unpublish" : "review"}
           onReasonChange={setRejectReason}
           onConfirm={async () => {
-            await onReject(rejectItem, rejectReason);
-            setRejectItem(null);
-            setRejectReason("");
+            if (rejectSubmitting) return;
+            setRejectSubmitting(true);
+            try {
+              if (rejectItem.status === "approved") {
+                await onUnpublish(rejectItem, rejectReason);
+              } else {
+                await onReject(rejectItem, rejectReason);
+              }
+              setRejectItem(null);
+              setRejectReason("");
+            } finally {
+              setRejectSubmitting(false);
+            }
           }}
+          submitting={rejectSubmitting}
           onClose={() => {
+            if (rejectSubmitting) return;
             setRejectItem(null);
             setRejectReason("");
           }}
+        />
+      )}
+
+      {removalReasonItem && (
+        <AdminRejectReasonModal
+          open
+          variant="removal"
+          name={config.getName(removalReasonItem)}
+          creator={getCreator(removalReasonItem).name}
+          region={config.getRegion(removalReasonItem)}
+          typeLabel={config.getTypeLabel(removalReasonItem)}
+          reason={config.getRemovalReason?.(removalReasonItem)}
+          onClose={() => setRemovalReasonItem(null)}
         />
       )}
 

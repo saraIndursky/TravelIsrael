@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { notFound } from "next/navigation";
-import type { Comment, Trail, Trip } from "@/types";
-import { getTrailById } from "@/lib/data/trails";
+import type { Comment, EntityImage, ReportType, Trail, Trip, User } from "@/types";
+import { getTrailById, resubmitTrailForApproval } from "@/lib/data/trails";
 import { getTripsContainingEntity } from "@/lib/data/trips";
 import {
   addComment,
@@ -15,9 +15,13 @@ import {
 } from "@/lib/data/social";
 import { createReport } from "@/lib/data/reports";
 import { isFavoriteEntity, toggleFavoriteEntity } from "@/lib/data/favorites";
-import { getStore } from "@/lib/data/store";
+import { getProfilesByIds } from "@/lib/data/auth";
 import { useAuthStore } from "@/hooks/use-stores";
+import { useCanonicalContentPath } from "@/hooks/use-canonical-content-path";
+import { trailPath } from "@/lib/utils/content-path";
 import { toast } from "@/components/ui/use-toast";
+import { ClientPageLoading } from "@/components/layout/page-loading";
+import { ContentRemovedBanner } from "@/components/features/content/content-removed-banner";
 import { TripDetailDescription } from "@/components/features/trips/detail/trip-detail-description";
 import { TripDetailReport } from "@/components/features/trips/detail/trip-detail-report";
 import { TripDetailRating } from "@/components/features/trips/detail/trip-detail-rating";
@@ -32,7 +36,9 @@ import { TrailDetailNature } from "@/components/features/trails/detail/trail-det
 import { TrailDetailActions } from "@/components/features/trails/detail/trail-detail-actions";
 import { CreateAssistantPanel } from "@/components/features/assistant/create-assistant-panel";
 import { TrailDetailRelatedTrips } from "@/components/features/trails/detail/trail-detail-related-trips";
-import type { ReportType } from "@/types";
+import { getTrailGalleryImages } from "@/lib/utils/trail-detail-content";
+import { addEntityGalleryImage, deleteEntityImage, getEntityImages } from "@/lib/data/images";
+import type { GalleryImagePayload } from "@/components/features/content/add-gallery-image-dialog";
 
 function computeAvgRating(scores: number[]): number {
   if (scores.length === 0) return 0;
@@ -44,6 +50,7 @@ export default function TrailDetailClient({ id }: { id: string }) {
   const [trail, setTrail] = useState<Trail | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [commentUsers, setCommentUsers] = useState<User[]>([]);
   const [ratingsCount, setRatingsCount] = useState(0);
   const [avgRating, setAvgRating] = useState(0);
   const [userRating, setUserRating] = useState(0);
@@ -52,9 +59,11 @@ export default function TrailDetailClient({ id }: { id: string }) {
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [hasUserReview, setHasUserReview] = useState(false);
+  const [resubmitting, setResubmitting] = useState(false);
+  const [communityImages, setCommunityImages] = useState<EntityImage[]>([]);
 
   const canInteract = role !== "guest";
-  const store = getStore();
+  useCanonicalContentPath(id, trail ? trailPath(trail) : null);
 
   useEffect(() => {
     async function load() {
@@ -64,21 +73,29 @@ export default function TrailDetailClient({ id }: { id: string }) {
         return;
       }
       setTrail(t);
-      setTrips(await getTripsContainingEntity("trail", id));
-      const ratings = await getRatings("trail", id);
+      setTrips(await getTripsContainingEntity("trail", t.id));
+      const ratings = await getRatings("trail", t.id);
       setRatingsCount(ratings.length);
       setAvgRating(computeAvgRating(ratings.map((r) => r.score)));
-      const existingRating = await getUserRating("trail", id);
+      const existingRating = await getUserRating("trail", t.id);
       setUserRating(existingRating?.score ?? 0);
-      setComments(await getComments("trail", id));
-      setHasUserReview(!!(await getUserComment("trail", id)));
-      setIsSaved(await isFavoriteEntity("trail", id));
+      const loadedComments = await getComments("trail", t.id);
+      setComments(loadedComments);
+      setCommentUsers(await getProfilesByIds(loadedComments.map((comment) => comment.user_id)));
+      setHasUserReview(!!(await getUserComment("trail", t.id)));
+      setIsSaved(await isFavoriteEntity("trail", t.id));
+      setCommunityImages(await getEntityImages("trail", t.id));
       setLoading(false);
     }
     load();
   }, [id]);
 
   const tagsDisplay = useMemo(() => trail?.tags.join(" · ") ?? "", [trail?.tags]);
+
+  const galleryImages = useMemo(
+    () => (trail ? getTrailGalleryImages(trail) : []),
+    [trail]
+  );
 
   const showOwnerAssistant =
     trail &&
@@ -87,18 +104,39 @@ export default function TrailDetailClient({ id }: { id: string }) {
     (trail.status === "pending" || trail.status === "rejected");
 
   if (loading) {
-    return <div className="min-h-screen animate-pulse bg-[#f9fafb] pt-20">טוען...</div>;
+    return <ClientPageLoading />;
   }
   if (!trail) notFound();
+  const entityId = trail.id;
 
   const handleToggleSaved = async () => {
     if (!canInteract) {
       toast({ title: "יש להתחבר כדי לשמור מסלול" });
       return;
     }
-    const next = await toggleFavoriteEntity("trail", id);
+    const next = await toggleFavoriteEntity("trail", entityId);
     setIsSaved(next);
+    const refreshed = await getTrailById(entityId);
+    if (!refreshed) {
+      toast({ title: "המסלול הוסר מהמועדפים — אין גישה לתוכן שהוסר" });
+      notFound();
+      return;
+    }
+    setTrail(refreshed);
     toast({ title: next ? "המסלול נשמר למועדפים" : "המסלול הוסר מהמועדפים" });
+  };
+
+  const handleResubmit = async () => {
+    setResubmitting(true);
+    const result = await resubmitTrailForApproval(entityId);
+    setResubmitting(false);
+    if (!result) {
+      toast({ title: "שליחה לאישור נכשלה", variant: "destructive" });
+      return;
+    }
+    const refreshed = await getTrailById(entityId);
+    if (refreshed) setTrail(refreshed);
+    toast({ title: "המסלול נשלח לאישור" });
   };
 
   const handleRate = async (score: number) => {
@@ -106,10 +144,10 @@ export default function TrailDetailClient({ id }: { id: string }) {
       toast({ title: "יש להתחבר כדי לדרג" });
       return;
     }
-    const rating = await upsertRating("trail", id, score);
+    const rating = await upsertRating("trail", entityId, score);
     if (rating) {
       setUserRating(score);
-      const ratings = await getRatings("trail", id);
+      const ratings = await getRatings("trail", entityId);
       setRatingsCount(ratings.length);
       setAvgRating(computeAvgRating(ratings.map((r) => r.score)));
       toast({ title: "הדירוג נשמר" });
@@ -117,12 +155,32 @@ export default function TrailDetailClient({ id }: { id: string }) {
   };
 
   const handleReport = async (reportType: ReportType, reason: string) => {
-    const report = await createReport("trail", id, reportType, reason);
+    const report = await createReport("trail", entityId, reportType, reason);
     if (report) {
       toast({ title: "הדיווח נשלח — תודה!" });
     } else {
       toast({ title: "יש להתחבר כדי לדווח", variant: "destructive" });
     }
+  };
+
+  const handleAddGalleryImage = async (payload: GalleryImagePayload) => {
+    const added = await addEntityGalleryImage("trail", entityId, payload);
+    if (added) {
+      setCommunityImages((prev) => [...prev, added]);
+      toast({ title: "התמונה נוספה לגלריה" });
+    } else {
+      throw new Error("יש להתחבר כדי להוסיף תמונה");
+    }
+  };
+
+  const handleDeleteGalleryImage = async (imageId: string) => {
+    const ok = await deleteEntityImage(imageId);
+    if (!ok) {
+      toast({ title: "מחיקת התמונה נכשלה", variant: "destructive" });
+      throw new Error("מחיקת התמונה נכשלה");
+    }
+    setCommunityImages((prev) => prev.filter((image) => image.id !== imageId));
+    toast({ title: "התמונה נמחקה" });
   };
 
   const handleAddReview = () => {
@@ -146,6 +204,15 @@ export default function TrailDetailClient({ id }: { id: string }) {
         isSaved={isSaved}
         onToggleSaved={handleToggleSaved}
       />
+      {trail.status === "removed" && (
+        <ContentRemovedBanner
+          removalReason={trail.removal_reason}
+          isOwner={Boolean(userId && trail.created_by === userId)}
+          favoriterNote={Boolean(userId && trail.created_by !== userId && isSaved)}
+          onResubmit={userId && trail.created_by === userId ? handleResubmit : undefined}
+          resubmitting={resubmitting}
+        />
+      )}
       <TrailDetailHighlights trail={trail} />
 
       <div className="mx-auto max-w-7xl px-4 pb-12 pt-16 md:px-6">
@@ -165,7 +232,14 @@ export default function TrailDetailClient({ id }: { id: string }) {
             <TripDetailReport onSubmit={handleReport} canReport={canInteract} />
             <TrailDetailWaypoints trail={trail} />
             <TrailDetailMapSection trail={trail} />
-            <TrailDetailGallery trail={trail} />
+            <TrailDetailGallery
+              images={galleryImages}
+              communityImages={communityImages}
+              currentUserId={userId}
+              canAddImage={canInteract}
+              onAddImage={handleAddGalleryImage}
+              onDeleteImage={handleDeleteGalleryImage}
+            />
             <TrailDetailNature trail={trail} />
           </div>
           <TrailDetailSidebar trail={trail} />
@@ -185,7 +259,7 @@ export default function TrailDetailClient({ id }: { id: string }) {
 
       <TripDetailReviews
         comments={comments}
-        users={store.users}
+        users={commentUsers}
         onAddReview={handleAddReview}
         canAddReview={canInteract && !hasUserReview}
       />
@@ -196,7 +270,7 @@ export default function TrailDetailClient({ id }: { id: string }) {
             className="rounded-sm border border-[#e5e7eb] bg-[#f9fafb] p-6"
             onSubmit={async (e) => {
               e.preventDefault();
-              const comment = await addComment("trail", id, commentText);
+              const comment = await addComment("trail", entityId, commentText);
               if (comment) {
                 setComments([...comments, comment]);
                 setCommentText("");
@@ -234,7 +308,7 @@ export default function TrailDetailClient({ id }: { id: string }) {
         </div>
       )}
 
-      <TrailDetailActions />
+      <TrailDetailActions trail={trail} />
 
       {showOwnerAssistant && (
         <CreateAssistantPanel

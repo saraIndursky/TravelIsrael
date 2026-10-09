@@ -11,6 +11,8 @@ interface TripDetailHeroProps {
   trip: Trip;
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
+  onShare?: () => void;
+  canShare?: boolean;
   /** מצב תצוגה מקדימה — ללא כפתורי פעולה */
   previewMode?: boolean;
 }
@@ -18,7 +20,14 @@ interface TripDetailHeroProps {
 const heroBtnClass =
   "flex h-11 w-11 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white";
 
-export function TripDetailHero({ trip, isFavorite, onToggleFavorite, previewMode }: TripDetailHeroProps) {
+export function TripDetailHero({
+  trip,
+  isFavorite,
+  onToggleFavorite,
+  onShare,
+  canShare = false,
+  previewMode,
+}: TripDetailHeroProps) {
   const reviewCount = getReviewCount(trip);
   const goBack = useGoBack();
 
@@ -45,9 +54,16 @@ export function TripDetailHero({ trip, isFavorite, onToggleFavorite, previewMode
             >
               <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
             </button>
-            <button type="button" className={heroBtnClass} aria-label="שתף">
-              <Share2 className="h-5 w-5 text-[#111827]" />
-            </button>
+            {canShare && onShare && (
+              <button
+                type="button"
+                onClick={onShare}
+                className={heroBtnClass}
+                aria-label="שתף טיול"
+              >
+                <Share2 className="h-5 w-5 text-[#111827]" />
+              </button>
+            )}
           </div>
           <button
             type="button"

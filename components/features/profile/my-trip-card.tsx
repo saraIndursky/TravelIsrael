@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import type { Status, Trip } from "@/types";
 import { DIFFICULTY_LABELS, STATUS_LABELS } from "@/types/enums";
+import { canEditTrip } from "@/lib/data/trips";
+import { useAuthStore } from "@/hooks/use-stores";
 import { StatusBadge } from "@/components/ui/custom/badges";
 import { RatingStars } from "@/components/ui/custom/rating-stars";
 import {
@@ -25,6 +27,7 @@ import {
 } from "@/components/features/trips/trip-card-shell";
 import { formatTripCardDuration, getReviewCount } from "@/lib/utils";
 import { getDifficultyColor } from "@/lib/utils/trip-display";
+import { tripEditPath, tripPath } from "@/lib/utils/content-path";
 import { cn } from "@/lib/utils";
 
 interface MyTripCardProps {
@@ -87,6 +90,8 @@ function ActionButton({
 
 export function MyTripCard({ trip, onSubmit, onDelete, onDuplicate, busy }: MyTripCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const { role, userId } = useAuthStore();
+  const showEdit = canEditTrip(trip, role, userId || null);
 
   async function handleDelete() {
     if (!confirmDelete) {
@@ -109,10 +114,12 @@ export function MyTripCard({ trip, onSubmit, onDelete, onDuplicate, busy }: MyTr
       case "draft":
         return (
           <>
-            <ActionLink href={`/trips/${trip.id}/edit`} variant="primary">
-              <PencilLine className="h-4 w-4" />
-              המשך עריכה
-            </ActionLink>
+            {showEdit && (
+              <ActionLink href={tripEditPath(trip)} variant="primary">
+                <PencilLine className="h-4 w-4" />
+                המשך עריכה
+              </ActionLink>
+            )}
             <ActionButton onClick={onSubmit} disabled={busy}>
               <Send className="h-4 w-4" />
               שליחה לאישור
@@ -126,14 +133,16 @@ export function MyTripCard({ trip, onSubmit, onDelete, onDuplicate, busy }: MyTr
       case "pending":
         return (
           <>
-            <ActionLink href={`/trips/${trip.id}`} variant="primary">
+            <ActionLink href={tripPath(trip)} variant="primary">
               <Eye className="h-4 w-4" />
               צפייה
             </ActionLink>
-            <ActionLink href={`/trips/${trip.id}/edit`}>
-              <PencilLine className="h-4 w-4" />
-              עריכה
-            </ActionLink>
+            {showEdit && (
+              <ActionLink href={tripEditPath(trip)}>
+                <PencilLine className="h-4 w-4" />
+                עריכה
+              </ActionLink>
+            )}
             <ActionButton onClick={handleDelete} variant="danger" disabled={busy}>
               <Trash2 className="h-4 w-4" />
               {confirmDelete ? "אישור מחיקה" : "מחיקה"}
@@ -143,10 +152,16 @@ export function MyTripCard({ trip, onSubmit, onDelete, onDuplicate, busy }: MyTr
       case "approved":
         return (
           <>
-            <ActionLink href={`/trips/${trip.id}`} variant="primary">
+            <ActionLink href={tripPath(trip)} variant="primary">
               <Eye className="h-4 w-4" />
               צפייה בטיול
             </ActionLink>
+            {showEdit && (
+              <ActionLink href={tripEditPath(trip)}>
+                <PencilLine className="h-4 w-4" />
+                עריכה
+              </ActionLink>
+            )}
             <ActionButton onClick={onDuplicate} disabled={busy}>
               <Copy className="h-4 w-4" />
               שכפל וערוך
@@ -156,14 +171,16 @@ export function MyTripCard({ trip, onSubmit, onDelete, onDuplicate, busy }: MyTr
       case "rejected":
         return (
           <>
-            <ActionLink href={`/trips/${trip.id}`} variant="primary">
+            <ActionLink href={tripPath(trip)} variant="primary">
               <Eye className="h-4 w-4" />
               צפייה
             </ActionLink>
-            <ActionLink href={`/trips/${trip.id}/edit`}>
-              <PencilLine className="h-4 w-4" />
-              עריכה
-            </ActionLink>
+            {showEdit && (
+              <ActionLink href={tripEditPath(trip)}>
+                <PencilLine className="h-4 w-4" />
+                עריכה
+              </ActionLink>
+            )}
             <ActionButton onClick={onSubmit} disabled={busy}>
               <Send className="h-4 w-4" />
               שליחה מחדש
@@ -171,6 +188,19 @@ export function MyTripCard({ trip, onSubmit, onDelete, onDuplicate, busy }: MyTr
             <ActionButton onClick={handleDelete} variant="danger" disabled={busy}>
               <Trash2 className="h-4 w-4" />
               {confirmDelete ? "אישור מחיקה" : "מחיקה"}
+            </ActionButton>
+          </>
+        );
+      case "removed":
+        return (
+          <>
+            <ActionLink href={tripPath(trip)} variant="primary">
+              <Eye className="h-4 w-4" />
+              צפייה
+            </ActionLink>
+            <ActionButton onClick={onSubmit} disabled={busy}>
+              <Send className="h-4 w-4" />
+              שליחה שוב לאישור
             </ActionButton>
           </>
         );
@@ -242,6 +272,12 @@ export function MyTripCard({ trip, onSubmit, onDelete, onDuplicate, busy }: MyTr
           {trip.rejection_reason}
         </div>
       )}
+
+      {trip.status === "removed" && (
+        <div className="rounded border border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          {trip.removal_reason?.trim() || "הטיול הוסר מהאתר על ידי מנהל."}
+        </div>
+      )}
     </TripCardShell>
   );
 }
@@ -251,4 +287,5 @@ export const CREATED_STATUS_TABS: { value: Status; label: string }[] = [
   { value: "pending", label: "ממתינים לאישור" },
   { value: "approved", label: "מאושרים" },
   { value: "rejected", label: "נדחו" },
+  { value: "removed", label: "הוסרו מהאתר" },
 ];

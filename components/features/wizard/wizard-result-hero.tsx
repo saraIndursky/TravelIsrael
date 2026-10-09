@@ -14,6 +14,7 @@ interface WizardResultHeroProps {
   matchScore: number;
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
+  onShare?: () => void;
 }
 
 const heroBtnClass =
@@ -24,6 +25,7 @@ export function WizardResultHero({
   matchScore,
   isFavorite,
   onToggleFavorite,
+  onShare,
 }: WizardResultHeroProps) {
   const reviewCount = getReviewCount(trip);
   const matchStyle = getMatchStyle(matchScore);
@@ -47,9 +49,11 @@ export function WizardResultHero({
           >
             <Heart className={cn("h-5 w-5", isFavorite && "fill-current")} />
           </button>
-          <button type="button" className={heroBtnClass} aria-label="שתף">
-            <Share2 className="h-5 w-5 text-[#111827]" />
-          </button>
+          {onShare && (
+            <button type="button" onClick={onShare} className={heroBtnClass} aria-label="שתף טיול">
+              <Share2 className="h-5 w-5 text-[#111827]" />
+            </button>
+          )}
         </div>
         <Link href="/wizard" className={heroBtnClass} aria-label="חזרה לוויזארד">
           <ArrowRight className="h-5 w-5 text-[#111827]" />

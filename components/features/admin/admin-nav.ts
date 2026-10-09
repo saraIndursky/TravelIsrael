@@ -5,6 +5,8 @@ import {
   Route,
   Flag,
   Users,
+  Globe2,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 
@@ -20,6 +22,8 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/trips", label: "טיולים", icon: Map, description: "אישור ועריכת טיולים" },
   { href: "/admin/places", label: "מקומות", icon: MapPin, description: "ניהול מקומות" },
   { href: "/admin/trails", label: "מסלולים", icon: Route, description: "ניהול מסלולים" },
+  { href: "/admin/regions", label: "אזורים", icon: Globe2, description: "היררכיית אזורים" },
   { href: "/admin/reports", label: "דיווחים", icon: Flag, description: "טיפול בדיווחים" },
+  { href: "/admin/moderation", label: "פיקוח", icon: ShieldCheck, description: "תגובות ותמונות מהקהילה" },
   { href: "/admin/users", label: "משתמשים", icon: Users, description: "תפקידי משתמשים" },
 ];

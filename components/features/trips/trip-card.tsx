@@ -8,6 +8,7 @@ import type { Trip } from "@/types";
 import { DIFFICULTY_LABELS } from "@/types/enums";
 import { formatTripCardDuration, getAccessibilityLabel, getReviewCount } from "@/lib/utils";
 import { getDifficultyColor } from "@/lib/utils/trip-display";
+import { tripPath } from "@/lib/utils/content-path";
 import { RatingStars } from "@/components/ui/custom/rating-stars";
 
 interface TripCardProps {
@@ -31,33 +32,39 @@ export function TripCard({
   return (
     <>
       <div className="group flex h-full flex-col overflow-hidden rounded border border-[#e5e7eb] bg-white transition-all duration-300 hover:border-[#d1d5db]">
-        <button
-          type="button"
-          className="relative h-[300px] w-full cursor-pointer overflow-hidden bg-[#f3f4f6] text-right"
-          onClick={() => setLightboxOpen(true)}
-          aria-label={`הגדל תמונה של ${trip.name}`}
-        >
-          <Image
-            src={trip.main_image}
-            alt={trip.name}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            sizes="(max-width:768px) 100vw, 33vw"
-          />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/30">
-            <Camera className="h-8 w-8 text-white opacity-0 transition-opacity group-hover:opacity-100" />
+        <div className="relative h-[300px] w-full overflow-hidden bg-[#f3f4f6]">
+          <div
+            role="button"
+            tabIndex={0}
+            className="relative h-full w-full cursor-pointer overflow-hidden text-right"
+            onClick={() => setLightboxOpen(true)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setLightboxOpen(true);
+              }
+            }}
+            aria-label={`הגדל תמונה של ${trip.name}`}
+          >
+            <Image
+              src={trip.main_image}
+              alt={trip.name}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              sizes="(max-width:768px) 100vw, 33vw"
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/30">
+              <Camera className="h-8 w-8 text-white opacity-0 transition-opacity group-hover:opacity-100" />
+            </div>
+            <span className="absolute top-3 right-3 rounded-full bg-white px-3 py-1 text-sm font-semibold text-gray-800">
+              {trip.region}
+            </span>
           </div>
-          <span className="absolute top-3 right-3 rounded-full bg-white px-3 py-1 text-sm font-semibold text-gray-800">
-            {trip.region}
-          </span>
           {showFavorite && (
             <button
               type="button"
-              className="absolute top-3 left-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-colors hover:bg-white disabled:opacity-60"
-              onClick={(e) => {
-                e.stopPropagation();
-                void onFavoriteToggle?.();
-              }}
+              className="absolute top-3 left-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-colors hover:bg-white disabled:opacity-60"
+              onClick={() => void onFavoriteToggle?.()}
               disabled={favoriteLoading}
               aria-label={isFavorite ? "הסר מהמועדפים" : "הוסף למועדפים"}
             >
@@ -66,7 +73,7 @@ export function TripCard({
               />
             </button>
           )}
-        </button>
+        </div>
 
         <div className="flex flex-grow flex-col p-5">
           <h3 className="text-lg font-medium text-[#111827] transition-colors group-hover:text-[#4b5563]">
@@ -111,7 +118,7 @@ export function TripCard({
 
             <div className="flex items-center justify-between border-t border-[#e5e7eb] pt-3 text-sm text-gray-600">
               <Link
-                href={`/trips/${trip.id}`}
+                href={tripPath(trip)}
                 className="w-full rounded border border-[#e5e7eb] bg-[#f9fafb] py-2.5 text-center text-sm font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
               >
                 לפרטים

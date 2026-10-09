@@ -6,8 +6,8 @@ Senior Full Stack developer building TravelIsrael — trip planning, discovery, 
 
 # Tech Stack
 - Frontend: Next.js App Router + React + Tailwind + shadcn/ui
-- Data (demo): lib/data/ with seed files in data/seed/
-- Future: Supabase, Resend, Vercel
+- Backend: Supabase — Auth, Postgres with RLS, Storage
+- Future: Resend, Vercel
 
 # Folder Structure
 ```
@@ -17,17 +17,19 @@ components/
   layout/      → Header, Footer, MobileNav
   features/    → trips, places, trails, wizard, admin, profile
 lib/
-  data/        → demo repos (queries & mutations)
+  data/        → typed repos (queries & mutations) — all DB access
+  supabase/    → clients, mappers, schema selection
   utils/       → helpers
   validations/ → Zod schemas
 types/         → TypeScript types
-data/seed/     → static demo data
+data/seed/     → static reference lists, used only by the AI assistant lookup
+supabase/      → DB schema baseline and demo seed
 hooks/         → custom React hooks
 ```
 
 # Feature Workflow
 1. Types in types/[entity].ts
-2. Seed + repo in lib/data/[entity].ts
+2. Repo in lib/data/[entity].ts
 3. Server Component page
 4. Client Components only for interactivity
 

@@ -9,7 +9,7 @@ import {
   TrendingUp,
   type LucideIcon,
 } from "lucide-react";
-import type { Difficulty, Region } from "@/types";
+import type { Difficulty } from "@/types";
 import { DIFFICULTY_LABELS } from "@/types/enums";
 
 export const WIZARD_STEPS: { key: string; label: string; icon: LucideIcon }[] = [
@@ -20,46 +20,6 @@ export const WIZARD_STEPS: { key: string; label: string; icon: LucideIcon }[] = 
   { key: "tags", label: "בחירת תגיות", icon: Tags },
   { key: "specialPreferences", label: "העדפות מיוחדות", icon: Settings },
   { key: "summary", label: "סיכום", icon: FileText },
-];
-
-export interface RegionTreeNode {
-  label: string;
-  region?: Region;
-  children?: RegionTreeNode[];
-}
-
-export const REGION_TREE: RegionTreeNode[] = [
-  { label: "ישראל" },
-  {
-    label: "דרום",
-    children: [
-      { label: "נגב", region: "נגב" },
-      { label: "אילת", region: "אילת" },
-      { label: "ים המלח", region: "ים המלח" },
-    ],
-  },
-  {
-    label: "מרכז",
-    children: [
-      { label: "מרכז", region: "מרכז" },
-      { label: "חוף", region: "חוף" },
-    ],
-  },
-  {
-    label: "צפון",
-    children: [
-      { label: "צפון", region: "צפון" },
-      { label: "גליל", region: "גליל" },
-      { label: "כרמל", region: "כרמל" },
-    ],
-  },
-  {
-    label: "ירושלים והסביבה",
-    children: [
-      { label: "ירושלים", region: "ירושלים" },
-      { label: "יהודה ושומרון", region: "יהודה ושומרון" },
-    ],
-  },
 ];
 
 export const DIFFICULTY_OPTIONS: { label: string; value: Difficulty }[] = [

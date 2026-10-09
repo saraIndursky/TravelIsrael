@@ -11,3 +11,9 @@ export const REPORT_TYPE_LABELS: Record<ReportType, string> = {
   inaccuracy: "חוסר נכונות",
   update: "עדכון",
 };
+
+export function entityHref(type: EntityType, id: string): string {
+  if (type === "trip") return `/trips/${id}`;
+  if (type === "place") return `/places/${id}`;
+  return `/trails/${id}`;
+}

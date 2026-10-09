@@ -12,14 +12,17 @@ import {
   authInputClassName,
   authSubmitClassName,
 } from "@/components/features/auth/auth-page-shell";
+import { AuthDivider } from "@/components/features/auth/auth-divider";
+import { GoogleSignInButton } from "@/components/features/auth/google-sign-in-button";
 import { toast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/hooks/use-stores";
-import { registerDemo } from "@/lib/data/auth";
+import { registerWithEmail } from "@/lib/data/auth";
+import { trackEvent } from "@/lib/analytics";
 import { registerSchema, type RegisterFormValues } from "@/lib/validations";
 
 export function RegisterForm() {
   const router = useRouter();
-  const { login } = useAuthStore();
+  const { setSession } = useAuthStore();
   const [submitting, setSubmitting] = useState(false);
 
   const {
@@ -33,13 +36,14 @@ export function RegisterForm() {
   async function onSubmit(values: RegisterFormValues) {
     setSubmitting(true);
     try {
-      const user = await registerDemo({
+      const user = await registerWithEmail({
         firstName: values.firstName,
         lastName: values.lastName,
         email: values.email,
         password: values.password,
       });
-      login(user.id, user.role);
+      setSession(user);
+      trackEvent("user_registered");
       toast({ title: "החשבון נוצר בהצלחה" });
       router.push("/");
     } catch (error) {
@@ -143,6 +147,9 @@ export function RegisterForm() {
         <button type="submit" disabled={submitting} className={`${authSubmitClassName} mt-6`}>
           {submitting ? "יוצר חשבון..." : "יצירת חשבון"}
         </button>
+
+        <AuthDivider />
+        <GoogleSignInButton nextPath="/" />
       </form>
     </AuthPageShell>
   );

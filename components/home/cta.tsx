@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useAuthStore } from "@/hooks/use-stores";
 
 export function HomeCta() {
-  const { role, setRole } = useAuthStore();
+  const { role } = useAuthStore();
 
   return (
     <section className="bg-muted/40 py-16 md:py-20">
@@ -12,13 +13,15 @@ export function HomeCta() {
         <p className="text-muted-foreground max-w-lg mx-auto">
           צרו חשבון והתחילו לתכנן את הטיול הבא שלכם היום
         </p>
-        <button
-          type="button"
-          className="ti-btn-primary px-8 py-3.5 text-base"
-          onClick={() => setRole(role === "guest" ? "user" : role)}
-        >
-          הצטרף עכשיו
-        </button>
+        {role === "guest" ? (
+          <Link href="/register" className="ti-btn-primary inline-block px-8 py-3.5 text-base">
+            הצטרף עכשיו
+          </Link>
+        ) : (
+          <Link href="/trips/create" className="ti-btn-primary inline-block px-8 py-3.5 text-base">
+            צור טיול חדש
+          </Link>
+        )}
       </div>
     </section>
   );

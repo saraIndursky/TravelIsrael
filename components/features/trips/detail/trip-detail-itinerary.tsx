@@ -1,14 +1,16 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Clock } from "lucide-react";
-import type { Place, Trail, TripStation } from "@/types";
+import type { Place, Trail, Trip, TripStation } from "@/types";
 import { getTypeStyle } from "@/lib/utils/trip-display";
 import { computeTripSchedule } from "@/lib/utils/trip-schedule";
 import { resolveStationDetails } from "@/lib/utils/trip-calculations";
+import { placePath, trailPath } from "@/lib/utils/content-path";
 import { TripDetailMap } from "@/components/features/trips/detail/trip-detail-map";
 import type { MapMarker } from "@/components/ui/custom/map-view";
 
 interface TripDetailItineraryProps {
+  trip: Trip;
   stations: TripStation[];
   places: Place[];
   trails: Trail[];
@@ -30,14 +32,9 @@ function getStationEntity(
   return null;
 }
 
-function getStationLink(station: TripStation): string {
-  if (station.station_type === "trail" && station.trail_id) {
-    return `/trails/${station.trail_id}`;
-  }
-  if (station.place_id) {
-    return `/places/${station.place_id}`;
-  }
-  return "#";
+function getStationLink(station: TripStation, entity: Place | Trail): string {
+  if (station.station_type === "trail") return trailPath(entity);
+  return placePath(entity);
 }
 
 function getStationImage(entity: Place | Trail): string {
@@ -49,6 +46,7 @@ function getStationDescription(entity: Place | Trail): string {
 }
 
 export function TripDetailItinerary({
+  trip,
   stations,
   places,
   trails,
@@ -81,7 +79,7 @@ export function TripDetailItinerary({
             const typeStyle = getTypeStyle(typeName);
 
             return (
-              <Link key={station.id} href={getStationLink(station)} className="block">
+              <Link key={station.id} href={getStationLink(station, entity)} className="block">
                 <div className="overflow-hidden rounded-sm border border-[#e5e7eb] transition-all hover:border-[#d1d5db]">
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                     <div className="md:col-span-1">
@@ -138,10 +136,24 @@ export function TripDetailItinerary({
         </div>
       </section>
 
-      {mapPlacement === "bottom" && <TripDetailMap markers={mapMarkers} />}
+      {mapPlacement === "bottom" && (
+        <TripDetailMap
+          markers={mapMarkers}
+          trip={trip}
+          stations={stations}
+          places={places}
+          trails={trails}
+        />
+      )}
       {mapPlacement === "mobile-only" && (
         <div className="lg:hidden">
-          <TripDetailMap markers={mapMarkers} />
+          <TripDetailMap
+            markers={mapMarkers}
+            trip={trip}
+            stations={stations}
+            places={places}
+            trails={trails}
+          />
         </div>
       )}
     </div>

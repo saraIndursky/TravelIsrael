@@ -1,27 +1,31 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
+const HERO_IMAGE =
+  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&h=1080&fit=crop";
+
 export function HomeHero() {
   return (
-    <section className="relative h-screen flex items-center">
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&h=1080&fit=crop')",
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/25 to-black/55" />
-      </div>
+    <section className="relative flex min-h-[100svh] items-start pt-24 pb-12 md:items-center">
+      <Image
+        src={HERO_IMAGE}
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-[center_30%]"
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/25 to-black/55" />
 
-      <div className="relative max-w-7xl mx-auto px-6 w-full">
+      <div className="relative mx-auto w-full max-w-7xl px-6">
         <div className="max-w-2xl">
-          <h1 className="text-5xl md:text-7xl font-light text-white mb-6 leading-tight">
+          <h1 className="mb-6 text-5xl font-light leading-tight text-white md:text-7xl">
             תכנון טיולים
             <br />
             במבט אחד
           </h1>
-          <p className="text-xl text-white/90 mb-12 font-light leading-relaxed">
+          <p className="mb-12 text-xl font-light leading-relaxed text-white/90">
             גלו מסלולים מתוכננים, מקומות מומלצים וטיולים
             <br />
             שמתאימים בדיוק לצרכים שלכם
@@ -30,18 +34,18 @@ export function HomeHero() {
           <div className="flex flex-col gap-4">
             <Link
               href="/wizard"
-              className="group inline-flex items-center justify-center gap-3 bg-white text-gray-900 px-8 py-4 max-w-[220px] rounded-md text-sm font-medium hover:bg-gray-50 transition-all"
+              className="group inline-flex max-w-[220px] items-center justify-center gap-3 rounded-md bg-white px-8 py-4 text-sm font-medium text-gray-900 transition-all hover:bg-gray-50"
             >
               מצא לי טיול
-              <ArrowLeft className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <ArrowLeft className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
 
             <Link
               href="/trips/create"
-              className="group inline-flex items-center justify-center gap-3 bg-white/60 text-gray-800 px-8 py-4 max-w-[220px] rounded-md text-sm font-medium border border-gray-300 hover:bg-white hover:text-gray-900 transition-all"
+              className="group inline-flex max-w-[220px] items-center justify-center gap-3 rounded-md border border-gray-300 bg-white/60 px-8 py-4 text-sm font-medium text-gray-800 transition-all hover:bg-white hover:text-gray-900"
             >
               תכנן טיול אישי
-              <ArrowLeft className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <ArrowLeft className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
         </div>

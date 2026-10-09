@@ -1,6 +1,13 @@
-import type { Accessibility, Place, Region, Status } from "@/types";
-import { canViewStatus, getCurrentRole, getCurrentUser } from "./auth";
-import { generateId, getStore, updateStore } from "./store";
+import type { Accessibility, Place, Region, Status, UserRole } from "@/types";
+import { createClient } from "@/lib/supabase/client";
+import { mapPlace } from "@/lib/supabase/mappers";
+import { notifyFavoriteEntityUpdated } from "@/lib/notifications/client";
+import { canHardDeleteContent, HARD_DELETE_APPROVED_MESSAGE } from "./content-delete";
+import { insertWithUniqueSlug } from "./slugs";
+import { slugOrIdColumn } from "@/lib/utils/slug";
+import { canViewContent, isVisibleInDiscoveryList } from "./content-access";
+import { getCurrentRole, getCurrentUser } from "./auth";
+import { isFavoriteEntity } from "./favorites";
 
 export interface PlaceFilters {
   region?: Region;
@@ -32,6 +39,8 @@ export interface CreatePlaceInput {
   image_url: string;
 }
 
+export type UpdatePlaceInput = CreatePlaceInput;
+
 export const PLACE_TYPE_OPTIONS = [
   "מוזיאון",
   "חוף",
@@ -50,121 +59,266 @@ export const PLACE_TYPE_OPTIONS = [
 const DEFAULT_PLACE_IMAGE =
   "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800";
 
-export async function getPlaces(filters?: PlaceFilters): Promise<Place[]> {
-  const store = getStore();
-  const user = await getCurrentUser();
-  const role = await getCurrentRole();
-
-  let places = store.places.filter((p) =>
-    canViewStatus(p.status, p.created_by, role, user?.id ?? null)
-  );
-
-  if (filters?.createdBy) places = places.filter((p) => p.created_by === filters.createdBy);
-  if (filters?.status) places = places.filter((p) => p.status === filters.status);
-  if (filters?.region) places = places.filter((p) => p.region === filters.region);
-  if (filters?.place_type) places = places.filter((p) => p.place_type === filters.place_type);
-  if (filters?.accessibility)
-    places = places.filter((p) => p.accessibility >= filters.accessibility!);
-  if (filters?.tags?.length)
-    places = places.filter((p) => filters.tags!.some((t) => p.tags.includes(t)));
+function applyPlaceFilters(places: Place[], filters?: PlaceFilters): Place[] {
+  let result = places;
+  if (filters?.createdBy) result = result.filter((p) => p.created_by === filters.createdBy);
+  if (filters?.status) result = result.filter((p) => p.status === filters.status);
+  if (filters?.region) result = result.filter((p) => p.region === filters.region);
+  if (filters?.place_type) result = result.filter((p) => p.place_type === filters.place_type);
+  if (filters?.accessibility) {
+    result = result.filter((p) => p.accessibility >= filters.accessibility!);
+  }
+  if (filters?.tags?.length) {
+    result = result.filter((p) => filters.tags!.some((t) => p.tags.includes(t)));
+  }
   if (filters?.search) {
     const q = filters.search.toLowerCase();
-    places = places.filter(
+    result = result.filter(
       (p) =>
         p.name.toLowerCase().includes(q) ||
         p.short_description.toLowerCase().includes(q) ||
         p.tags.some((t) => t.includes(q))
     );
   }
+  return result;
+}
 
-  return places;
+export async function getPlaces(filters?: PlaceFilters): Promise<Place[]> {
+  const supabase = createClient();
+  let query = supabase.from("places").select("*");
+
+  if (filters?.status) query = query.eq("status", filters.status);
+  if (filters?.createdBy) query = query.eq("created_by", filters.createdBy);
+  if (filters?.region) query = query.eq("region", filters.region);
+  if (filters?.place_type) query = query.eq("place_type", filters.place_type);
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+
+  return applyPlaceFilters((data ?? []).map(mapPlace), filters).filter((place) =>
+    isVisibleInDiscoveryList(place.status, Boolean(filters?.createdBy))
+  );
 }
 
 export async function getPlaceById(id: string): Promise<Place | null> {
-  const places = await getPlaces();
-  return places.find((p) => p.id === id) ?? null;
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("places")
+    .select("*")
+    .eq(slugOrIdColumn(id), id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+
+  const place = mapPlace(data);
+  const user = await getCurrentUser();
+  const role = await getCurrentRole();
+  const favorited = user ? await isFavoriteEntity("place", place.id) : false;
+  if (!canViewContent(place.status, place.created_by, role, user?.id ?? null, favorited)) return null;
+  return place;
 }
 
 export async function createPlace(data: CreatePlaceInput): Promise<Place> {
   const user = await getCurrentUser();
   if (!user) throw new Error("יש להתחבר כדי ליצור מקום");
 
-  const now = new Date().toISOString();
-  const imageUrl = data.image_url.trim() || DEFAULT_PLACE_IMAGE;
+  const supabase = createClient();
+  const row = await insertWithUniqueSlug(data.name, async (slug) => {
+    const result = await supabase
+      .from("places")
+      .insert({
+        name: data.name.trim(),
+        slug,
+        short_description: data.short_description.trim(),
+        full_description: data.full_description.trim(),
+        address: data.address.trim(),
+        lat: data.lat,
+        lng: data.lng,
+        region: data.region,
+        place_type: data.place_type,
+        accessibility: data.accessibility,
+        tags: data.tags,
+        avg_duration_minutes: data.avg_duration_minutes,
+        estimated_price: data.estimated_price,
+        opening_time: data.opening_time?.trim() || null,
+        closing_time: data.closing_time?.trim() || null,
+        phone: data.phone?.trim() || null,
+        website: data.website?.trim() || null,
+        image_url: data.image_url.trim() || DEFAULT_PLACE_IMAGE,
+        created_by: user.id,
+        status: "pending",
+      })
+      .select("*")
+      .single();
+    return { data: result.data, error: result.error };
+  });
+  return mapPlace(row);
+}
 
-  const place: Place = {
-    id: generateId("place"),
-    name: data.name.trim(),
-    short_description: data.short_description.trim(),
-    full_description: data.full_description.trim(),
-    address: data.address.trim(),
-    lat: data.lat,
-    lng: data.lng,
-    region: data.region,
-    place_type: data.place_type,
-    accessibility: data.accessibility,
-    tags: data.tags,
-    avg_duration_minutes: data.avg_duration_minutes,
-    estimated_price: data.estimated_price,
-    opening_time: data.opening_time?.trim() || undefined,
-    closing_time: data.closing_time?.trim() || undefined,
-    phone: data.phone?.trim() || undefined,
-    website: data.website?.trim() || undefined,
-    image_url: imageUrl,
-    created_by: user.id,
-    status: "pending",
-    updated_at: now,
-  };
+/** בעלים רשאי לערוך רק כל עוד המקום לא אושר. מקום מאושר — מנהל בלבד. */
+export function canEditPlace(place: Place, role: UserRole, userId: string | null): boolean {
+  if (role === "admin") return true;
+  if (!userId || place.created_by !== userId) return false;
+  return place.status === "pending" || place.status === "rejected";
+}
 
-  updateStore((store) => ({
-    ...store,
-    places: [...store.places, place],
-  }));
+export async function updatePlace(id: string, data: UpdatePlaceInput): Promise<Place | null> {
+  const user = await getCurrentUser();
+  const role = await getCurrentRole();
+  const existing = await getPlaceById(id);
+  if (!existing) return null;
+  if (!canEditPlace(existing, role, user?.id ?? null)) return null;
 
-  return place;
+  const isAdmin = role === "admin";
+  const supabase = createClient();
+  const { data: row, error } = await supabase
+    .from("places")
+    .update({
+      name: data.name.trim(),
+      short_description: data.short_description.trim(),
+      full_description: data.full_description.trim(),
+      address: data.address.trim(),
+      lat: data.lat,
+      lng: data.lng,
+      region: data.region,
+      place_type: data.place_type,
+      accessibility: data.accessibility,
+      tags: data.tags,
+      avg_duration_minutes: data.avg_duration_minutes,
+      estimated_price: data.estimated_price,
+      opening_time: data.opening_time?.trim() || null,
+      closing_time: data.closing_time?.trim() || null,
+      phone: data.phone?.trim() || null,
+      website: data.website?.trim() || null,
+      image_url: data.image_url.trim() || DEFAULT_PLACE_IMAGE,
+      // עריכה של בעלים מחזירה את המקום לתור האישור; מנהל עורך בלי לשנות סטטוס
+      ...(isAdmin ? {} : { status: "pending" as Status, rejection_reason: null }),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error || !row) throw new Error(error?.message ?? "עדכון המקום נכשל");
+  if (!isAdmin) {
+    void notifyFavoriteEntityUpdated({ entityType: "place", entityId: id });
+  }
+  return mapPlace(row);
 }
 
 export async function deletePlace(id: string): Promise<boolean> {
   const user = await getCurrentUser();
   const role = await getCurrentRole();
-  const store = getStore();
-  const existing = store.places.find((p) => p.id === id);
+  const existing = await getPlaceById(id);
   if (!existing) return false;
-  if (role !== "admin" && existing.created_by !== user?.id) return false;
-  if (existing.status === "approved" && role !== "admin") return false;
+  if (!canHardDeleteContent(existing.status, existing.created_by, role, user?.id ?? null)) {
+    throw new Error(HARD_DELETE_APPROVED_MESSAGE);
+  }
 
-  updateStore((s) => ({
-    ...s,
-    places: s.places.filter((p) => p.id !== id),
-  }));
+  const supabase = createClient();
+  const { error } = await supabase.from("places").delete().eq("id", id);
+  if (error) throw new Error(error.message);
   return true;
 }
 
-export async function updatePlaceStatus(id: string, status: Status, rejectionReason?: string | null): Promise<Place | null> {
+export async function updatePlaceStatus(
+  id: string,
+  status: Status,
+  rejectionReason?: string | null
+): Promise<Place | null> {
   const role = await getCurrentRole();
   if (role !== "admin") return null;
-  updateStore((store) => ({
-    ...store,
-    places: store.places.map((p) =>
-      p.id === id
-        ? {
-            ...p,
-            status,
-            rejection_reason: status === "rejected" ? rejectionReason?.trim() || undefined : status === "approved" ? undefined : p.rejection_reason,
-            updated_at: new Date().toISOString(),
-          }
-        : p
-    ),
-  }));
-  return getPlaceById(id);
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("places")
+    .update({
+      status,
+      rejection_reason: status === "rejected" ? rejectionReason?.trim() || null : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error || !data) return null;
+  return mapPlace(data);
+}
+
+export async function removePlaceFromSite(id: string, reason?: string | null): Promise<Place | null> {
+  const role = await getCurrentRole();
+  if (role !== "admin") return null;
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("places")
+    .update({
+      status: "removed",
+      removal_reason: reason?.trim() || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error || !data) return null;
+  return mapPlace(data);
+}
+
+export async function resubmitPlaceForApproval(id: string): Promise<Place | null> {
+  const user = await getCurrentUser();
+  if (!user) return null;
+
+  const existing = await getPlaceById(id);
+  if (!existing || existing.created_by !== user.id || existing.status !== "removed") return null;
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("places")
+    .update({
+      status: "pending",
+      removal_reason: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error || !data) return null;
+  return mapPlace(data);
 }
 
 export async function restorePlace(id: string): Promise<Place | null> {
-  return updatePlaceStatus(id, "pending", null);
+  const role = await getCurrentRole();
+  if (role !== "admin") return null;
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("places")
+    .update({
+      status: "pending",
+      rejection_reason: null,
+      removal_reason: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error || !data) return null;
+  return mapPlace(data);
 }
 
 export async function getAllPlacesAdmin(): Promise<Place[]> {
   const role = await getCurrentRole();
   if (role !== "admin") return [];
-  return getStore().places;
+
+  const supabase = createClient();
+  const { data, error } = await supabase.from("places").select("*").order("updated_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapPlace);
+}
+
+export async function getPlacesCatalog(): Promise<Place[]> {
+  return getPlaces();
 }

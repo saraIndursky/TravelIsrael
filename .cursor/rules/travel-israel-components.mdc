@@ -22,7 +22,6 @@ StatusTabs — drafts / pending / approved / rejected
 
 # Layout
 Header, Footer, MobileNav — RTL, mobile-first
-DemoRoleSwitcher in header for demo auth
 
 # UX Requirements
 - dir="rtl" throughout

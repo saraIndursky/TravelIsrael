@@ -2,10 +2,12 @@ import type { Accessibility, Difficulty, Region, Status } from "./enums";
 
 export interface Trail {
   id: string;
+  slug?: string;
   name: string;
   short_description: string;
   full_description: string;
   region: Region;
+  region_id?: string;
   trail_type: string;
   length_km: number;
   duration_minutes: number;
@@ -23,5 +25,6 @@ export interface Trail {
   created_by: string;
   status: Status;
   rejection_reason?: string;
+  removal_reason?: string;
   updated_at: string;
 }

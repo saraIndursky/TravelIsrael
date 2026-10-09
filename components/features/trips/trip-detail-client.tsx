@@ -26,11 +26,9 @@ import { TripDetailRating } from "@/components/features/trips/detail/trip-detail
 
 import { TripDetailReport } from "@/components/features/trips/detail/trip-detail-report";
 
-import { TripDetailActions, type TripDetailActionsMode } from "@/components/features/trips/detail/trip-detail-actions";
+import { TripDetailActions } from "@/components/features/trips/detail/trip-detail-actions";
 
 import {
-
-  addTripGalleryImage,
 
   duplicateTrip,
 
@@ -38,7 +36,7 @@ import {
 
   incrementTripViews,
 
-  updateTrip,
+  submitTripForApproval,
 } from "@/lib/data/trips";
 
 import {
@@ -60,18 +58,25 @@ import {
 import { createReport } from "@/lib/data/reports";
 
 import { isFavorite, toggleFavorite } from "@/lib/data/favorites";
-
-import { getStore } from "@/lib/data/store";
+import { addEntityGalleryImage, deleteEntityImage, getEntityImages } from "@/lib/data/images";
+import type { GalleryImagePayload } from "@/components/features/content/add-gallery-image-dialog";
+import { getProfilesByIds } from "@/lib/data/auth";
+import { usePlacesTrailsCatalog } from "@/hooks/use-catalog";
 
 import { computeTripSchedule } from "@/lib/utils/trip-schedule";
 
 import { buildTripMapMarkers } from "@/lib/utils/trip-map";
+import { shareTrip } from "@/lib/utils/share";
+import { tripEditPath, tripPath } from "@/lib/utils/content-path";
+import { useCanonicalContentPath } from "@/hooks/use-canonical-content-path";
 
 import { useAuthStore } from "@/hooks/use-stores";
 
+import { ClientPageLoading } from "@/components/layout/page-loading";
+import { ContentRemovedBanner } from "@/components/features/content/content-removed-banner";
 import { toast } from "@/components/ui/use-toast";
 
-import type { Comment, ReportType } from "@/types";
+import type { Comment, EntityImage, ReportType, User } from "@/types";
 
 
 
@@ -80,8 +85,10 @@ export default function TripDetailClient({ id }: { id: string }) {
   const router = useRouter();
 
   const { role, userId } = useAuthStore();
+  const { places, trails } = usePlacesTrailsCatalog();
 
   const [trip, setTrip] = useState<TripWithStations | null>(null);
+  const [commentUsers, setCommentUsers] = useState<User[]>([]);
 
   const [comments, setComments] = useState<Comment[]>([]);
 
@@ -102,12 +109,13 @@ export default function TripDetailClient({ id }: { id: string }) {
   const [duplicating, setDuplicating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [hasUserReview, setHasUserReview] = useState(false);
+  const [communityImages, setCommunityImages] = useState<EntityImage[]>([]);
 
 
 
   const canInteract = role !== "guest";
 
-
+  useCanonicalContentPath(id, trip ? tripPath(trip) : null);
 
   useEffect(() => {
 
@@ -125,18 +133,21 @@ export default function TripDetailClient({ id }: { id: string }) {
 
       setTrip(t);
 
-      await incrementTripViews(id);
+      await incrementTripViews(t.id);
 
-      setComments(await getComments("trip", id));
+      const loadedComments = await getComments("trip", t.id);
+      setComments(loadedComments);
+      setCommentUsers(await getProfilesByIds(loadedComments.map((comment) => comment.user_id)));
 
-      setRatingsCount((await getRatings("trip", id)).length);
+      setRatingsCount((await getRatings("trip", t.id)).length);
 
-      const existingRating = await getUserRating("trip", id);
+      const existingRating = await getUserRating("trip", t.id);
 
       setUserRating(existingRating?.score ?? 0);
 
-      setFavorite(await isFavorite(id));
-      setHasUserReview(!!(await getUserComment("trip", id)));
+      setFavorite(await isFavorite(t.id));
+      setHasUserReview(!!(await getUserComment("trip", t.id)));
+      setCommunityImages(await getEntityImages("trip", t.id));
       setLoading(false);
 
     }
@@ -145,19 +156,12 @@ export default function TripDetailClient({ id }: { id: string }) {
 
   }, [id]);
 
-
-
-  const store = getStore();
-
-
-
   const totalTravelKm = useMemo(() => {
 
     if (!trip) return 0;
 
-    return computeTripSchedule(trip.stations, store.places, store.trails).totalTravelKm;
-
-  }, [trip, store.places, store.trails]);
+    return computeTripSchedule(trip.stations, places, trails).totalTravelKm;
+  }, [trip, places, trails]);
 
 
 
@@ -165,36 +169,26 @@ export default function TripDetailClient({ id }: { id: string }) {
 
     if (!trip) return [];
 
-    return buildTripMapMarkers(trip.stations, store.places, store.trails);
-
-  }, [trip, store.places, store.trails]);
+    return buildTripMapMarkers(trip.stations, places, trails);
+  }, [trip, places, trails]);
 
 
 
   if (loading) {
-
-    return <div className="min-h-screen animate-pulse bg-[#f9fafb] pt-20">טוען...</div>;
-
+    return <ClientPageLoading />;
   }
 
   if (!trip) notFound();
 
-  const isOwner = trip.created_by === userId;
-  const actionsMode: TripDetailActionsMode =
-    isOwner && trip.status === "draft"
-      ? "owner-draft"
-      : isOwner && trip.status === "rejected"
-        ? "owner-rejected"
-        : "default";
-
-  const handleEdit = () => router.push(`/trips/${id}/edit`);
+  const entityId = trip.id;
 
   const handleSubmitForApproval = async () => {
     setSubmitting(true);
-    const result = await updateTrip(id, { status: "pending" });
+    const result = await submitTripForApproval(entityId);
     setSubmitting(false);
     if (result) {
-      setTrip(result);
+      const refreshed = await getTripById(entityId);
+      if (refreshed) setTrip(refreshed);
       toast({ title: "הטיול נשלח לאישור" });
     } else {
       toast({ title: "שגיאה בשליחה לאישור", variant: "destructive" });
@@ -227,13 +221,20 @@ export default function TripDetailClient({ id }: { id: string }) {
 
     setSavingFavorite(true);
 
-    const next = await toggleFavorite(id);
+    const next = await toggleFavorite(entityId);
 
     setFavorite(next);
 
-    const updated = await getTripById(id);
+    const updated = await getTripById(entityId);
 
-    if (updated) setTrip(updated);
+    if (!updated) {
+      setSavingFavorite(false);
+      toast({ title: "הטיול הוסר מהמועדפים — אין גישה לתוכן שהוסר" });
+      notFound();
+      return;
+    }
+
+    setTrip(updated);
 
     toast({ title: next ? "הטיול נשמר למועדפים" : "הטיול הוסר מהמועדפים" });
 
@@ -255,7 +256,7 @@ export default function TripDetailClient({ id }: { id: string }) {
 
     setDuplicating(true);
 
-    const copy = await duplicateTrip(id);
+    const copy = await duplicateTrip(entityId);
 
     setDuplicating(false);
 
@@ -263,7 +264,7 @@ export default function TripDetailClient({ id }: { id: string }) {
 
       toast({ title: "הטיול שוכפל — ניתן לערוך אותו" });
 
-      router.push(`/trips/${copy.id}/edit`);
+      router.push(tripEditPath(copy));
 
     } else {
 
@@ -285,15 +286,15 @@ export default function TripDetailClient({ id }: { id: string }) {
 
     }
 
-    const rating = await upsertRating("trip", id, score);
+    const rating = await upsertRating("trip", entityId, score);
 
     if (rating) {
 
       setUserRating(score);
 
-      setRatingsCount((await getRatings("trip", id)).length);
+      setRatingsCount((await getRatings("trip", entityId)).length);
 
-      const updated = await getTripById(id);
+      const updated = await getTripById(entityId);
 
       if (updated) setTrip(updated);
 
@@ -306,7 +307,7 @@ export default function TripDetailClient({ id }: { id: string }) {
 
 
   const handleReport = async (reportType: ReportType, reason: string) => {
-    const report = await createReport("trip", id, reportType, reason);
+    const report = await createReport("trip", entityId, reportType, reason);
 
     if (report) {
 
@@ -322,39 +323,62 @@ export default function TripDetailClient({ id }: { id: string }) {
 
 
 
-  const handleAddGalleryImage = async (url: string) => {
-
-    const updated = await addTripGalleryImage(id, url);
-
-    if (updated) {
-
-      setTrip(updated);
-
+  const handleAddGalleryImage = async (payload: GalleryImagePayload) => {
+    const added = await addEntityGalleryImage("trip", entityId, payload);
+    if (added) {
+      setCommunityImages((prev) => [...prev, added]);
       toast({ title: "התמונה נוספה לגלריה" });
-
     } else {
-
-      toast({ title: "יש להתחבר כדי להוסיף תמונה", variant: "destructive" });
-
+      throw new Error("יש להתחבר כדי להוסיף תמונה");
     }
-
   };
 
+  const handleDeleteGalleryImage = async (imageId: string) => {
+    const ok = await deleteEntityImage(imageId);
+    if (!ok) {
+      toast({ title: "מחיקת התמונה נכשלה", variant: "destructive" });
+      throw new Error("מחיקת התמונה נכשלה");
+    }
+    setCommunityImages((prev) => prev.filter((image) => image.id !== imageId));
+    toast({ title: "התמונה נמחקה" });
+  };
 
+  const handleShare = async () => {
+    try {
+      const result = await shareTrip(trip);
+      toast({
+        title: result === "shared" ? "הטיול שותף" : "הקישור הועתק ללוח",
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+      toast({
+        title: error instanceof Error ? error.message : "שגיאה בשיתוף",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
 
     <div className="min-h-screen bg-white" dir="rtl">
 
       <TripDetailHero
-
         trip={trip}
-
         isFavorite={favorite}
-
         onToggleFavorite={handleToggleFavorite}
-
+        canShare={trip.status === "approved"}
+        onShare={handleShare}
       />
+
+      {trip.status === "removed" && (
+        <ContentRemovedBanner
+          removalReason={trip.removal_reason}
+          isOwner={Boolean(userId && trip.created_by === userId)}
+          favoriterNote={Boolean(userId && trip.created_by !== userId && favorite)}
+          onResubmit={userId && trip.created_by === userId ? handleSubmitForApproval : undefined}
+          resubmitting={submitting}
+        />
+      )}
 
       <TripDetailHighlights trip={trip} totalTravelKm={totalTravelKm} />
 
@@ -365,15 +389,11 @@ export default function TripDetailClient({ id }: { id: string }) {
       </div>
 
       <TripDetailItinerary
-
+        trip={trip}
         stations={trip.stations}
-
-        places={store.places}
-
-        trails={store.trails}
-
+        places={places}
+        trails={trails}
         mapMarkers={mapMarkers}
-
       />
 
       <TripDetailGallery
@@ -382,13 +402,14 @@ export default function TripDetailClient({ id }: { id: string }) {
 
         stations={trip.stations}
 
-        places={store.places}
+        places={places}
 
-        trails={store.trails}
-
+        trails={trails}
+        communityImages={communityImages}
+        currentUserId={userId}
         canAddImage={canInteract}
-
         onAddImage={handleAddGalleryImage}
+        onDeleteImage={handleDeleteGalleryImage}
 
       />
 
@@ -409,7 +430,7 @@ export default function TripDetailClient({ id }: { id: string }) {
 
       <TripDetailReviews
         comments={comments}
-        users={store.users}
+        users={commentUsers}
         onAddReview={handleAddReview}
         canAddReview={canInteract && !hasUserReview}
       />
@@ -426,7 +447,7 @@ export default function TripDetailClient({ id }: { id: string }) {
 
               e.preventDefault();
 
-              const comment = await addComment("trip", id, commentText);
+              const comment = await addComment("trip", entityId, commentText);
               if (comment) {
                 setComments([...comments, comment]);
                 setCommentText("");
@@ -494,11 +515,10 @@ export default function TripDetailClient({ id }: { id: string }) {
 
 
       <TripDetailActions
-        mode={actionsMode}
+        trip={trip}
         isFavorite={favorite}
         onSave={handleToggleFavorite}
         onDuplicate={handleDuplicate}
-        onEdit={handleEdit}
         onSubmitForApproval={handleSubmitForApproval}
         saving={savingFavorite}
         duplicating={duplicating}

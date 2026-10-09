@@ -1,3 +1,8 @@
+import type { Metadata } from "next";
+import { LIST_PAGE_METADATA } from "@/lib/seo/metadata";
+
+export const metadata: Metadata = LIST_PAGE_METADATA.wizard;
+
 export default function WizardLayout({ children }: { children: React.ReactNode }) {
-  return <div className="flex min-h-[calc(100dvh-72px)] flex-col bg-white">{children}</div>;
+  return children;
 }

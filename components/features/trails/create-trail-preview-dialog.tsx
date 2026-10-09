@@ -7,6 +7,7 @@ import { TrailDetailHighlights } from "@/components/features/trails/detail/trail
 import { TrailDetailWaypoints } from "@/components/features/trails/detail/trail-detail-waypoints";
 import { TrailDetailMapSection } from "@/components/features/trails/detail/trail-detail-map-section";
 import { TrailDetailGallery } from "@/components/features/trails/detail/trail-detail-gallery";
+import { getTrailGalleryImages } from "@/lib/utils/trail-detail-content";
 import { TrailDetailNature } from "@/components/features/trails/detail/trail-detail-nature";
 import { TrailDetailSidebar } from "@/components/features/trails/detail/trail-detail-sidebar";
 import { TripDetailDescription } from "@/components/features/trips/detail/trip-detail-description";
@@ -18,6 +19,7 @@ interface CreateTrailPreviewDialogProps {
   trail: Trail;
   onSave: () => void;
   saving?: boolean;
+  saveLabel?: string;
 }
 
 export function CreateTrailPreviewDialog({
@@ -26,6 +28,7 @@ export function CreateTrailPreviewDialog({
   trail,
   onSave,
   saving = false,
+  saveLabel = "שמור ושלח לאישור",
 }: CreateTrailPreviewDialogProps) {
   if (!open) return null;
 
@@ -76,7 +79,7 @@ export function CreateTrailPreviewDialog({
                 )}
                 <TrailDetailWaypoints trail={trail} />
                 <TrailDetailMapSection trail={trail} />
-                <TrailDetailGallery trail={trail} />
+                <TrailDetailGallery images={getTrailGalleryImages(trail)} />
                 <TrailDetailNature trail={trail} />
               </div>
               <TrailDetailSidebar trail={trail} />
@@ -101,7 +104,7 @@ export function CreateTrailPreviewDialog({
             onClick={onSave}
             className="flex-1 rounded-lg bg-[#111827] py-3 text-sm font-bold text-white hover:bg-[#1f2937] disabled:opacity-50"
           >
-            {saving ? "שומר..." : "שמור ושלח לאישור"}
+            {saving ? "שומר..." : saveLabel}
           </button>
         </div>
       </div>

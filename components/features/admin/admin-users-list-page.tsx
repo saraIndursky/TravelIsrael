@@ -6,6 +6,7 @@ import { Filter, Search, Shield, User as UserIcon, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { User, UserRole } from "@/types";
 import { toast } from "@/components/ui/use-toast";
+import { CenteredPageLoading } from "@/components/layout/page-loading";
 
 interface AdminUsersListPageProps {
   users: User[];
@@ -33,7 +34,7 @@ export function AdminUsersListPage({ users, loading, onRoleChange }: AdminUsersL
   }, [users, searchTerm, filterRole]);
 
   if (loading) {
-    return <div className="py-20 text-center text-muted-foreground">טוען...</div>;
+    return <CenteredPageLoading />;
   }
 
   const adminCount = users.filter((u) => u.role === "admin").length;
@@ -137,8 +138,17 @@ export function AdminUsersListPage({ users, loading, onRoleChange }: AdminUsersL
                         value={u.role}
                         aria-label={`תפקיד עבור ${u.name}`}
                         onChange={async (e) => {
-                          await onRoleChange(u.id, e.target.value as UserRole);
-                          toast({ title: "התפקיד עודכן" });
+                          const newRole = e.target.value as UserRole;
+                          try {
+                            await onRoleChange(u.id, newRole);
+                            toast({ title: "התפקיד עודכן" });
+                          } catch (error) {
+                            toast({
+                              title: "עדכון התפקיד נכשל",
+                              description: error instanceof Error ? error.message : undefined,
+                              variant: "destructive",
+                            });
+                          }
                         }}
                       >
                         <option value="user">{roleLabel.user}</option>
@@ -178,8 +188,17 @@ export function AdminUsersListPage({ users, loading, onRoleChange }: AdminUsersL
                     value={u.role}
                     aria-label={`תפקיד עבור ${u.name}`}
                     onChange={async (e) => {
-                      await onRoleChange(u.id, e.target.value as UserRole);
-                      toast({ title: "התפקיד עודכן" });
+                      const newRole = e.target.value as UserRole;
+                      try {
+                        await onRoleChange(u.id, newRole);
+                        toast({ title: "התפקיד עודכן" });
+                      } catch (error) {
+                        toast({
+                          title: "עדכון התפקיד נכשל",
+                          description: error instanceof Error ? error.message : undefined,
+                          variant: "destructive",
+                        });
+                      }
                     }}
                   >
                     <option value="user">{roleLabel.user}</option>

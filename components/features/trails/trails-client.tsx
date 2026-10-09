@@ -8,6 +8,7 @@ import type { Difficulty, Region } from "@/types";
 import { DIFFICULTY_LABELS, REGIONS } from "@/types/enums";
 import { TrailCard } from "@/components/features/trails/trail-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LazyList } from "@/components/ui/custom/lazy-list";
 import { getTrails } from "@/lib/data/trails";
 import { useAuthStore } from "@/hooks/use-stores";
 
@@ -20,7 +21,6 @@ export function TrailsClient() {
   const searchParams = useSearchParams();
   const { role } = useAuthStore();
   const [trails, setTrails] = useState<Awaited<ReturnType<typeof getTrails>>>([]);
-  const [visibleCount, setVisibleCount] = useState(12);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [region, setRegion] = useState(searchParams.get("region") ?? "");
@@ -45,7 +45,6 @@ export function TrailsClient() {
       difficulty: (appliedDifficulty as Difficulty) || undefined,
     });
     setTrails(result);
-    setVisibleCount(12);
     setLoading(false);
   }, [appliedSearch, appliedRegion, appliedDifficulty]);
 
@@ -62,7 +61,6 @@ export function TrailsClient() {
     router.replace(q ? `${pathname}?${q}` : pathname);
   }
 
-  const visibleTrails = trails.slice(0, visibleCount);
 
   return (
     <div className="min-h-screen bg-[#f9fafb]">
@@ -130,25 +128,14 @@ export function TrailsClient() {
               <Skeleton key={i} className="h-96 w-full" />
             ))}
           </div>
-        ) : trails.length === 0 ? (
-          <p className="text-center text-[#6b7280]">לא נמצאו מסלולים</p>
         ) : (
-          <>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3">
-              {visibleTrails.map((trail) => (
-                <TrailCard key={trail.id} trail={trail} />
-              ))}
-            </div>
-            {visibleCount < trails.length && (
-              <button
-                type="button"
-                onClick={() => setVisibleCount((c) => c + 12)}
-                className="mt-8 w-full rounded-lg border border-[#d1d5db] bg-white py-3 text-sm font-medium text-[#111827] hover:bg-[#f9fafb]"
-              >
-                טען עוד...
-              </button>
-            )}
-          </>
+          <LazyList
+            items={trails}
+            pageSize={20}
+            className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3"
+            emptyMessage="לא נמצאו מסלולים"
+            renderItem={(trail) => <TrailCard key={trail.id} trail={trail} />}
+          />
         )}
       </div>
     </div>

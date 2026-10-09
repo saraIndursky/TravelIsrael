@@ -6,9 +6,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Label } from "@/components/ui/label";
 import { REGIONS } from "@/types/enums";
-import type { Accessibility, Region } from "@/types";
+import type { Accessibility, Place, Region } from "@/types";
 import { toast } from "@/components/ui/use-toast";
-import { createPlace, PLACE_TYPE_OPTIONS } from "@/lib/data/places";
+import { createPlace, updatePlace, PLACE_TYPE_OPTIONS } from "@/lib/data/places";
+import { placePath } from "@/lib/utils/content-path";
 import { placeFormSchema, type PlaceFormValues } from "@/lib/validations";
 import { CreatePlacePreviewDialog } from "@/components/features/places/create-place-preview-dialog";
 import { CommonTagsField } from "@/components/features/shared/common-tags-field";
@@ -17,6 +18,11 @@ import { TripImageField } from "@/components/features/trips/trip-image-field";
 import { getAccessibilityLabel } from "@/lib/utils";
 import { buildPreviewPlace } from "@/lib/utils/preview-place";
 import { CreateAssistantPanel } from "@/components/features/assistant/create-assistant-panel";
+import { useAuthStore } from "@/hooks/use-stores";
+import {
+  buildTripReturnUrl,
+  sanitizeReturnPath,
+} from "@/lib/utils/trip-create-draft";
 
 const inputClass =
   "w-full rounded-sm border border-[#d1d5db] bg-white px-4 py-2.5 text-sm text-[#111827] focus:border-[#111827] focus:outline-none";
@@ -35,10 +41,63 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-export function CreatePlaceForm() {
+const emptyValues: PlaceFormValues = {
+  name: "",
+  short_description: "",
+  full_description: "",
+  address: "",
+  lat: 32.0853,
+  lng: 34.7818,
+  region: "",
+  place_type: "",
+  accessibility: 3,
+  tags: [],
+  avg_duration_minutes: 60,
+  estimated_price: 0,
+  opening_time: "",
+  closing_time: "",
+  phone: "",
+  website: "",
+  image_url: "",
+};
+
+function toFormValues(place: Place): PlaceFormValues {
+  return {
+    name: place.name,
+    short_description: place.short_description,
+    full_description: place.full_description,
+    address: place.address,
+    lat: place.lat,
+    lng: place.lng,
+    region: place.region,
+    place_type: place.place_type,
+    accessibility: place.accessibility,
+    tags: place.tags,
+    avg_duration_minutes: place.avg_duration_minutes,
+    estimated_price: place.estimated_price,
+    opening_time: place.opening_time ?? "",
+    closing_time: place.closing_time ?? "",
+    phone: place.phone ?? "",
+    website: place.website ?? "",
+    image_url: place.image_url,
+  };
+}
+
+interface PlaceFormProps {
+  mode?: "create" | "edit";
+  placeId?: string;
+  initialPlace?: Place;
+}
+
+export function PlaceForm({ mode = "create", placeId, initialPlace }: PlaceFormProps) {
   const router = useRouter();
+  const { role } = useAuthStore();
   const [submitting, setSubmitting] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+
+  const isEdit = mode === "edit";
+  const keepsStatus = isEdit && role === "admin";
+  const saveLabel = keepsStatus ? "שמור שינויים" : "שמור ושלח לאישור";
 
   const {
     register,
@@ -50,25 +109,7 @@ export function CreatePlaceForm() {
     formState: { errors },
   } = useForm<PlaceFormValues>({
     resolver: zodResolver(placeFormSchema),
-    defaultValues: {
-      name: "",
-      short_description: "",
-      full_description: "",
-      address: "",
-      lat: 32.0853,
-      lng: 34.7818,
-      region: "",
-      place_type: "",
-      accessibility: 3,
-      tags: [],
-      avg_duration_minutes: 60,
-      estimated_price: 0,
-      opening_time: "",
-      closing_time: "",
-      phone: "",
-      website: "",
-      image_url: "",
-    },
+    defaultValues: initialPlace ? toFormValues(initialPlace) : emptyValues,
   });
 
   const selectedTags = watch("tags") ?? [];
@@ -77,7 +118,7 @@ export function CreatePlaceForm() {
   async function onSubmit(values: PlaceFormValues) {
     setSubmitting(true);
     try {
-      const place = await createPlace({
+      const payload = {
         name: values.name,
         short_description: values.short_description,
         full_description: values.full_description,
@@ -95,12 +136,37 @@ export function CreatePlaceForm() {
         phone: values.phone,
         website: values.website,
         image_url: values.image_url ?? "",
-      });
+      };
+
+      if (isEdit && placeId) {
+        const updated = await updatePlace(placeId, payload);
+        if (!updated) {
+          toast({ title: "אין הרשאה לערוך מקום זה", variant: "destructive" });
+          return;
+        }
+        toast({ title: keepsStatus ? "השינויים נשמרו" : "המקום עודכן ונשלח לאישור" });
+        window.location.assign(placePath(updated));
+        return;
+      }
+
+      const place = await createPlace(payload);
       toast({ title: "המקום נשלח לאישור" });
-      router.push(`/places/${place.id}`);
+      const returnTo = sanitizeReturnPath(
+        new URLSearchParams(window.location.search).get("returnTo")
+      );
+      if (returnTo) {
+        router.push(buildTripReturnUrl(returnTo, { type: "place", id: place.id }));
+      } else {
+        router.push(placePath(place));
+      }
     } catch (error) {
       toast({
-        title: error instanceof Error ? error.message : "שגיאה ביצירת המקום",
+        title:
+          error instanceof Error
+            ? error.message
+            : isEdit
+              ? "שגיאה בעדכון המקום"
+              : "שגיאה ביצירת המקום",
         variant: "destructive",
       });
     } finally {
@@ -117,7 +183,7 @@ export function CreatePlaceForm() {
     setPreviewOpen(true);
   }
 
-  const previewPlace = buildPreviewPlace(getValues());
+  const previewPlace = buildPreviewPlace(getValues(), initialPlace);
 
   return (
     <>
@@ -247,7 +313,11 @@ export function CreatePlaceForm() {
           </div>
 
           <div>
-            <CreateFormActions onPreview={() => void openPreview()} submitting={submitting} />
+            <CreateFormActions
+              onPreview={() => void openPreview()}
+              submitting={submitting}
+              saveLabel={saveLabel}
+            />
           </div>
         </div>
       </form>
@@ -263,6 +333,7 @@ export function CreatePlaceForm() {
         onClose={() => setPreviewOpen(false)}
         place={previewPlace}
         saving={submitting}
+        saveLabel={saveLabel}
         onSave={() => void handleSubmit(onSubmit)()}
       />
     </>

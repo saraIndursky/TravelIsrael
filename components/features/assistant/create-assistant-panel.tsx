@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Bot, Copy, MessageCircle, Sparkles, X } from "lucide-react";
 import type {
   AssistantContext,
@@ -10,6 +10,7 @@ import type {
 } from "@/types/assistant";
 import type { FieldValues, UseFormSetValue } from "react-hook-form";
 import { useCreateAssistant } from "@/hooks/use-create-assistant";
+import { formatFieldValuePreview } from "@/lib/assistant/format-update-preview";
 import { toast } from "@/components/ui/use-toast";
 
 interface QuickAction {
@@ -37,6 +38,7 @@ const TRAIL_ACTIONS: QuickAction[] = [
 ];
 
 const TRIP_ACTIONS: QuickAction[] = [
+  { id: "short_description", label: "תיאור קצר" },
   { id: "full_description", label: "מלא תיאור מלא" },
   { id: "tags", label: "הצע תגיות" },
   { id: "stations_hint", label: "עזרה בתחנות" },
@@ -71,6 +73,15 @@ export function CreateAssistantPanel<T extends FieldValues>({
 }: CreateAssistantPanelProps<T>) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
+  const lastAssistantMessageRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const focusInput = useCallback(() => {
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+  }, []);
 
   const {
     messages,
@@ -91,6 +102,37 @@ export function CreateAssistantPanel<T extends FieldValues>({
 
   const actions = getActions(entity);
   const canApply = !copyOnly && setValue && pendingUpdates.length > 0;
+  const lastAssistantIndex = messages.reduce(
+    (index, msg, i) => (msg.role === "assistant" ? i : index),
+    -1
+  );
+
+  useEffect(() => {
+    if (loading || lastAssistantIndex < 0) return;
+
+    const frame = requestAnimationFrame(() => {
+      const messageEl = lastAssistantMessageRef.current;
+      const scrollEl = messagesScrollRef.current;
+      if (!messageEl || !scrollEl) return;
+
+      const top =
+        messageEl.getBoundingClientRect().top -
+        scrollEl.getBoundingClientRect().top +
+        scrollEl.scrollTop;
+
+      scrollEl.scrollTo({ top, behavior: "smooth" });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [messages, loading, lastAssistantIndex]);
+
+  useEffect(() => {
+    if (open) focusInput();
+  }, [open, focusInput]);
+
+  useEffect(() => {
+    if (open && !loading) focusInput();
+  }, [open, loading, focusInput]);
 
   async function handleCopy(update: AssistantFieldUpdate) {
     const ok = await copyUpdateValue(update);
@@ -110,6 +152,7 @@ export function CreateAssistantPanel<T extends FieldValues>({
     if (!input.trim() || loading) return;
     void sendMessage(input);
     setInput("");
+    focusInput();
   }
 
   return (
@@ -162,16 +205,20 @@ export function CreateAssistantPanel<T extends FieldValues>({
           </div>
 
           {/* Messages */}
-          <div className="flex-1 space-y-2 overflow-y-auto px-3 py-3">
+          <div
+            ref={messagesScrollRef}
+            className="flex-1 space-y-2 overflow-y-auto px-3 py-3"
+          >
             {messages.length === 0 && (
               <p className="text-center text-xs text-[#9ca3af] py-4">
-                שאלי על שדה בטופס או השתמשי בכפתור מהיר למעלה.
+                כתבי מה חסר — למשל «תוסיפי תיאור ותגיות» או «מה הוחל על הטופס?»
               </p>
             )}
             {messages.map((msg, i) => (
               <div
                 key={i}
-                className={`max-w-[90%] rounded-2xl px-3 py-2 text-sm ${
+                ref={i === lastAssistantIndex ? lastAssistantMessageRef : undefined}
+                className={`max-w-[90%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap ${
                   msg.role === "user"
                     ? "ms-auto bg-[#111827] text-white"
                     : "me-auto border border-[#e5e7eb] bg-[#f9fafb] text-[#374151]"
@@ -198,23 +245,28 @@ export function CreateAssistantPanel<T extends FieldValues>({
                 <Sparkles className="h-3.5 w-3.5" />
                 {pendingUpdates.length} הצעות — אשרי לפני החלה
               </p>
-              <ul className="mb-3 space-y-1">
+              <ul className="mb-3 max-h-40 space-y-2 overflow-y-auto">
                 {pendingUpdates.map((u) => (
                   <li
                     key={u.field}
-                    className="flex items-center justify-between gap-2 text-xs text-[#047857]"
+                    className="rounded-lg border border-[#a7f3d0] bg-white/70 px-2 py-1.5 text-xs text-[#047857]"
                   >
-                    <span>{u.label}</span>
-                    {copyOnly && (
-                      <button
-                        type="button"
-                        onClick={() => void handleCopy(u)}
-                        className="flex items-center gap-1 hover:underline"
-                      >
-                        <Copy className="h-3 w-3" />
-                        העתק
-                      </button>
-                    )}
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-medium">{u.label}</span>
+                      {copyOnly && (
+                        <button
+                          type="button"
+                          onClick={() => void handleCopy(u)}
+                          className="flex shrink-0 items-center gap-1 hover:underline"
+                        >
+                          <Copy className="h-3 w-3" />
+                          העתק
+                        </button>
+                      )}
+                    </div>
+                    <p className="mt-1 whitespace-pre-wrap break-words text-[#065f46]/90">
+                      {formatFieldValuePreview(u.field, u.value, 200)}
+                    </p>
                   </li>
                 ))}
               </ul>
@@ -254,11 +306,13 @@ export function CreateAssistantPanel<T extends FieldValues>({
             className="flex gap-2 border-t border-[#e5e7eb] px-3 py-3"
           >
             <input
+              ref={inputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="שאלי על שדה בטופס..."
               disabled={loading}
+              autoFocus
               className="min-w-0 flex-1 rounded-full border border-[#e5e7eb] px-4 py-2 text-sm focus:border-[#111827] focus:outline-none"
             />
             <button

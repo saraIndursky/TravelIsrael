@@ -1,25 +1,46 @@
-import type { EntityType, Favorite } from "@/types";
+import type { EntityType, Favorite, Trip } from "@/types";
+import { createClient } from "@/lib/supabase/client";
+import { mapFavorite, mapPlace, mapTrail, mapTrip } from "@/lib/supabase/mappers";
 import { getCurrentUser } from "./auth";
-import { generateId, getStore, updateStore } from "./store";
-
-function matchFavorite(f: Favorite, userId: string, entityType: EntityType, entityId: string): boolean {
-  return f.user_id === userId && f.entity_type === entityType && f.entity_id === entityId;
-}
 
 export async function getUserFavorites(): Promise<Favorite[]> {
   const user = await getCurrentUser();
   if (!user) return [];
-  return getStore().favorites.filter((f) => f.user_id === user.id);
+
+  const supabase = createClient();
+  const { data, error } = await supabase.from("favorites").select("*").eq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapFavorite);
 }
 
 export async function isFavoriteEntity(entityType: EntityType, entityId: string): Promise<boolean> {
   const user = await getCurrentUser();
   if (!user) return false;
-  return getStore().favorites.some((f) => matchFavorite(f, user.id, entityType, entityId));
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("favorites")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("entity_type", entityType)
+    .eq("entity_id", entityId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return Boolean(data);
 }
 
 export async function isFavorite(tripId: string): Promise<boolean> {
   return isFavoriteEntity("trip", tripId);
+}
+
+async function adjustTripFavoriteCount(tripId: string, delta: number): Promise<void> {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("trips").select("favorites_count").eq("id", tripId).maybeSingle();
+  if (error || !data) return;
+  await supabase
+    .from("trips")
+    .update({ favorites_count: Math.max(0, data.favorites_count + delta) })
+    .eq("id", tripId);
 }
 
 export async function toggleFavoriteEntity(
@@ -29,43 +50,30 @@ export async function toggleFavoriteEntity(
   const user = await getCurrentUser();
   if (!user) return false;
 
-  const store = getStore();
-  const existing = store.favorites.find((f) => matchFavorite(f, user.id, entityType, entityId));
+  const supabase = createClient();
+  const { data: existing, error: existingError } = await supabase
+    .from("favorites")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("entity_type", entityType)
+    .eq("entity_id", entityId)
+    .maybeSingle();
+  if (existingError) throw new Error(existingError.message);
 
   if (existing) {
-    updateStore((s) => ({
-      ...s,
-      favorites: s.favorites.filter((f) => f.id !== existing.id),
-      trips:
-        entityType === "trip"
-          ? s.trips.map((t) =>
-              t.id === entityId
-                ? { ...t, favorites_count: Math.max(0, t.favorites_count - 1) }
-                : t
-            )
-          : s.trips,
-    }));
+    const { error } = await supabase.from("favorites").delete().eq("id", existing.id);
+    if (error) throw new Error(error.message);
+    if (entityType === "trip") await adjustTripFavoriteCount(entityId, -1);
     return false;
   }
 
-  const favorite: Favorite = {
-    id: generateId("f"),
+  const { error } = await supabase.from("favorites").insert({
     user_id: user.id,
     entity_type: entityType,
     entity_id: entityId,
-    created_at: new Date().toISOString(),
-  };
-
-  updateStore((s) => ({
-    ...s,
-    favorites: [...s.favorites, favorite],
-    trips:
-      entityType === "trip"
-        ? s.trips.map((t) =>
-            t.id === entityId ? { ...t, favorites_count: t.favorites_count + 1 } : t
-          )
-        : s.trips,
-  }));
+  });
+  if (error) throw new Error(error.message);
+  if (entityType === "trip") await adjustTripFavoriteCount(entityId, 1);
   return true;
 }
 
@@ -73,23 +81,35 @@ export async function toggleFavorite(tripId: string): Promise<boolean> {
   return toggleFavoriteEntity("trip", tripId);
 }
 
-export async function getFavoriteTrips() {
+export async function getFavoriteTrips(): Promise<Trip[]> {
   const favorites = await getUserFavorites();
-  const store = getStore();
   const tripIds = favorites.filter((f) => f.entity_type === "trip").map((f) => f.entity_id);
-  return store.trips.filter((t) => tripIds.includes(t.id));
+  if (tripIds.length === 0) return [];
+
+  const supabase = createClient();
+  const { data, error } = await supabase.from("trips").select("*").in("id", tripIds);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapTrip);
 }
 
 export async function getFavoritePlaces() {
   const favorites = await getUserFavorites();
-  const store = getStore();
   const placeIds = favorites.filter((f) => f.entity_type === "place").map((f) => f.entity_id);
-  return store.places.filter((p) => placeIds.includes(p.id));
+  if (placeIds.length === 0) return [];
+
+  const supabase = createClient();
+  const { data, error } = await supabase.from("places").select("*").in("id", placeIds);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapPlace);
 }
 
 export async function getFavoriteTrails() {
   const favorites = await getUserFavorites();
-  const store = getStore();
   const trailIds = favorites.filter((f) => f.entity_type === "trail").map((f) => f.entity_id);
-  return store.trails.filter((t) => trailIds.includes(t.id));
+  if (trailIds.length === 0) return [];
+
+  const supabase = createClient();
+  const { data, error } = await supabase.from("trails").select("*").in("id", trailIds);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapTrail);
 }

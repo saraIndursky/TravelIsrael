@@ -126,6 +126,7 @@ export function BuildTripPreviewDialog({
           <TripDetailHighlights trip={trip} totalTravelKm={totalTravelKm} />
           <TripDetailDescription description={trip.full_description} />
           <TripDetailItinerary
+            trip={trip}
             stations={sorted}
             places={places}
             trails={trails}
