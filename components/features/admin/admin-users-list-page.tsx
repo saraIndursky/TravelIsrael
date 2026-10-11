@@ -144,6 +144,7 @@ export function AdminUsersListPage({ users, loading, onRoleChange }: AdminUsersL
                             await onRoleChange(u.id, newRole);
                             toast({ title: "התפקיד עודכן" });
                           } catch (error) {
+                            if (error instanceof Error && error.name === "RoleChangeCancelled") return;
                             toast({
                               title: "עדכון התפקיד נכשל",
                               description: error instanceof Error ? error.message : undefined,
@@ -194,6 +195,7 @@ export function AdminUsersListPage({ users, loading, onRoleChange }: AdminUsersL
                         await onRoleChange(u.id, newRole);
                         toast({ title: "התפקיד עודכן" });
                       } catch (error) {
+                        if (error instanceof Error && error.name === "RoleChangeCancelled") return;
                         toast({
                           title: "עדכון התפקיד נכשל",
                           description: error instanceof Error ? error.message : undefined,

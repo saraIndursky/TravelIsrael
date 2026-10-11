@@ -187,6 +187,27 @@ export async function getUsers(): Promise<User[]> {
   return (data ?? []).map(mapProfile);
 }
 
+/** Whether the signed-in user has an e-mail + password login (Google-only users do not). */
+export async function currentUserHasPasswordLogin(): Promise<boolean> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return Boolean(user?.identities?.some((identity) => identity.provider === "email"));
+}
+
+/** Re-checks the signed-in user's password; also refreshes the session's authentication time. */
+export async function reauthenticateWithPassword(password: string): Promise<void> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) throw new Error("לא מחובר");
+
+  const { error } = await supabase.auth.signInWithPassword({ email: user.email, password });
+  if (error) throw new Error("הסיסמה שגויה");
+}
+
 export async function updateUserRole(userId: string, role: UserRole): Promise<User> {
   if (role !== "user" && role !== "admin") {
     throw new Error("תפקיד לא תקין");
@@ -204,7 +225,8 @@ export async function updateUserRole(userId: string, role: UserRole): Promise<Us
   });
 
   if (error) {
-    throw new Error(error.message.includes("הרשאה") ? error.message : "עדכון התפקיד נכשל");
+    const known = ["הרשאה", "אימות", "עצמך", "האחרון"].some((word) => error.message.includes(word));
+    throw new Error(known ? error.message : "עדכון התפקיד נכשל");
   }
   if (!data) {
     throw new Error("עדכון התפקיד נכשל");

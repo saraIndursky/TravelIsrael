@@ -34,19 +34,6 @@ export async function getUserRating(
   return data ? mapRating(data) : null;
 }
 
-async function refreshTripAverage(entityId: string): Promise<void> {
-  const supabase = createClient();
-  const { data, error } = await supabase.from("ratings").select("score").eq("entity_type", "trip").eq("entity_id", entityId);
-  if (error) throw new Error(error.message);
-
-  const avg =
-    (data ?? []).length > 0
-      ? (data ?? []).reduce((sum, row) => sum + row.score, 0) / (data ?? []).length
-      : 0;
-
-  await supabase.from("trips").update({ avg_rating: avg }).eq("id", entityId);
-}
-
 export async function upsertRating(
   entityType: EntityType,
   entityId: string,
@@ -73,7 +60,6 @@ export async function upsertRating(
   if (error || !data) return null;
 
   if (entityType === "trip") {
-    await refreshTripAverage(entityId);
   }
 
   void notifySocialActivity({ entityType, entityId, event: "rating" });

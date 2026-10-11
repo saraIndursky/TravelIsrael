@@ -3,9 +3,19 @@ import type { AssistantRequestBody, QuickActionId } from "@/types/assistant";
 import { runDemoAssistant } from "@/lib/assistant/demo-assistant";
 import { runGeminiAssistant } from "@/lib/assistant/gemini-assistant";
 import { runOpenAIAssistant } from "@/lib/assistant/openai-assistant";
+import { createClient } from "@/lib/supabase/server";
+import { isRateLimited } from "@/lib/server/rate-limit";
 
 // Gemini can take several seconds (and one retry); give the serverless function room on Vercel.
 export const maxDuration = 30;
+
+// Each request can cost money (the AI provider bills per call), so it is limited to signed-in
+// users, to a modest number per user, and to a bounded input size.
+const RATE_LIMIT = 40;
+const RATE_WINDOW_MS = 10 * 60 * 1000;
+const MAX_MESSAGES = 30;
+const MAX_MESSAGE_LENGTH = 4000;
+const MAX_SNAPSHOT_LENGTH = 40_000;
 
 const VALID_ENTITIES = new Set(["place", "trail", "trip"]);
 const VALID_CONTEXTS = new Set(["create", "detail"]);
@@ -44,9 +54,27 @@ function extractQuickAction(messages: AssistantRequestBody["messages"]): QuickAc
 
 export async function POST(request: Request) {
   try {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ message: "יש להתחבר כדי להשתמש בעוזר" }, { status: 401 });
+    }
+    if (isRateLimited(`assistant:${user.id}`, RATE_LIMIT, RATE_WINDOW_MS)) {
+      return NextResponse.json({ message: "יותר מדי בקשות לעוזר. נסו שוב בעוד כמה דקות." }, { status: 429 });
+    }
+
     const body: unknown = await request.json();
     if (!isValidBody(body)) {
       return NextResponse.json({ message: "בקשה לא תקינה" }, { status: 400 });
+    }
+    const tooLong =
+      body.messages.length > MAX_MESSAGES ||
+      body.messages.some((m) => typeof m?.content !== "string" || m.content.length > MAX_MESSAGE_LENGTH) ||
+      JSON.stringify(body.formSnapshot).length > MAX_SNAPSHOT_LENGTH;
+    if (tooLong) {
+      return NextResponse.json({ message: "הבקשה גדולה מדי" }, { status: 413 });
     }
 
     const mode = process.env.ASSISTANT_MODE ?? "demo";

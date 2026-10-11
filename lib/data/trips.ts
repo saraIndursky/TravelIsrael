@@ -498,10 +498,7 @@ export async function incrementTripViews(id: string): Promise<void> {
   if (!trip) return;
 
   const supabase = createClient();
-  const { error } = await supabase
-    .from("trips")
-    .update({ views_count: trip.views_count + 1 })
-    .eq("id", trip.id);
+  const { error } = await supabase.rpc("increment_trip_views", { p_trip_id: trip.id });
   if (error) throw new Error(error.message);
 }
 

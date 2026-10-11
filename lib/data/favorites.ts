@@ -33,16 +33,6 @@ export async function isFavorite(tripId: string): Promise<boolean> {
   return isFavoriteEntity("trip", tripId);
 }
 
-async function adjustTripFavoriteCount(tripId: string, delta: number): Promise<void> {
-  const supabase = createClient();
-  const { data, error } = await supabase.from("trips").select("favorites_count").eq("id", tripId).maybeSingle();
-  if (error || !data) return;
-  await supabase
-    .from("trips")
-    .update({ favorites_count: Math.max(0, data.favorites_count + delta) })
-    .eq("id", tripId);
-}
-
 export async function toggleFavoriteEntity(
   entityType: EntityType,
   entityId: string
@@ -63,7 +53,6 @@ export async function toggleFavoriteEntity(
   if (existing) {
     const { error } = await supabase.from("favorites").delete().eq("id", existing.id);
     if (error) throw new Error(error.message);
-    if (entityType === "trip") await adjustTripFavoriteCount(entityId, -1);
     return false;
   }
 
@@ -73,7 +62,6 @@ export async function toggleFavoriteEntity(
     entity_id: entityId,
   });
   if (error) throw new Error(error.message);
-  if (entityType === "trip") await adjustTripFavoriteCount(entityId, 1);
   return true;
 }
 

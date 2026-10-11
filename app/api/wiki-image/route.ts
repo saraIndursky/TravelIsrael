@@ -3,6 +3,7 @@ const ALLOWED_PATH_PREFIX = "/wikipedia/commons/";
 
 // Wikimedia throttles anonymous server-side hotlinking (HTTP 429), so we fetch with an
 // identifying User-Agent and let the CDN cache the result for a year.
+const MAX_BYTES = 12 * 1024 * 1024;
 const USER_AGENT = "TravelIsraelStudentProject/1.0 (https://travel-israel.vercel.app)";
 
 export async function GET(request: Request) {
@@ -22,9 +23,16 @@ export async function GET(request: Request) {
     return new Response("Image host not allowed", { status: 400 });
   }
 
-  const upstream = await fetch(target, { headers: { "User-Agent": USER_AGENT } });
+  // A redirect could lead off the allowed host, so redirects are not followed.
+  let upstream: Response;
+  try {
+    upstream = await fetch(target, { headers: { "User-Agent": USER_AGENT }, redirect: "error" });
+  } catch {
+    return new Response("Image unavailable", { status: 502 });
+  }
   const contentType = upstream.headers.get("content-type") ?? "";
-  if (!upstream.ok || !contentType.startsWith("image/")) {
+  const length = Number(upstream.headers.get("content-length") ?? 0);
+  if (!upstream.ok || !contentType.startsWith("image/") || length > MAX_BYTES) {
     return new Response("Image unavailable", { status: 502 });
   }
 
