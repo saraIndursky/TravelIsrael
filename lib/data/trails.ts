@@ -8,6 +8,7 @@ import { slugOrIdColumn } from "@/lib/utils/slug";
 import { canViewContent, isVisibleInDiscoveryList } from "./content-access";
 import { getCurrentRole, getCurrentUser } from "./auth";
 import { isFavoriteEntity } from "./favorites";
+import { toStoredImageUrl } from "@/lib/utils/image-url";
 
 export interface TrailFilters {
   region?: Region;
@@ -143,7 +144,7 @@ export async function createTrail(data: CreateTrailInput): Promise<Trail> {
         end_lat: data.end_lat,
         end_lng: data.end_lng,
         waypoints: data.waypoints,
-        image_url: data.image_url.trim() || DEFAULT_TRAIL_IMAGE,
+        image_url: toStoredImageUrl(data.image_url.trim()) || DEFAULT_TRAIL_IMAGE,
         created_by: user.id,
         status: "pending",
       })
@@ -190,7 +191,7 @@ export async function updateTrail(id: string, data: UpdateTrailInput): Promise<T
       end_lat: data.end_lat,
       end_lng: data.end_lng,
       waypoints: data.waypoints,
-      image_url: data.image_url.trim() || DEFAULT_TRAIL_IMAGE,
+      image_url: toStoredImageUrl(data.image_url.trim()) || DEFAULT_TRAIL_IMAGE,
       // עריכה של בעלים מחזירה את המסלול לתור האישור; מנהל עורך בלי לשנות סטטוס
       ...(isAdmin ? {} : { status: "pending" as Status, rejection_reason: null }),
       updated_at: new Date().toISOString(),

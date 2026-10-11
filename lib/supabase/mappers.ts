@@ -14,6 +14,7 @@ import type {
   User,
 } from "@/types";
 import type { Accessibility, Difficulty, Region, Status, UserRole } from "@/types/enums";
+import { toDisplayImageUrl } from "@/lib/utils/image-url";
 
 type ProfileRow = {
   id: string;
@@ -190,7 +191,7 @@ export function mapPlace(row: PlaceRow): Place {
     closing_time: row.closing_time ?? undefined,
     phone: row.phone ?? undefined,
     website: row.website ?? undefined,
-    image_url: row.image_url,
+    image_url: toDisplayImageUrl(row.image_url),
     created_by: row.created_by ?? "",
     status: row.status,
     rejection_reason: row.rejection_reason ?? undefined,
@@ -221,7 +222,7 @@ export function mapTrail(row: TrailRow): Trail {
     end_lat: row.end_lat,
     end_lng: row.end_lng,
     waypoints: row.waypoints ?? [],
-    image_url: row.image_url,
+    image_url: toDisplayImageUrl(row.image_url),
     created_by: row.created_by ?? "",
     status: row.status,
     rejection_reason: row.rejection_reason ?? undefined,
@@ -237,8 +238,8 @@ export function mapTrip(row: TripRow): Trip {
     name: row.name,
     short_description: row.short_description,
     full_description: row.full_description,
-    main_image: row.main_image,
-    gallery_images: row.gallery_images ?? [],
+    main_image: toDisplayImageUrl(row.main_image),
+    gallery_images: (row.gallery_images ?? []).map(toDisplayImageUrl),
     tags: row.tags ?? [],
     created_by: row.created_by ?? "",
     status: row.status,

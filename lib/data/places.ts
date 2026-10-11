@@ -8,6 +8,7 @@ import { slugOrIdColumn } from "@/lib/utils/slug";
 import { canViewContent, isVisibleInDiscoveryList } from "./content-access";
 import { getCurrentRole, getCurrentUser } from "./auth";
 import { isFavoriteEntity } from "./favorites";
+import { toStoredImageUrl } from "@/lib/utils/image-url";
 
 export interface PlaceFilters {
   region?: Region;
@@ -144,7 +145,7 @@ export async function createPlace(data: CreatePlaceInput): Promise<Place> {
         closing_time: data.closing_time?.trim() || null,
         phone: data.phone?.trim() || null,
         website: data.website?.trim() || null,
-        image_url: data.image_url.trim() || DEFAULT_PLACE_IMAGE,
+        image_url: toStoredImageUrl(data.image_url.trim()) || DEFAULT_PLACE_IMAGE,
         created_by: user.id,
         status: "pending",
       })
@@ -190,7 +191,7 @@ export async function updatePlace(id: string, data: UpdatePlaceInput): Promise<P
       closing_time: data.closing_time?.trim() || null,
       phone: data.phone?.trim() || null,
       website: data.website?.trim() || null,
-      image_url: data.image_url.trim() || DEFAULT_PLACE_IMAGE,
+      image_url: toStoredImageUrl(data.image_url.trim()) || DEFAULT_PLACE_IMAGE,
       // עריכה של בעלים מחזירה את המקום לתור האישור; מנהל עורך בלי לשנות סטטוס
       ...(isAdmin ? {} : { status: "pending" as Status, rejection_reason: null }),
       updated_at: new Date().toISOString(),

@@ -11,6 +11,7 @@ import { canViewStatus, getCurrentRole, getCurrentUser } from "./auth";
 import { isFavoriteEntity } from "./favorites";
 import { getPlaces } from "./places";
 import { getTrails } from "./trails";
+import { toStoredImageUrl } from "@/lib/utils/image-url";
 
 export type TripSort =
   | "createAt"
@@ -174,8 +175,8 @@ export async function createTrip(
         slug,
         short_description: data.short_description,
         full_description: data.full_description,
-        main_image: data.main_image,
-        gallery_images: data.gallery_images ?? [],
+        main_image: toStoredImageUrl(data.main_image),
+        gallery_images: (data.gallery_images ?? []).map(toStoredImageUrl),
         tags: data.tags,
         created_by: user.id,
         status: data.status,
