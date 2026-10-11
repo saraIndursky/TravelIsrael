@@ -4,6 +4,9 @@ import { runDemoAssistant } from "@/lib/assistant/demo-assistant";
 import { runGeminiAssistant } from "@/lib/assistant/gemini-assistant";
 import { runOpenAIAssistant } from "@/lib/assistant/openai-assistant";
 
+// Gemini can take several seconds (and one retry); give the serverless function room on Vercel.
+export const maxDuration = 30;
+
 const VALID_ENTITIES = new Set(["place", "trail", "trip"]);
 const VALID_CONTEXTS = new Set(["create", "detail"]);
 const VALID_QUICK_ACTIONS = new Set<string>([
