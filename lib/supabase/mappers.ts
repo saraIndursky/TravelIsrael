@@ -349,7 +349,7 @@ export function mapEntityImage(row: EntityImageRow): EntityImage {
     user_id: row.user_id,
     entity_type: row.entity_type,
     entity_id: row.entity_id,
-    url: row.url,
+    url: toDisplayImageUrl(row.url),
     storage_path: row.storage_path,
     created_at: row.created_at,
   };

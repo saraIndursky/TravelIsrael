@@ -56,8 +56,8 @@ export function AdminRegionsListPage({ loading: externalLoading }: AdminRegionsL
 
   const tree = useMemo(() => buildRegionTree(regions), [regions]);
   const parentOptions = useMemo(
-    () => regions.filter((region) => !region.is_selectable),
-    [regions]
+    () => regions.filter((region) => region.id !== editing?.id),
+    [regions, editing]
   );
 
   const isBusy = loading || externalLoading;
@@ -215,7 +215,7 @@ export function AdminRegionsListPage({ loading: externalLoading }: AdminRegionsL
                 </button>
               </>
             )}
-            {!record.is_selectable && (
+            {record.status !== "rejected" && (
               <button
                 type="button"
                 onClick={() => openCreate(record.id)}

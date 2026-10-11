@@ -10,6 +10,7 @@ import { CenteredPageLoading } from "@/components/layout/page-loading";
 import { ENTITY_TYPE_LABELS, entityHref } from "@/components/features/admin/admin-report-labels";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import type { EntityType, ModerationKind, ModerationQueueItem } from "@/types";
+import { toDisplayImageUrl } from "@/lib/utils/image-url";
 
 interface AdminModerationListPageProps {
   items: ModerationQueueItem[];
@@ -136,7 +137,7 @@ export function AdminModerationListPage({
                     {item.kind === "gallery_image" ? (
                       <div className="relative h-40 w-full max-w-xs overflow-hidden rounded-lg border border-border/60">
                         <Image
-                          src={item.content}
+                          src={toDisplayImageUrl(item.content)}
                           alt="תמונה לפיקוח"
                           fill
                           className="object-cover"
