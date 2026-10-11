@@ -11,7 +11,7 @@ import { LazyList } from "@/components/ui/custom/lazy-list";
 import { getPlaces } from "@/lib/data/places";
 import { getTrails } from "@/lib/data/trails";
 import type { Place, Trail } from "@/types";
-import { REGIONS } from "@/types/enums";
+import { useRegionNames } from "@/hooks/use-region-names";
 import { formatStopDuration } from "@/lib/utils/trip-time";
 import { getDifficultyColor, getDifficultyLabel, getTypeStyle } from "@/lib/utils/trip-display";
 import { PageLoadingSpinner } from "@/components/layout/page-loading";
@@ -35,6 +35,7 @@ export function StationPicker({
   onCreatePlace,
   onCreateTrail,
 }: StationPickerProps) {
+  const regionNames = useRegionNames();
   const [search, setSearch] = useState("");
   const [region, setRegion] = useState("");
   const [items, setItems] = useState<StationItem[]>([]);
@@ -93,7 +94,7 @@ export function StationPicker({
                   className="rounded-lg border border-[#d1d5db] px-4 py-3 transition-colors focus:border-[#111827] focus:outline-none"
                 >
                   <option value="">כל האזורים</option>
-                  {REGIONS.map((r) => (
+                  {regionNames.map((r) => (
                     <option key={r} value={r}>
                       {r}
                     </option>
@@ -268,7 +269,7 @@ export function StationPicker({
             onChange={(e) => setRegion(e.target.value)}
           >
             <option value="">כל האזורים</option>
-            {REGIONS.map((r) => (
+            {regionNames.map((r) => (
               <option key={r} value={r}>
                 {r}
               </option>

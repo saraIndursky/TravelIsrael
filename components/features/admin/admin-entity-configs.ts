@@ -3,6 +3,7 @@ import type { AdminEntityListConfig } from "@/components/features/admin/admin-en
 import { computePopularity } from "@/lib/utils/admin-popularity";
 import { placePath, trailPath, tripEditPath, tripPath } from "@/lib/utils/content-path";
 import { isNewPlaceType } from "@/lib/utils/place-types";
+import { isNewTrailType } from "@/lib/utils/trail-types";
 
 export const tripsAdminConfig: AdminEntityListConfig<Trip> = {
   title: "ניהול טיולים",
@@ -36,9 +37,31 @@ export const tripsAdminConfig: AdminEntityListConfig<Trip> = {
   showPopularity: true,
 };
 
+/** What is "new" for admins: types no approved item uses, and regions still waiting for approval. */
+export interface AdminNewness {
+  approvedTypes: string[];
+  pendingRegions: string[];
+}
+
+function newnessBadges(
+  status: string,
+  type: string,
+  region: string,
+  isNewType: (type: string, approvedTypes: readonly string[]) => boolean,
+  newness: AdminNewness
+): string[] {
+  if (status === "approved" || status === "removed") return [];
+  const badges: string[] = [];
+  if (isNewType(type, newness.approvedTypes)) badges.push("סוג חדש");
+  if (newness.pendingRegions.includes(region)) badges.push("אזור חדש");
+  return badges;
+}
+
+const NO_NEWNESS: AdminNewness = { approvedTypes: [], pendingRegions: [] };
+
 export function placesAdminConfig(
   types: string[],
-  approvedTypes: string[] = []
+  newness: AdminNewness = NO_NEWNESS
 ): AdminEntityListConfig<Place> {
   return {
     title: "ניהול מקומות",
@@ -57,10 +80,7 @@ export function placesAdminConfig(
     getImageUrl: (p) => p.image_url,
     getName: (p) => p.name,
     getTypeLabel: (p) => p.place_type,
-    getTypeBadge: (p) =>
-      p.status !== "approved" && p.status !== "removed" && isNewPlaceType(p.place_type, approvedTypes)
-        ? "סוג חדש"
-        : null,
+    getTypeBadges: (p) => newnessBadges(p.status, p.place_type, p.region, isNewPlaceType, newness),
     getCreatorId: (p) => p.created_by,
     getRegion: (p) => p.region,
     getRejectionReason: (p) => p.rejection_reason,
@@ -69,7 +89,10 @@ export function placesAdminConfig(
   };
 }
 
-export function trailsAdminConfig(types: string[]): AdminEntityListConfig<Trail> {
+export function trailsAdminConfig(
+  types: string[],
+  newness: AdminNewness = NO_NEWNESS
+): AdminEntityListConfig<Trail> {
   return {
     title: "ניהול מסלולים",
     subtitle: "נהל את כל המסלולים במערכת",
@@ -87,6 +110,7 @@ export function trailsAdminConfig(types: string[]): AdminEntityListConfig<Trail>
     getImageUrl: (t) => t.image_url,
     getName: (t) => t.name,
     getTypeLabel: (t) => `${t.trail_type} • ${t.length_km} ק״מ`,
+    getTypeBadges: (t) => newnessBadges(t.status, t.trail_type, t.region, isNewTrailType, newness),
     getCreatorId: (t) => t.created_by,
     getRegion: (t) => t.region,
     getRejectionReason: (t) => t.rejection_reason,

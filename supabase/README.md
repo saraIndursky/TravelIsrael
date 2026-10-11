@@ -25,6 +25,7 @@
 | `schema/15_notifications_realtime.sql` | Realtime publication — badge מיידי בפעמון |
 | `schema/16_notifications_broadcast.sql` | kinds לתוכן חדש/מועדפים + `region_ids` בהעדפות |
 | `schema/17_content_delete_hardening.sql` | חסימת מחיקה hard של תוכן מאושר |
+| `schema/25_region_requests.sql` | הצעת אזור חדש על ידי משתמש (ממתין עד אישור מנהל או אישור התוכן) — public + demo |
 
 ## הרצת SQL על הפרויקט החי
 

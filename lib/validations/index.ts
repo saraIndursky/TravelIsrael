@@ -73,7 +73,7 @@ export const placeFormSchema = z.object({
   address: z.string().min(2, "יש להזין כתובת"),
   lat: z.coerce.number().min(-90).max(90, "קו רוחב לא תקין"),
   lng: z.coerce.number().min(-180).max(180, "קו אורך לא תקין"),
-  region: z.string().min(1, "יש לבחור אזור"),
+  region: z.string().min(1, "יש לבחור אזור").max(30, "שם האזור ארוך מדי (עד 30 תווים)"),
   place_type: z
     .string()
     .min(1, "יש לבחור סוג מקום")
@@ -105,8 +105,11 @@ export const trailFormSchema = z.object({
   name: z.string().min(2, "שם המסלול חייב להכיל לפחות 2 תווים"),
   short_description: z.string().min(10, "תיאור קצר חייב להכיל לפחות 10 תווים"),
   full_description: z.string().min(20, "תיאור מלא חייב להכיל לפחות 20 תווים"),
-  region: z.string().min(1, "יש לבחור אזור"),
-  trail_type: z.string().min(1, "יש לבחור סוג מסלול"),
+  region: z.string().min(1, "יש לבחור אזור").max(30, "שם האזור ארוך מדי (עד 30 תווים)"),
+  trail_type: z
+    .string()
+    .min(1, "יש לבחור סוג מסלול")
+    .max(30, "שם סוג המסלול ארוך מדי (עד 30 תווים)"),
   length_km: z.coerce.number().min(0.1, "אורך המסלול חייב להיות חיובי"),
   duration_minutes: z.coerce.number().min(15, "משך מינימלי 15 דקות"),
   difficulty: z.enum(["easy", "medium", "hard"]),

@@ -130,6 +130,19 @@ export function AdminRegionsListPage({ loading: externalLoading }: AdminRegionsL
     }
   }
 
+  async function handleStatus(region: RegionRecord, status: "approved" | "rejected") {
+    try {
+      await updateRegion(region.id, { status });
+      toast({ title: status === "approved" ? "האזור אושר ויופיע לכולם" : "האזור נדחה" });
+      await load();
+    } catch (error) {
+      toast({
+        title: error instanceof Error ? error.message : "שגיאה בעדכון האזור",
+        variant: "destructive",
+      });
+    }
+  }
+
   function toggleExpanded(id: string) {
     setExpanded((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
   }
@@ -171,11 +184,37 @@ export function AdminRegionsListPage({ loading: externalLoading }: AdminRegionsL
               {!record.is_selectable && (
                 <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">קבוצה</span>
               )}
+              {record.status === "pending" && (
+                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                  אזור חדש — ממתין לאישור
+                </span>
+              )}
+              {record.status === "rejected" && (
+                <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">נדחה</span>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">סדר: {record.sort_order}</p>
           </div>
 
           <div className="flex items-center gap-2">
+            {record.status === "pending" && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleStatus(record, "approved")}
+                  className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white hover:bg-emerald-700"
+                >
+                  אשר
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleStatus(record, "rejected")}
+                  className="rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50"
+                >
+                  דחה
+                </button>
+              </>
+            )}
             {!record.is_selectable && (
               <button
                 type="button"

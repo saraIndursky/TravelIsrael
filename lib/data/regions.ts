@@ -1,7 +1,7 @@
 import type { Region } from "@/types";
-import type { RegionRecord, RegionTreeNode } from "@/types/region";
+import type { RegionRecord, RegionStatus, RegionTreeNode } from "@/types/region";
 import { createClient } from "@/lib/supabase/client";
-import { getCurrentRole } from "./auth";
+import { getCurrentRole, getCurrentUser } from "./auth";
 
 type RegionRow = {
   id: string;
@@ -10,6 +10,8 @@ type RegionRow = {
   parent_id: string | null;
   sort_order: number;
   is_selectable: boolean;
+  status: RegionStatus;
+  created_by: string | null;
   created_at: string;
 };
 
@@ -27,6 +29,7 @@ export interface UpdateRegionInput {
   code?: Region | null;
   is_selectable?: boolean;
   sort_order?: number;
+  status?: RegionStatus;
 }
 
 function mapRegion(row: RegionRow): RegionRecord {
@@ -37,6 +40,8 @@ function mapRegion(row: RegionRow): RegionRecord {
     parent_id: row.parent_id,
     sort_order: row.sort_order,
     is_selectable: row.is_selectable,
+    status: row.status ?? "approved",
+    created_by: row.created_by ?? null,
     created_at: row.created_at,
   };
 }
@@ -206,6 +211,7 @@ export async function updateRegion(id: string, input: UpdateRegionInput): Promis
       code: nextSelectable ? nextCode : null,
       is_selectable: nextSelectable,
       sort_order: input.sort_order ?? existing.sort_order,
+      status: input.status ?? existing.status,
     })
     .eq("id", id)
     .select("*")
@@ -245,4 +251,43 @@ export async function deleteRegion(id: string): Promise<boolean> {
   const { error } = await supabase.from("regions").delete().eq("id", id);
   if (error) throw new Error(error.message);
   return true;
+}
+
+/**
+ * Returns the code of the region to store on content. An existing region is reused; otherwise a
+ * new one is proposed under `parentId`. It stays pending until an admin approves it (or the
+ * content that uses it), and admins create approved regions directly.
+ */
+export async function ensureRegion(name: string, parentId: string): Promise<string> {
+  const code = name.replace(/\s+/g, " ").trim();
+  if (!code) throw new Error("יש להזין אזור");
+
+  const regions = await getRegions();
+  const existing = regions.find(
+    (region) => region.is_selectable && region.code?.toLowerCase() === code.toLowerCase()
+  );
+  if (existing?.code) return existing.code;
+
+  if (!parentId) throw new Error("יש לבחור את האזור שמכיל את האזור החדש");
+
+  const user = await getCurrentUser();
+  if (!user) throw new Error("יש להתחבר כדי להוסיף אזור");
+  const role = await getCurrentRole();
+
+  const supabase = createClient();
+  const { error } = await supabase.from("regions").insert({
+    name: code,
+    code,
+    parent_id: parentId,
+    is_selectable: true,
+    sort_order: 100,
+    status: role === "admin" ? "approved" : "pending",
+    created_by: user.id,
+  });
+
+  if (error) {
+    if (error.code === "23505") throw new Error("אזור בשם הזה כבר קיים או ממתין לאישור");
+    throw new Error(error.message);
+  }
+  return code;
 }

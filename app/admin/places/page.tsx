@@ -6,6 +6,7 @@ import { placesAdminConfig } from "@/components/features/admin/admin-entity-conf
 import { useAuthStore } from "@/hooks/use-stores";
 import { deletePlace, getAllPlacesAdmin, removePlaceFromSite, restorePlace, updatePlaceStatus } from "@/lib/data/places";
 import { getUsers } from "@/lib/data/auth";
+import { getRegions } from "@/lib/data/regions";
 import { notifyContentRemoved, notifyContentStatusChange } from "@/lib/notifications/client";
 import type { Place, User } from "@/types";
 import { toast } from "@/components/ui/use-toast";
@@ -15,13 +16,17 @@ export default function AdminPlacesPage() {
   const { role } = useAuthStore();
   const [places, setPlaces] = useState<Place[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [pendingRegions, setPendingRegions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [allPlaces, allUsers] = await Promise.all([getAllPlacesAdmin(), getUsers()]);
+    const [allPlaces, allUsers, allRegions] = await Promise.all([getAllPlacesAdmin(), getUsers(), getRegions()]);
     setPlaces(allPlaces);
     setUsers(allUsers);
+    setPendingRegions(
+      allRegions.filter((r) => r.status === "pending" && r.code).map((r) => r.code as string)
+    );
     setLoading(false);
   }, []);
 
@@ -35,8 +40,12 @@ export default function AdminPlacesPage() {
   );
 
   const config = useMemo(
-    () => placesAdminConfig(Array.from(new Set(places.map((p) => p.place_type))).sort(), approvedTypes),
-    [places, approvedTypes]
+    () =>
+      placesAdminConfig(Array.from(new Set(places.map((p) => p.place_type))).sort(), {
+        approvedTypes,
+        pendingRegions,
+      }),
+    [places, approvedTypes, pendingRegions]
   );
 
   if (role !== "admin") return null;
@@ -49,6 +58,7 @@ export default function AdminPlacesPage() {
       loading={loading}
       onApprove={async (item) => {
         const isNewType = isNewPlaceType(item.place_type, approvedTypes);
+        const isNewRegion = pendingRegions.includes(item.region);
         await updatePlaceStatus(item.id, "approved");
         await notifyContentStatusChange({
           entityType: "place",
@@ -60,11 +70,13 @@ export default function AdminPlacesPage() {
           regionId: item.region_id,
         });
         await load();
+        const added = [
+          isNewType ? `סוג המקום החדש "${item.place_type}"` : null,
+          isNewRegion ? `האזור החדש "${item.region}"` : null,
+        ].filter(Boolean);
         toast({
           title: "המקום אושר",
-          description: isNewType
-            ? `סוג המקום החדש "${item.place_type}" נוסף לרשימה ויופיע לכולם`
-            : undefined,
+          description: added.length > 0 ? `${added.join(" ו")} נוספו לרשימה ויופיעו לכולם` : undefined,
         });
       }}
       onReject={async (item, reason) => {

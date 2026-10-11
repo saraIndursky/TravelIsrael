@@ -1,7 +1,7 @@
 "use client";
 
 import { Accessibility, MapPin, Search, TrendingUp } from "lucide-react";
-import { REGIONS } from "@/types/enums";
+import { useRegionNames } from "@/hooks/use-region-names";
 import { cn } from "@/lib/utils";
 
 export const TRIP_TYPE_OPTIONS = ["טבע", "תרבות", "ים", "מדבר", "משפחות", "היסטוריה", "אוכל"] as const;
@@ -48,6 +48,7 @@ const selectClass =
   "w-full rounded-sm border border-[#d1d5db] bg-white px-4 py-2.5 text-sm text-[#111827] transition-colors focus:border-[#111827] focus:outline-none";
 
 export function TripFilters({ values, onChange, onApply, onClear, className }: TripFiltersProps) {
+  const regionNames = useRegionNames();
   const set = <K extends keyof TripFilterValues>(key: K, value: TripFilterValues[K]) => {
     onChange({ ...values, [key]: value });
   };
@@ -88,7 +89,7 @@ export function TripFilters({ values, onChange, onApply, onClear, className }: T
           </label>
           <select value={values.region} onChange={(e) => set("region", e.target.value)} className={selectClass}>
             <option value="">כל האזורים</option>
-            {REGIONS.map((r) => (
+            {regionNames.map((r) => (
               <option key={r} value={r}>{r}</option>
             ))}
           </select>

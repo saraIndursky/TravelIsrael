@@ -1,5 +1,7 @@
 import type { Region } from "./enums";
 
+export type RegionStatus = "approved" | "pending" | "rejected";
+
 export interface RegionRecord {
   id: string;
   name: string;
@@ -7,6 +9,8 @@ export interface RegionRecord {
   parent_id: string | null;
   sort_order: number;
   is_selectable: boolean;
+  status: RegionStatus;
+  created_by: string | null;
   created_at: string;
 }
 

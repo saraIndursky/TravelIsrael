@@ -5,7 +5,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Plus, Search } from "lucide-react";
 import type { Difficulty, Region } from "@/types";
-import { DIFFICULTY_LABELS, REGIONS } from "@/types/enums";
+import { DIFFICULTY_LABELS } from "@/types/enums";
+import { useRegionNames } from "@/hooks/use-region-names";
 import { TrailCard } from "@/components/features/trails/trail-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InfiniteScrollFooter } from "@/components/ui/custom/infinite-scroll-footer";
@@ -18,6 +19,7 @@ const inputClass =
   "w-full rounded-sm border border-[#d1d5db] bg-white px-4 py-2.5 text-sm text-[#111827] focus:border-[#111827] focus:outline-none";
 
 export function TrailsClient() {
+  const regionNames = useRegionNames();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -102,7 +104,7 @@ export function TrailsClient() {
           </div>
           <select className={inputClass} value={region} onChange={(e) => setRegion(e.target.value)}>
             <option value="">כל האזורים</option>
-            {REGIONS.map((r) => (
+            {regionNames.map((r) => (
               <option key={r} value={r}>{r}</option>
             ))}
           </select>

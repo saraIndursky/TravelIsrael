@@ -7,9 +7,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import type { Accessibility, Difficulty, Region, Trail } from "@/types";
-import { DIFFICULTY_LABELS, REGIONS } from "@/types/enums";
+import { DIFFICULTY_LABELS } from "@/types/enums";
 import { toast } from "@/components/ui/use-toast";
-import { createTrail, updateTrail, TRAIL_TYPE_OPTIONS } from "@/lib/data/trails";
+import { createTrail, updateTrail, getApprovedTrailTypes } from "@/lib/data/trails";
+import { ensureRegion } from "@/lib/data/regions";
+import { trailTypes } from "@/lib/utils/trail-types";
+import { CustomTypeField } from "@/components/features/shared/custom-type-field";
+import { RegionField } from "@/components/features/shared/region-field";
 import { trailPath } from "@/lib/utils/content-path";
 import { trailFormSchema, type TrailFormValues } from "@/lib/validations";
 import { CreateTrailPreviewDialog } from "@/components/features/trails/create-trail-preview-dialog";
@@ -100,6 +104,7 @@ export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormP
   const router = useRouter();
   const { role } = useAuthStore();
   const [submitting, setSubmitting] = useState(false);
+  const [newRegionParent, setNewRegionParent] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const isEdit = mode === "edit";
@@ -127,11 +132,12 @@ export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormP
   async function onSubmit(values: TrailFormValues) {
     setSubmitting(true);
     try {
+      const region = await ensureRegion(values.region, newRegionParent);
       const payload = {
         name: values.name,
         short_description: values.short_description,
         full_description: values.full_description,
-        region: values.region as Region,
+        region: region as Region,
         trail_type: values.trail_type,
         length_km: values.length_km,
         duration_minutes: values.duration_minutes,
@@ -225,26 +231,23 @@ export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormP
 
       <Section title="מאפייני המסלול">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <Label>אזור</Label>
-            <select className={inputClass} {...register("region")}>
-              <option value="">בחר אזור</option>
-              {REGIONS.map((r) => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
-            <FieldError message={errors.region?.message} />
-          </div>
-          <div>
-            <Label>סוג מסלול</Label>
-            <select className={inputClass} {...register("trail_type")}>
-              <option value="">בחר סוג</option>
-              {TRAIL_TYPE_OPTIONS.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-            <FieldError message={errors.trail_type?.message} />
-          </div>
+          <RegionField
+            value={watch("region") ?? ""}
+            onChange={(region) => setValue("region", region, { shouldValidate: true })}
+            parentId={newRegionParent}
+            onParentChange={setNewRegionParent}
+            error={errors.region?.message}
+          />
+          <CustomTypeField
+            label="סוג מסלול"
+            helpers={trailTypes}
+            loadApprovedTypes={getApprovedTrailTypes}
+            value={watch("trail_type") ?? ""}
+            onChange={(type) => setValue("trail_type", type, { shouldValidate: true })}
+            error={errors.trail_type?.message}
+            newTypePlaceholder="למשל: רכיבה על סוסים"
+            newTypeHint="לא מצאת סוג מתאים? כתבי אותו כאן. אחרי שהמנהל יאשר את המסלול, הסוג יתווסף לרשימה לכולם."
+          />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>

@@ -54,6 +54,14 @@ export const TRAIL_TYPE_OPTIONS = [
   "אחר",
 ] as const;
 
+/** Types used by approved trails; together with the base list they make up the type picker. */
+export async function getApprovedTrailTypes(): Promise<string[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("trails").select("trail_type").eq("status", "approved");
+  if (error) throw new Error(error.message);
+  return Array.from(new Set((data ?? []).map((row) => row.trail_type as string)));
+}
+
 const DEFAULT_TRAIL_IMAGE =
   "https://images.unsplash.com/photo-1551632811-561732b1c4e9?w=800";
 
