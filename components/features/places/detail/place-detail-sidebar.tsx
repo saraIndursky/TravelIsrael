@@ -1,3 +1,4 @@
+import { toSafeExternalUrl } from "@/lib/utils/safe-url";
 import { AlertCircle, CheckCircle2, Globe, Navigation, Phone } from "lucide-react";
 import type { Place } from "@/types";
 import {
@@ -21,6 +22,7 @@ const TIP_ICONS: Record<string, string> = {
 };
 
 export function PlaceDetailSidebar({ place }: PlaceDetailSidebarProps) {
+  const safeWebsite = toSafeExternalUrl(place.website);
   const features = getPlaceFeatures(place);
   const tips = getPlaceTips(place);
   const navUrl = getNavigationUrl(place);
@@ -39,15 +41,15 @@ export function PlaceDetailSidebar({ place }: PlaceDetailSidebarProps) {
               <span>{place.phone}</span>
             </a>
           )}
-          {place.website && (
+          {safeWebsite && (
             <a
-              href={place.website.startsWith("http") ? place.website : `https://${place.website}`}
+              href={safeWebsite}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 text-[#4b5563] transition-colors hover:text-[#111827]"
             >
               <Globe className="h-5 w-5 shrink-0" />
-              <span className="truncate text-sm">{place.website.replace(/^https?:\/\//, "")}</span>
+              <span className="truncate text-sm">{safeWebsite.replace(/^https?:\/\//, "")}</span>
             </a>
           )}
           {!place.phone && !place.website && (

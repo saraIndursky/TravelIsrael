@@ -1,51 +1,29 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { AdminEntityListPage } from "@/components/features/admin/admin-entity-list-page";
 import { placesAdminConfig } from "@/components/features/admin/admin-entity-configs";
 import { useAuthStore } from "@/hooks/use-stores";
-import { deletePlace, getAllPlacesAdmin, removePlaceFromSite, restorePlace, updatePlaceStatus } from "@/lib/data/places";
-import { getUsers } from "@/lib/data/auth";
-import { getRegions } from "@/lib/data/regions";
+import { deletePlace, removePlaceFromSite, restorePlace, updatePlaceStatus } from "@/lib/data/places";
+import { useAdminEntitySource } from "@/hooks/use-admin-entity-source";
+import { mapPlace } from "@/lib/supabase/mappers";
 import { notifyContentRemoved, notifyContentStatusChange } from "@/lib/notifications/client";
-import type { Place, User } from "@/types";
+import type { Place } from "@/types";
 import { toast } from "@/components/ui/use-toast";
 import { isNewPlaceType } from "@/lib/utils/place-types";
 
 export default function AdminPlacesPage() {
   const { role } = useAuthStore();
-  const [places, setPlaces] = useState<Place[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [pendingRegions, setPendingRegions] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    const [allPlaces, allUsers, allRegions] = await Promise.all([getAllPlacesAdmin(), getUsers(), getRegions()]);
-    setPlaces(allPlaces);
-    setUsers(allUsers);
-    setPendingRegions(
-      allRegions.filter((r) => r.status === "pending" && r.code).map((r) => r.code as string)
-    );
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    if (role === "admin") load();
-  }, [role, load]);
-
-  const approvedTypes = useMemo(
-    () => Array.from(new Set(places.filter((p) => p.status === "approved").map((p) => p.place_type))),
-    [places]
-  );
+  const { source, refresh: load, types, pendingRegions } = useAdminEntitySource({
+    table: "places",
+    map: mapPlace,
+    typeColumn: "place_type",
+  });
+  const approvedTypes = types.approved;
 
   const config = useMemo(
-    () =>
-      placesAdminConfig(Array.from(new Set(places.map((p) => p.place_type))).sort(), {
-        approvedTypes,
-        pendingRegions,
-      }),
-    [places, approvedTypes, pendingRegions]
+    () => placesAdminConfig(types.all, { approvedTypes, pendingRegions }),
+    [types.all, approvedTypes, pendingRegions]
   );
 
   if (role !== "admin") return null;
@@ -53,9 +31,7 @@ export default function AdminPlacesPage() {
   return (
     <AdminEntityListPage
       config={config}
-      items={places}
-      users={users}
-      loading={loading}
+      source={source}
       onApprove={async (item) => {
         const isNewType = isNewPlaceType(item.place_type, approvedTypes);
         const isNewRegion = pendingRegions.includes(item.region);

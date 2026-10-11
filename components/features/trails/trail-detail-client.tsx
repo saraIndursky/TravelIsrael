@@ -136,7 +136,7 @@ export default function TrailDetailClient({ id }: { id: string }) {
     }
     const refreshed = await getTrailById(entityId);
     if (refreshed) setTrail(refreshed);
-    toast({ title: "המסלול נשליחה לאישור" });
+    toast({ title: "המסלול נשלח לאישור" });
   };
 
   const handleRate = async (score: number) => {
@@ -259,6 +259,12 @@ export default function TrailDetailClient({ id }: { id: string }) {
 
       <TripDetailReviews
         comments={comments}
+        currentUserId={userId}
+        onReviewUpdated={(updated) => setComments(comments.map((item) => (item.id === updated.id ? updated : item)))}
+        onReviewDeleted={(id) => {
+          setComments(comments.filter((item) => item.id !== id));
+          setHasUserReview(false);
+        }}
         users={commentUsers}
         onAddReview={handleAddReview}
         canAddReview={canInteract && !hasUserReview}

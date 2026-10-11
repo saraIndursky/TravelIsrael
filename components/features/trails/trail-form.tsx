@@ -160,13 +160,13 @@ export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormP
           toast({ title: "אין הרשאה לערוך מסלול זה", variant: "destructive" });
           return;
         }
-        toast({ title: keepsStatus ? "השינויים נשמרו" : "המסלול עודכן ונשליחה לאישור" });
+        toast({ title: keepsStatus ? "השינויים נשמרו" : "המסלול עודכן ונשלח לאישור" });
         router.push(trailPath(updated));
         return;
       }
 
       const trail = await createTrail(payload);
-      toast({ title: "המסלול נשליחה לאישור" });
+      toast({ title: "המסלול נשלח לאישור" });
       const returnTo = sanitizeReturnPath(
         new URLSearchParams(window.location.search).get("returnTo")
       );

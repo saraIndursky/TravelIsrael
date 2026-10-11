@@ -7,6 +7,8 @@ import { AlertCircle, Camera, CheckCircle2, Eye, EyeOff, Trash2 } from "lucide-r
 import { UserAvatar } from "@/components/ui/custom/user-avatar";
 import {
   changePassword,
+  currentUserHasPasswordLogin,
+  deleteMyAccount,
   getCurrentUser,
   getUserStatistics,
   removeProfileAvatar,
@@ -15,6 +17,7 @@ import {
 } from "@/lib/data/auth";
 import { useAuthStore } from "@/hooks/use-stores";
 import { cn } from "@/lib/utils";
+import { DeleteAccountDialog } from "@/components/features/profile/delete-account-dialog";
 import { NotificationPreferencesSection } from "@/components/features/profile/notification-preferences-section";
 
 type ProfileState = {
@@ -223,6 +226,8 @@ export function ProfilePersonalArea() {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [stats, setStats] = useState({ joinDate: "", trips: 0, views: 0 });
   const [loading, setLoading] = useState(true);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [hasPassword, setHasPassword] = useState(true);
 
   useEffect(() => {
     if (role === "guest") {
@@ -294,6 +299,16 @@ export function ProfilePersonalArea() {
     } finally {
       setAvatarUploading(false);
     }
+  }
+
+  useEffect(() => {
+    currentUserHasPasswordLogin().then(setHasPassword).catch(() => setHasPassword(true));
+  }, []);
+
+  async function handleDeleteAccount(password: string) {
+    await deleteMyAccount(password);
+    router.replace("/");
+    router.refresh();
   }
 
   async function handleProfileSave() {
@@ -489,6 +504,29 @@ export function ProfilePersonalArea() {
             </button>
           </div>
         </div>
+
+        <div className="rounded-2xl border border-red-100 bg-white p-8 shadow-sm">
+          <h2 className="mb-2 text-base font-semibold text-gray-800">מחיקת החשבון</h2>
+          <p className="mb-5 text-sm text-gray-600">
+            מחיקת החשבון היא סופית. תוכן שכבר פורסם יישאר באתר, וכל השאר יימחק.
+          </p>
+          <div dir="ltr" className="flex justify-start">
+            <button
+              type="button"
+              onClick={() => setDeleteOpen(true)}
+              className="rounded-xl border border-red-200 px-6 py-2.5 text-sm font-medium text-red-700 transition hover:bg-red-50"
+            >
+              מחיקת החשבון
+            </button>
+          </div>
+        </div>
+
+        <DeleteAccountDialog
+          open={deleteOpen}
+          needsPassword={hasPassword}
+          onCancel={() => setDeleteOpen(false)}
+          onConfirm={handleDeleteAccount}
+        />
       </div>
     </div>
   );

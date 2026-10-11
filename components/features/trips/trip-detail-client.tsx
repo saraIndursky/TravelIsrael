@@ -189,7 +189,7 @@ export default function TripDetailClient({ id }: { id: string }) {
     if (result) {
       const refreshed = await getTripById(entityId);
       if (refreshed) setTrip(refreshed);
-      toast({ title: "הטיול נשליחה לאישור" });
+      toast({ title: "הטיול נשלח לאישור" });
     } else {
       toast({ title: "שגיאה בשליחה לאישור", variant: "destructive" });
     }
@@ -430,6 +430,12 @@ export default function TripDetailClient({ id }: { id: string }) {
 
       <TripDetailReviews
         comments={comments}
+        currentUserId={userId}
+        onReviewUpdated={(updated) => setComments(comments.map((item) => (item.id === updated.id ? updated : item)))}
+        onReviewDeleted={(id) => {
+          setComments(comments.filter((item) => item.id !== id));
+          setHasUserReview(false);
+        }}
         users={commentUsers}
         onAddReview={handleAddReview}
         canAddReview={canInteract && !hasUserReview}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, ExternalLink, Filter, Search, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -8,12 +8,15 @@ import { Button } from "@/components/ui/button";
 import type { EntityType, ReportWithEntityName } from "@/types";
 import { ENTITY_TYPE_LABELS, REPORT_TYPE_LABELS, entityHref } from "@/components/features/admin/admin-report-labels";
 import { CenteredPageLoading } from "@/components/layout/page-loading";
+import { InfiniteScrollFooter } from "@/components/ui/custom/infinite-scroll-footer";
+import { usePagedList } from "@/hooks/use-paged-list";
+import { getReportsCounts, getReportsPage } from "@/lib/data/reports";
 
 interface AdminReportsListPageProps {
-  reports: ReportWithEntityName[];
-  loading?: boolean;
-  onResolve: (id: string) => Promise<void>;
-  onReject: (id: string) => Promise<void>;
+  /** Changes after every resolve / reject so the list reloads from the first page. */
+  version: number;
+  onResolve: (report: ReportWithEntityName) => Promise<void>;
+  onReject: (report: ReportWithEntityName) => Promise<void>;
 }
 
 type ReportTab = "pending" | "resolved" | "rejected";
@@ -36,27 +39,29 @@ const statusLabel = {
   rejected: "נדחה",
 };
 
-export function AdminReportsListPage({ reports, loading, onResolve, onReject }: AdminReportsListPageProps) {
+export function AdminReportsListPage({ version, onResolve, onReject }: AdminReportsListPageProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterEntity, setFilterEntity] = useState<EntityType | "">("");
   const [activeTab, setActiveTab] = useState<ReportTab>("pending");
 
-  const filtered = useMemo(() => {
-    return reports.filter((r) => {
-      const q = searchTerm.trim();
-      const matchesTab = r.status === activeTab;
-      const matchesSearch =
-        !q ||
-        r.reason.includes(q) ||
-        r.entity_name.includes(q) ||
-        r.entity_id.includes(q) ||
-        (REPORT_TYPE_LABELS[r.report_type] ?? "").includes(q);
-      const matchesEntity = !filterEntity || r.entity_type === filterEntity;
-      return matchesTab && matchesSearch && matchesEntity;
-    });
-  }, [reports, activeTab, searchTerm, filterEntity]);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [counts, setCounts] = useState<Awaited<ReturnType<typeof getReportsCounts>> | null>(null);
 
-  if (loading) {
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const { items: reports, total, hasMore, loading, loadingMore, error, loadMore } = usePagedList<ReportWithEntityName>(
+    (page) => getReportsPage({ status: activeTab, entityType: filterEntity, search: debouncedSearch, page }),
+    [activeTab, debouncedSearch, filterEntity, version].join("|")
+  );
+
+  useEffect(() => {
+    getReportsCounts().then(setCounts).catch(() => undefined);
+  }, [version]);
+
+  if (loading && !counts) {
     return <CenteredPageLoading />;
   }
 
@@ -69,10 +74,10 @@ export function AdminReportsListPage({ reports, loading, onResolve, onReject }: 
             <p className="mt-1 text-sm text-muted-foreground">טיפול בדיווחי משתמשים על תוכן</p>
           </div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-            <StatBox value={reports.filter((r) => r.status === "pending").length} label="ממתינים לטיפול" variant="warning" />
-            <StatBox value={reports.filter((r) => r.status === "resolved").length} label="טופלו" variant="success" />
-            <StatBox value={reports.filter((r) => r.status === "rejected").length} label="נדחו" variant="danger" />
-            <StatBox value={reports.length} label='סה"כ דיווחים' variant="info" />
+            <StatBox value={counts?.pending ?? 0} label="ממתינים לטיפול" variant="warning" />
+            <StatBox value={counts?.resolved ?? 0} label="טופלו" variant="success" />
+            <StatBox value={counts?.rejected ?? 0} label="נדחו" variant="danger" />
+            <StatBox value={counts?.total ?? 0} label='סה"כ דיווחים' variant="info" />
           </div>
         </div>
       </div>
@@ -80,7 +85,7 @@ export function AdminReportsListPage({ reports, loading, onResolve, onReject }: 
       <div className="border-b border-border/60 bg-white">
         <div className="flex gap-1 overflow-x-auto px-4 md:px-8">
           {TABS.map((tab) => {
-            const count = reports.filter((r) => r.status === tab.value).length;
+            const count = counts?.[tab.value] ?? 0;
             return (
               <button
                 key={tab.value}
@@ -138,17 +143,17 @@ export function AdminReportsListPage({ reports, loading, onResolve, onReject }: 
 
       <div className="px-4 py-6 md:px-8">
         <p className="mb-4 text-sm text-muted-foreground">
-          מציג {filtered.length} מתוך {reports.length} דיווחים
+          מציג {reports.length} מתוך {total} דיווחים
         </p>
 
-        {filtered.length === 0 ? (
+        {!loading && reports.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border/80 bg-white py-12 text-center">
             <Filter className="mx-auto mb-3 h-12 w-12 text-muted-foreground/50" aria-hidden />
             <p className="text-muted-foreground">לא נמצאו דיווחים</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {filtered.map((r) => (
+            {reports.map((r) => (
               <div key={r.id} className="rounded-xl border border-border/60 bg-white p-5 transition hover:shadow-sm">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0 space-y-2">
@@ -178,11 +183,11 @@ export function AdminReportsListPage({ reports, loading, onResolve, onReject }: 
                     </Link>
                     {r.status === "pending" && (
                       <>
-                        <Button size="sm" className="gap-1.5 rounded-xl" onClick={() => onResolve(r.id)}>
+                        <Button size="sm" className="gap-1.5 rounded-xl" onClick={() => onResolve(r)}>
                           <Check className="h-3.5 w-3.5" aria-hidden />
                           טפל
                         </Button>
-                        <Button size="sm" variant="danger" className="gap-1.5 rounded-xl" onClick={() => onReject(r.id)}>
+                        <Button size="sm" variant="danger" className="gap-1.5 rounded-xl" onClick={() => onReject(r)}>
                           <X className="h-3.5 w-3.5" aria-hidden />
                           דחה
                         </Button>
@@ -194,6 +199,7 @@ export function AdminReportsListPage({ reports, loading, onResolve, onReject }: 
             ))}
           </div>
         )}
+        <InfiniteScrollFooter hasMore={hasMore} loadingMore={loadingMore} error={error} onLoadMore={loadMore} />
       </div>
     </div>
   );

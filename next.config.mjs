@@ -1,11 +1,14 @@
 /** @type {import('next').NextConfig} */
-// Directives that can't break rendering are enforced. The full CSP runs in report-only mode
-// first, so mistakes show up in the browser console instead of breaking the site.
-const enforcedCsp = ["frame-ancestors 'none'", "base-uri 'self'", "form-action 'self'", "object-src 'none'"].join("; ");
+// Content Security Policy: the browser only runs scripts from our own origin (plus Vercel
+// analytics) and only talks to our own origin and Supabase, so text a user managed to inject
+// into a page could neither run nor send data anywhere else. It was run in report-only mode and
+// checked across the public, signed-in and admin pages before being enforced.
+// Next's dev server needs 'unsafe-eval' for hot reloading; production builds don't.
+const isDev = process.env.NODE_ENV !== "production";
 
-const reportOnlyCsp = [
+const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
@@ -21,8 +24,7 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self), payment=()" },
-  { key: "Content-Security-Policy", value: enforcedCsp },
-  { key: "Content-Security-Policy-Report-Only", value: reportOnlyCsp },
+  { key: "Content-Security-Policy", value: csp },
 ];
 
 const nextConfig = {

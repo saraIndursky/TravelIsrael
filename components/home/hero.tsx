@@ -5,7 +5,7 @@ import { toDisplayImageUrl } from "@/lib/utils/image-url";
 
 // Timna Valley: red sandstone under a blue sky. The previous photo is archived in public/brand/archive/.
 const HERO_IMAGE = toDisplayImageUrl(
-  "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Timna_valley_16583_%2811962924993%29.jpg/1920px-Timna_valley_16583_%2811962924993%29.jpg"
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Nature_of_Israel_2018_03.jpg/1920px-Nature_of_Israel_2018_03.jpg"
 );
 
 export function HomeHero() {

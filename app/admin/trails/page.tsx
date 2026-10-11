@@ -1,51 +1,29 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { AdminEntityListPage } from "@/components/features/admin/admin-entity-list-page";
 import { trailsAdminConfig } from "@/components/features/admin/admin-entity-configs";
 import { useAuthStore } from "@/hooks/use-stores";
-import { deleteTrail, getAllTrailsAdmin, removeTrailFromSite, restoreTrail, updateTrailStatus } from "@/lib/data/trails";
-import { getUsers } from "@/lib/data/auth";
-import { getRegions } from "@/lib/data/regions";
+import { deleteTrail, removeTrailFromSite, restoreTrail, updateTrailStatus } from "@/lib/data/trails";
+import { useAdminEntitySource } from "@/hooks/use-admin-entity-source";
+import { mapTrail } from "@/lib/supabase/mappers";
 import { isNewTrailType } from "@/lib/utils/trail-types";
 import { notifyContentRemoved, notifyContentStatusChange } from "@/lib/notifications/client";
-import type { Trail, User } from "@/types";
+import type { Trail } from "@/types";
 import { toast } from "@/components/ui/use-toast";
 
 export default function AdminTrailsPage() {
   const { role } = useAuthStore();
-  const [trails, setTrails] = useState<Trail[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [pendingRegions, setPendingRegions] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    const [allTrails, allUsers, allRegions] = await Promise.all([getAllTrailsAdmin(), getUsers(), getRegions()]);
-    setTrails(allTrails);
-    setUsers(allUsers);
-    setPendingRegions(
-      allRegions.filter((r) => r.status === "pending" && r.code).map((r) => r.code as string)
-    );
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    if (role === "admin") load();
-  }, [role, load]);
-
-  const approvedTypes = useMemo(
-    () => Array.from(new Set(trails.filter((t) => t.status === "approved").map((t) => t.trail_type))),
-    [trails]
-  );
+  const { source, refresh: load, types, pendingRegions } = useAdminEntitySource({
+    table: "trails",
+    map: mapTrail,
+    typeColumn: "trail_type",
+  });
+  const approvedTypes = types.approved;
 
   const config = useMemo(
-    () =>
-      trailsAdminConfig(Array.from(new Set(trails.map((t) => t.trail_type))).sort(), {
-        approvedTypes,
-        pendingRegions,
-      }),
-    [trails, approvedTypes, pendingRegions]
+    () => trailsAdminConfig(types.all, { approvedTypes, pendingRegions }),
+    [types.all, approvedTypes, pendingRegions]
   );
 
   if (role !== "admin") return null;
@@ -53,9 +31,7 @@ export default function AdminTrailsPage() {
   return (
     <AdminEntityListPage
       config={config}
-      items={trails}
-      users={users}
-      loading={loading}
+      source={source}
       onApprove={async (item) => {
         const isNewType = isNewTrailType(item.trail_type, approvedTypes);
         const isNewRegion = pendingRegions.includes(item.region);

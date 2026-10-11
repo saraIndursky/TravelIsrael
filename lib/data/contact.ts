@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
+import { ADMIN_PAGE_SIZE } from "./admin-lists";
+import { pageRange, toPage, type Page } from "./paged";
 import { getCurrentRole, getCurrentUser } from "./auth";
 
 export type ContactStatus = "new" | "handled";
@@ -32,6 +34,41 @@ export async function getContactMessages(): Promise<ContactMessage[]> {
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   return (data ?? []) as ContactMessage[];
+}
+
+export type ContactTab = "new" | "handled" | "all";
+
+/** Admin: one page of contact messages (newest first) for a tab. */
+export async function getContactMessagesPage(params: { tab: ContactTab; page: number }): Promise<Page<ContactMessage>> {
+  if ((await getCurrentRole()) !== "admin") return { items: [], total: 0, hasMore: false };
+
+  const supabase = createClient();
+  const { from, to } = pageRange(params.page, ADMIN_PAGE_SIZE);
+  let query = supabase
+    .from("contact_messages")
+    .select("id, name, email, subject, message, user_id, status, created_at, handled_at", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: true })
+    .range(from, to);
+  if (params.tab !== "all") query = query.eq("status", params.tab);
+
+  const { data, error, count } = await query;
+  if (error) throw new Error(error.message);
+  return toPage((data ?? []) as ContactMessage[], count, params.page, ADMIN_PAGE_SIZE);
+}
+
+export async function getContactCounts(): Promise<{ new: number; handled: number }> {
+  const supabase = createClient();
+  const count = async (status: "new" | "handled") => {
+    const { count: value, error } = await supabase
+      .from("contact_messages")
+      .select("*", { count: "exact", head: true })
+      .eq("status", status);
+    if (error) throw new Error(error.message);
+    return value ?? 0;
+  };
+  const [fresh, handled] = await Promise.all([count("new"), count("handled")]);
+  return { new: fresh, handled };
 }
 
 export async function getNewContactCount(): Promise<number> {

@@ -9,7 +9,7 @@ import { HomeFeatures } from "@/components/home/features";
 import { HomeCta } from "@/components/home/cta";
 
 const HOME_OG_IMAGE =
-  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&h=630&fit=crop";
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Nature_of_Israel_2018_03.jpg/1280px-Nature_of_Israel_2018_03.jpg";
 
 export const metadata: Metadata = {
   title: "TravelIsrael — תכנון, גילוי ושיתוף טיולים בישראל",

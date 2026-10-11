@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,10 +15,14 @@ import {
 import { getAdminActionsByStatus, getAdminMobileActions } from "@/components/features/admin/admin-list-actions";
 import { AdminStatusBadgeInline } from "@/components/features/admin/admin-status-badge-inline";
 import { POPULARITY_LABELS } from "@/lib/utils/admin-popularity";
-import { adminListShowsE2eContent, isE2eTestContentName } from "@/lib/utils/e2e-content";
 import type { Status, User as AppUser } from "@/types";
 import { useRegionNames } from "@/hooks/use-region-names";
 import { CenteredPageLoading } from "@/components/layout/page-loading";
+import { InfiniteScrollFooter } from "@/components/ui/custom/infinite-scroll-footer";
+import { usePagedList } from "@/hooks/use-paged-list";
+import type { AdminEntitySource } from "@/hooks/use-admin-entity-source";
+import type { AdminStatusCounts } from "@/lib/data/admin-lists";
+import { getProfilesByIdsAdmin } from "@/lib/data/auth";
 
 type ListTab = "approved" | "pending" | "rejected" | "removed";
 
@@ -35,6 +39,9 @@ export interface AdminEntityListConfig<T extends { id: string; status: Status }>
     allLabel: string;
     options: string[];
     getValue: (item: T) => string;
+    /** Database column the filter runs on, and how a chosen option maps to the stored value. */
+    column: string;
+    toStored?: (label: string) => string;
   };
   getImageUrl: (item: T) => string;
   getName: (item: T) => string;
@@ -53,9 +60,7 @@ export interface AdminEntityListConfig<T extends { id: string; status: Status }>
 
 interface AdminEntityListPageProps<T extends { id: string; status: Status }> {
   config: AdminEntityListConfig<T>;
-  items: T[];
-  users: AppUser[];
-  loading?: boolean;
+  source: AdminEntitySource<T>;
   onApprove: (item: T) => Promise<void>;
   onReject: (item: T, reason: string) => Promise<void>;
   onUnpublish: (item: T, reason: string) => Promise<void>;
@@ -72,9 +77,7 @@ const TABS: { label: string; value: ListTab }[] = [
 
 export function AdminEntityListPage<T extends { id: string; status: Status }>({
   config,
-  items,
-  users,
-  loading,
+  source,
   onApprove,
   onReject,
   onUnpublish,
@@ -95,31 +98,68 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
   const [rejectSubmitting, setRejectSubmitting] = useState(false);
   const [statsItem, setStatsItem] = useState<T | null>(null);
 
-  const userMap = useMemo(() => new Map(users.map((u) => [u.id, u])), [users]);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [counts, setCounts] = useState<AdminStatusCounts | null>(null);
+  const [creators, setCreators] = useState<Map<string, AppUser>>(new Map());
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const typeFilter = config.typeFilter;
+  const { fetchPage, fetchCounts, version } = source;
+  const resetKey = [activeTab, debouncedSearch, filterType, filterRegion, version].join("|");
+
+  const { items, total, hasMore, loading, loadingMore, error, loadMore } = usePagedList<T>(
+    (page) =>
+      fetchPage({
+        status: activeTab,
+        search: debouncedSearch,
+        typeColumn: filterType && typeFilter ? typeFilter.column : undefined,
+        typeValue: filterType && typeFilter ? (typeFilter.toStored?.(filterType) ?? filterType) : undefined,
+        region: filterRegion || undefined,
+        page,
+      }),
+    resetKey
+  );
+
+  useEffect(() => {
+    let active = true;
+    fetchCounts()
+      .then((result) => active && setCounts(result))
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [fetchCounts, version]);
+
+  // names and e-mails of the creators on the pages loaded so far
+  useEffect(() => {
+    const missing = items.map((item) => config.getCreatorId(item)).filter((id) => id && !creators.has(id));
+    if (missing.length === 0) return;
+    let active = true;
+    getProfilesByIdsAdmin(missing)
+      .then((profiles) => {
+        if (!active) return;
+        setCreators((previous) => {
+          const next = new Map(previous);
+          profiles.forEach((profile) => next.set(profile.id, profile));
+          return next;
+        });
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [items, creators, config]);
+
+  const userMap = creators;
 
   const getCreator = (item: T) => {
     const user = userMap.get(config.getCreatorId(item));
     return { name: user?.name ?? "לא ידוע", email: user?.email ?? "" };
   };
-
-  const filtered = useMemo(() => {
-    return items.filter((item) => {
-      const user = userMap.get(config.getCreatorId(item));
-      const creatorName = user?.name ?? "";
-      const matchesStatus = item.status === activeTab;
-      const q = searchTerm.trim();
-      const matchesSearch =
-        !q ||
-        config.getName(item).includes(q) ||
-        config.getRegion(item).includes(q) ||
-        creatorName.includes(q);
-      const matchesType = !filterType || !config.typeFilter || config.typeFilter.getValue(item) === filterType;
-      const matchesRegion = !filterRegion || config.getRegion(item) === filterRegion;
-      const matchesE2e =
-        !isE2eTestContentName(config.getName(item)) || adminListShowsE2eContent(searchTerm);
-      return matchesStatus && matchesSearch && matchesType && matchesRegion && matchesE2e;
-    });
-  }, [items, activeTab, searchTerm, filterType, filterRegion, config, userMap]);
 
   const showPopularity = config.showPopularity && activeTab === "approved";
 
@@ -146,9 +186,11 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
     onViewRemoval: (item: T) => setRemovalReasonItem(item),
   };
 
-  if (loading) {
+  if (loading && !counts) {
     return <CenteredPageLoading />;
   }
+
+  const count = (key: keyof AdminStatusCounts) => counts?.[key] ?? 0;
 
   return (
     <div className="min-h-full bg-secondary/30">
@@ -169,11 +211,11 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
           </div>
 
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-            <StatBox value={items.filter((i) => i.status === "approved").length} label={`${config.entityLabelPlural} מאושרים`} variant="success" />
-            <StatBox value={items.filter((i) => i.status === "pending").length} label="ממתינים לאישור" variant="warning" />
-            <StatBox value={items.filter((i) => i.status === "rejected").length} label="נדחו" variant="danger" />
-            <StatBox value={items.filter((i) => i.status === "removed").length} label="הוסרו" variant="danger" />
-            <StatBox value={items.length} label={`סה״כ ${config.entityLabelPlural}`} variant="info" />
+            <StatBox value={count("approved")} label={`${config.entityLabelPlural} מאושרים`} variant="success" />
+            <StatBox value={count("pending")} label="ממתינים לאישור" variant="warning" />
+            <StatBox value={count("rejected")} label="נדחו" variant="danger" />
+            <StatBox value={count("removed")} label="הוסרו" variant="danger" />
+            <StatBox value={count("total")} label={`סה״כ ${config.entityLabelPlural}`} variant="info" />
           </div>
         </div>
       </div>
@@ -182,7 +224,7 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
       <div className="border-b border-border/60 bg-white">
         <div className="flex gap-1 overflow-x-auto px-4 md:px-8">
           {TABS.map((tab) => {
-            const count = items.filter((i) => i.status === tab.value).length;
+            const tabCount = count(tab.value);
             return (
               <button
                 key={tab.value}
@@ -194,7 +236,7 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {tab.label} ({count})
+                {tab.label} ({tabCount})
               </button>
             );
           })}
@@ -251,7 +293,7 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
       {/* Content */}
       <div className="px-4 py-6 md:px-8">
         <p className="mb-4 text-sm text-muted-foreground">
-          מציג {filtered.length} מתוך {items.length} {config.entityLabelPlural}
+          מציג {items.length} מתוך {total} {config.entityLabelPlural}
         </p>
 
         <div className="overflow-hidden rounded-xl border border-border/60 bg-white">
@@ -272,7 +314,7 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {filtered.map((item) => {
+                {items.map((item) => {
                   const creator = getCreator(item);
                   const stats = config.getStats?.(item);
                   return (
@@ -348,7 +390,7 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
 
           {/* Mobile */}
           <div className="divide-y divide-border/60 lg:hidden">
-            {filtered.map((item) => {
+            {items.map((item) => {
               const creator = getCreator(item);
               const mobileActions = getAdminMobileActions(item, handlers);
               return (
@@ -415,13 +457,23 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
             })}
           </div>
 
-          {filtered.length === 0 && (
+          {!loading && items.length === 0 && (
             <div className="py-12 text-center">
               <Filter className="mx-auto mb-3 h-12 w-12 text-muted-foreground/50" aria-hidden />
               <p className="text-muted-foreground">לא נמצאו תוצאות</p>
             </div>
           )}
         </div>
+      </div>
+
+      <div className="px-4 pb-6 md:px-8">
+        <InfiniteScrollFooter
+          hasMore={hasMore}
+          loadingMore={loadingMore}
+          error={error}
+          onLoadMore={loadMore}
+          endMessage={items.length > 0 ? "הוצגו כל התוצאות" : undefined}
+        />
       </div>
 
       {/* Modals */}

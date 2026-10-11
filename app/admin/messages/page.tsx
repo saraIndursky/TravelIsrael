@@ -1,14 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, Inbox, Mail, RotateCcw, Trash2 } from "lucide-react";
 import { CenteredPageLoading } from "@/components/layout/page-loading";
+import { InfiniteScrollFooter } from "@/components/ui/custom/infinite-scroll-footer";
+import { usePagedList } from "@/hooks/use-paged-list";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { toast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/hooks/use-stores";
 import {
   deleteContactMessage,
-  getContactMessages,
+  getContactCounts,
+  getContactMessagesPage,
   setContactHandled,
   type ContactMessage,
 } from "@/lib/data/contact";
@@ -27,37 +30,22 @@ function formatDate(value: string): string {
 
 export default function AdminMessagesPage() {
   const { role } = useAuthStore();
-  const [messages, setMessages] = useState<ContactMessage[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [version, setVersion] = useState(0);
   const [tab, setTab] = useState<Tab>("new");
+  const [counts, setCounts] = useState({ new: 0, handled: 0 });
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ContactMessage | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      setMessages(await getContactMessages());
-    } catch {
-      toast({ title: "טעינת הפניות נכשלה", variant: "destructive" });
-    }
-    setLoading(false);
-  }, []);
+  const { items: visible, hasMore, loading, loadingMore, error, loadMore } = usePagedList<ContactMessage>(
+    (page) => getContactMessagesPage({ tab, page }),
+    `${tab}|${version}`
+  );
 
   useEffect(() => {
-    if (role === "admin") void load();
-  }, [role, load]);
+    if (role === "admin") getContactCounts().then(setCounts).catch(() => undefined);
+  }, [role, version]);
 
-  const counts = useMemo(
-    () => ({
-      new: messages.filter((m) => m.status === "new").length,
-      handled: messages.filter((m) => m.status === "handled").length,
-    }),
-    [messages]
-  );
-  const visible = useMemo(
-    () => (tab === "all" ? messages : messages.filter((m) => m.status === tab)),
-    [messages, tab]
-  );
+  const load = async () => setVersion((current) => current + 1);
 
   async function toggleHandled(message: ContactMessage) {
     setBusyId(message.id);
@@ -86,7 +74,7 @@ export default function AdminMessagesPage() {
   }
 
   if (role !== "admin") return null;
-  if (loading) return <CenteredPageLoading />;
+  if (loading && visible.length === 0 && counts.new + counts.handled === 0) return <CenteredPageLoading />;
 
   return (
     <div className="min-h-full bg-secondary/30">
@@ -95,7 +83,7 @@ export default function AdminMessagesPage() {
         <p className="mt-1 text-sm text-muted-foreground">הודעות שנשלחו דרך טופס יצירת הקשר.</p>
         <div className="mt-5 flex flex-wrap gap-2" role="tablist" aria-label="סינון פניות">
           {TABS.map(({ value, label }) => {
-            const count = value === "all" ? messages.length : counts[value];
+            const count = value === "all" ? counts.new + counts.handled : counts[value];
             return (
               <button
                 key={value}
@@ -117,7 +105,7 @@ export default function AdminMessagesPage() {
       </div>
 
       <div className="space-y-4 px-4 py-6 md:px-8">
-        {visible.length === 0 ? (
+        {!loading && visible.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border/80 bg-white py-12 text-center">
             <Inbox className="mx-auto mb-3 h-12 w-12 text-muted-foreground/50" aria-hidden />
             <p className="text-muted-foreground">אין פניות להצגה</p>
@@ -153,7 +141,7 @@ export default function AdminMessagesPage() {
                   href={`mailto:${message.email}?subject=${encodeURIComponent(`Re: ${message.subject}`)}`}
                   className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted"
                 >
-                  <Mail className="h-4 w-4" aria-hidden /> השב באימייל
+                  <Mail className="h-4 w-4" aria-hidden /> מענה באימייל
                 </a>
                 <button
                   type="button"
@@ -163,11 +151,11 @@ export default function AdminMessagesPage() {
                 >
                   {message.status === "new" ? (
                     <>
-                      <Check className="h-4 w-4" aria-hidden /> סמן כטופלה
+                      <Check className="h-4 w-4" aria-hidden /> סימון כטופלה
                     </>
                   ) : (
                     <>
-                      <RotateCcw className="h-4 w-4" aria-hidden /> החזר לחדשות
+                      <RotateCcw className="h-4 w-4" aria-hidden /> החזרה לחדשות
                     </>
                   )}
                 </button>
@@ -177,12 +165,13 @@ export default function AdminMessagesPage() {
                   onClick={() => setPendingDelete(message)}
                   className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-60"
                 >
-                  <Trash2 className="h-4 w-4" aria-hidden /> מחק
+                  <Trash2 className="h-4 w-4" aria-hidden /> מחיקה
                 </button>
               </div>
             </article>
           ))
         )}
+        <InfiniteScrollFooter hasMore={hasMore} loadingMore={loadingMore} error={error} onLoadMore={loadMore} />
       </div>
 
       <ConfirmDeleteDialog

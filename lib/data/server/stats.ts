@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { SYSTEM_PROFILE_ID } from "@/lib/system-profile";
 
 export interface HomeStats {
   placesCount: number;
@@ -17,6 +18,9 @@ async function countRows(
 
   if (filter) {
     query = query.eq(filter.column, filter.value);
+  }
+  if (table === "public_profiles") {
+    query = query.neq("id", SYSTEM_PROFILE_ID);
   }
 
   const { count, error } = await query;

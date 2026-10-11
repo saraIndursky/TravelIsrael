@@ -385,6 +385,12 @@ export function WizardResultsClient() {
 
           <TripDetailReviews
             comments={comments}
+            currentUserId={userId}
+            onReviewUpdated={(updated) => setComments(comments.map((item) => (item.id === updated.id ? updated : item)))}
+            onReviewDeleted={(id) => {
+              setComments(comments.filter((item) => item.id !== id));
+              setHasUserReview(false);
+            }}
             users={commentUsers}
             onAddReview={handleAddReview}
             canAddReview={canInteract && !hasUserReview}

@@ -1,17 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Filter, Search, Shield, User as UserIcon, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { User, UserRole } from "@/types";
 import { toast } from "@/components/ui/use-toast";
 import { CenteredPageLoading } from "@/components/layout/page-loading";
+import { InfiniteScrollFooter } from "@/components/ui/custom/infinite-scroll-footer";
+import { usePagedList } from "@/hooks/use-paged-list";
+import { getUsersCounts, getUsersPage } from "@/lib/data/auth";
+import { SYSTEM_PROFILE_ID } from "@/lib/system-profile";
 
 interface AdminUsersListPageProps {
-  users: User[];
-  loading?: boolean;
-  onRoleChange: (userId: string, role: UserRole) => Promise<void>;
+  /** Changes after every role update so the list reloads from the first page. */
+  version: number;
+  onRoleChange: (user: User, role: UserRole) => Promise<void>;
 }
 
 const roleLabel: Record<UserRole, string> = {
@@ -20,25 +24,30 @@ const roleLabel: Record<UserRole, string> = {
   admin: "מנהל",
 };
 
-export function AdminUsersListPage({ users, loading, onRoleChange }: AdminUsersListPageProps) {
+export function AdminUsersListPage({ version, onRoleChange }: AdminUsersListPageProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState<UserRole | "">("");
 
-  const filtered = useMemo(() => {
-    return users.filter((u) => {
-      const q = searchTerm.trim();
-      const matchesSearch = !q || u.name.includes(q) || u.email.includes(q);
-      const matchesRole = !filterRole || u.role === filterRole;
-      return matchesSearch && matchesRole;
-    });
-  }, [users, searchTerm, filterRole]);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [counts, setCounts] = useState<{ total: number; admins: number; users: number } | null>(null);
 
-  if (loading) {
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const { items: users, total, hasMore, loading, loadingMore, error, loadMore } = usePagedList<User>(
+    (page) => getUsersPage({ search: debouncedSearch, role: filterRole, page }),
+    [debouncedSearch, filterRole, version].join("|")
+  );
+
+  useEffect(() => {
+    getUsersCounts().then(setCounts).catch(() => undefined);
+  }, [version]);
+
+  if (loading && !counts) {
     return <CenteredPageLoading />;
   }
-
-  const adminCount = users.filter((u) => u.role === "admin").length;
-  const userCount = users.filter((u) => u.role === "user").length;
 
   return (
     <div className="min-h-full bg-secondary/30">
@@ -49,10 +58,10 @@ export function AdminUsersListPage({ users, loading, onRoleChange }: AdminUsersL
             <p className="mt-1 text-sm text-muted-foreground">ניהול תפקידי משתמשים במערכת</p>
           </div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-            <StatBox value={users.length} label='סה"כ משתמשים' variant="info" />
-            <StatBox value={adminCount} label="מנהלים" variant="success" />
-            <StatBox value={userCount} label="משתמשים רגילים" variant="warning" />
-            <StatBox value={filtered.length} label="תוצאות מסוננות" variant="danger" />
+            <StatBox value={counts?.total ?? 0} label='סה"כ משתמשים' variant="info" />
+            <StatBox value={counts?.admins ?? 0} label="מנהלים" variant="success" />
+            <StatBox value={counts?.users ?? 0} label="משתמשים רגילים" variant="warning" />
+            <StatBox value={total} label="תוצאות מסוננות" variant="danger" />
           </div>
         </div>
       </div>
@@ -93,7 +102,7 @@ export function AdminUsersListPage({ users, loading, onRoleChange }: AdminUsersL
 
       <div className="px-4 py-6 md:px-8">
         <p className="mb-4 text-sm text-muted-foreground">
-          מציג {filtered.length} מתוך {users.length} משתמשים
+          מציג {users.length} מתוך {total} משתמשים
         </p>
 
         <div className="overflow-hidden rounded-xl border border-border/60 bg-white">
@@ -108,7 +117,7 @@ export function AdminUsersListPage({ users, loading, onRoleChange }: AdminUsersL
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {filtered.map((u) => (
+                {users.map((u) => (
                   <tr key={u.id} className="transition hover:bg-muted/20">
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
@@ -134,28 +143,32 @@ export function AdminUsersListPage({ users, loading, onRoleChange }: AdminUsersL
                     </td>
                     <td className="px-4 py-4 text-muted-foreground">{u.email}</td>
                     <td className="px-4 py-4">
-                      <select
-                        className="ti-select h-9 min-w-[120px]"
-                        value={u.role}
-                        aria-label={`תפקיד עבור ${u.name}`}
-                        onChange={async (e) => {
-                          const newRole = e.target.value as UserRole;
-                          try {
-                            await onRoleChange(u.id, newRole);
-                            toast({ title: "התפקיד עודכן" });
-                          } catch (error) {
-                            if (error instanceof Error && error.name === "RoleChangeCancelled") return;
-                            toast({
-                              title: "עדכון התפקיד נכשל",
-                              description: error instanceof Error ? error.message : undefined,
-                              variant: "destructive",
-                            });
-                          }
-                        }}
-                      >
-                        <option value="user">{roleLabel.user}</option>
-                        <option value="admin">{roleLabel.admin}</option>
-                      </select>
+                      {u.id === SYSTEM_PROFILE_ID ? (
+                        <span className="text-sm text-muted-foreground">פרופיל מערכת</span>
+                      ) : (
+                        <select
+                          className="ti-select h-9 min-w-[120px]"
+                          value={u.role}
+                          aria-label={`תפקיד עבור ${u.name}`}
+                          onChange={async (e) => {
+                            const newRole = e.target.value as UserRole;
+                            try {
+                              await onRoleChange(u, newRole);
+                              toast({ title: "התפקיד עודכן" });
+                            } catch (error) {
+                              if (error instanceof Error && error.name === "RoleChangeCancelled") return;
+                              toast({
+                                title: "עדכון התפקיד נכשל",
+                                description: error instanceof Error ? error.message : undefined,
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                        >
+                          <option value="user">{roleLabel.user}</option>
+                          <option value="admin">{roleLabel.admin}</option>
+                        </select>
+                      )}
                     </td>
                     <td className="px-4 py-4 text-sm text-muted-foreground">
                       {u.created_at ? new Date(u.created_at).toLocaleDateString("he-IL") : "—"}
@@ -167,7 +180,7 @@ export function AdminUsersListPage({ users, loading, onRoleChange }: AdminUsersL
           </div>
 
           <div className="divide-y divide-border/60 md:hidden">
-            {filtered.map((u) => (
+            {users.map((u) => (
               <div key={u.id} className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="relative h-12 w-12 overflow-hidden rounded-full bg-muted">
@@ -185,40 +198,45 @@ export function AdminUsersListPage({ users, loading, onRoleChange }: AdminUsersL
                   </div>
                 </div>
                 <div className="mt-3">
-                  <select
-                    className="ti-select h-9 w-full"
-                    value={u.role}
-                    aria-label={`תפקיד עבור ${u.name}`}
-                    onChange={async (e) => {
-                      const newRole = e.target.value as UserRole;
-                      try {
-                        await onRoleChange(u.id, newRole);
-                        toast({ title: "התפקיד עודכן" });
-                      } catch (error) {
-                        if (error instanceof Error && error.name === "RoleChangeCancelled") return;
-                        toast({
-                          title: "עדכון התפקיד נכשל",
-                          description: error instanceof Error ? error.message : undefined,
-                          variant: "destructive",
-                        });
-                      }
-                    }}
-                  >
-                    <option value="user">{roleLabel.user}</option>
-                    <option value="admin">{roleLabel.admin}</option>
-                  </select>
+                  {u.id === SYSTEM_PROFILE_ID ? (
+                    <span className="text-sm text-muted-foreground">פרופיל מערכת</span>
+                  ) : (
+                    <select
+                      className="ti-select h-9 w-full"
+                      value={u.role}
+                      aria-label={`תפקיד עבור ${u.name}`}
+                      onChange={async (e) => {
+                        const newRole = e.target.value as UserRole;
+                        try {
+                          await onRoleChange(u, newRole);
+                          toast({ title: "התפקיד עודכן" });
+                        } catch (error) {
+                          if (error instanceof Error && error.name === "RoleChangeCancelled") return;
+                          toast({
+                            title: "עדכון התפקיד נכשל",
+                            description: error instanceof Error ? error.message : undefined,
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                    >
+                      <option value="user">{roleLabel.user}</option>
+                      <option value="admin">{roleLabel.admin}</option>
+                    </select>
+                  )}
                 </div>
               </div>
             ))}
           </div>
 
-          {filtered.length === 0 && (
+          {!loading && users.length === 0 && (
             <div className="py-12 text-center">
               <Filter className="mx-auto mb-3 h-12 w-12 text-muted-foreground/50" aria-hidden />
               <p className="text-muted-foreground">לא נמצאו משתמשים</p>
             </div>
           )}
         </div>
+        <InfiniteScrollFooter hasMore={hasMore} loadingMore={loadingMore} error={error} onLoadMore={loadMore} />
       </div>
     </div>
   );

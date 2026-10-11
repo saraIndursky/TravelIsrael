@@ -153,7 +153,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
     }
     const refreshed = await getPlaceById(entityId);
     if (refreshed) setPlace(refreshed);
-    toast({ title: "המקום נשליחה לאישור" });
+    toast({ title: "המקום נשלח לאישור" });
   };
 
   const handleRate = async (score: number) => {
@@ -274,6 +274,12 @@ export default function PlaceDetailClient({ id }: { id: string }) {
 
       <TripDetailReviews
         comments={comments}
+        currentUserId={userId}
+        onReviewUpdated={(updated) => setComments(comments.map((item) => (item.id === updated.id ? updated : item)))}
+        onReviewDeleted={(id) => {
+          setComments(comments.filter((item) => item.id !== id));
+          setHasUserReview(false);
+        }}
         users={commentUsers}
         onAddReview={handleAddReview}
         canAddReview={canInteract && !hasUserReview}

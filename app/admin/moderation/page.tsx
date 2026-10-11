@@ -1,37 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { AdminModerationListPage } from "@/components/features/admin/admin-moderation-list-page";
 import { useAuthStore } from "@/hooks/use-stores";
-import {
-  deleteModerationItem,
-  getUnseenModerationQueue,
-  markModerationSeen,
-} from "@/lib/data/moderation";
-import type { ModerationQueueItem } from "@/types";
+import { deleteModerationItem, markModerationSeen } from "@/lib/data/moderation";
 import { toast } from "@/components/ui/use-toast";
 
 export default function AdminModerationPage() {
   const { role } = useAuthStore();
-  const [items, setItems] = useState<ModerationQueueItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setItems(await getUnseenModerationQueue());
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    if (role === "admin") load();
-  }, [role, load]);
+  const [version, setVersion] = useState(0);
+  const load = async () => setVersion((current) => current + 1);
 
   if (role !== "admin") return null;
 
   return (
     <AdminModerationListPage
-      items={items}
-      loading={loading}
+      version={version}
       onSeen={async (id) => {
         const ok = await markModerationSeen(id);
         if (!ok) {

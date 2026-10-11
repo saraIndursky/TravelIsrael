@@ -1,6 +1,8 @@
 import type { Status, User, UserRole } from "@/types";
 import { createClient } from "@/lib/supabase/client";
 import { mapProfile } from "@/lib/supabase/mappers";
+import { ADMIN_PAGE_SIZE, cleanSearchTerm } from "./admin-lists";
+import { pageRange, toPage, type Page } from "./paged";
 import { notifyWelcomeEmail } from "@/lib/notifications/client";
 import { resolveBootstrapRole, syncBootstrapAdminProfile } from "./bootstrap-admin";
 import { canViewContent } from "./content-access";
@@ -187,6 +189,48 @@ export async function getUsers(): Promise<User[]> {
   return (data ?? []).map(mapProfile);
 }
 
+export interface UsersPageParams {
+  search: string;
+  role: UserRole | "";
+  page: number;
+}
+
+/** Admin: one page of users, newest first, filtered on the server. */
+export async function getUsersPage(params: UsersPageParams): Promise<Page<User>> {
+  const role = await getCurrentRole();
+  if (role !== "admin") return { items: [], total: 0, hasMore: false };
+
+  const supabase = createClient();
+  const { from, to } = pageRange(params.page, ADMIN_PAGE_SIZE);
+  let query = supabase
+    .from("profiles")
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: true })
+    .range(from, to);
+
+  if (params.role) query = query.eq("role", params.role);
+  const term = cleanSearchTerm(params.search);
+  if (term) query = query.or(`name.ilike.%${term}%,email.ilike.%${term}%`);
+
+  const { data, error, count } = await query;
+  if (error) throw new Error(error.message);
+  return toPage((data ?? []).map(mapProfile), count, params.page, ADMIN_PAGE_SIZE);
+}
+
+export async function getUsersCounts(): Promise<{ total: number; admins: number; users: number }> {
+  const supabase = createClient();
+  const count = async (role?: UserRole) => {
+    let query = supabase.from("profiles").select("*", { count: "exact", head: true });
+    if (role) query = query.eq("role", role);
+    const { count: value, error } = await query;
+    if (error) throw new Error(error.message);
+    return value ?? 0;
+  };
+  const [total, admins, users] = await Promise.all([count(), count("admin"), count("user")]);
+  return { total, admins, users };
+}
+
 /** Whether the signed-in user has an e-mail + password login (Google-only users do not). */
 export async function currentUserHasPasswordLogin(): Promise<boolean> {
   const supabase = createClient();
@@ -206,6 +250,19 @@ export async function reauthenticateWithPassword(password: string): Promise<void
 
   const { error } = await supabase.auth.signInWithPassword({ email: user.email, password });
   if (error) throw new Error("הסיסמה שגויה");
+}
+
+/** Permanently deletes the signed-in user's account (see supabase/schema/31_account_deletion.sql). */
+export async function deleteMyAccount(password: string): Promise<void> {
+  if (await currentUserHasPasswordLogin()) await reauthenticateWithPassword(password);
+
+  const supabase = createClient();
+  const { error } = await supabase.rpc("delete_my_account");
+  if (error) {
+    const known = ["אימות", "האחרון", "התחברות"].some((word) => error.message.includes(word));
+    throw new Error(known ? error.message : "מחיקת החשבון נכשלה");
+  }
+  await supabase.auth.signOut();
 }
 
 export async function updateUserRole(userId: string, role: UserRole): Promise<User> {
@@ -484,6 +541,17 @@ function mapPublicProfile(row: PublicProfileRow): User {
 export async function getProfileById(userId: string): Promise<User | null> {
   const [profile] = await getProfilesByIds([userId]);
   return profile ?? null;
+}
+
+/** Admin screens: name and e-mail of the given users (RLS only lets admins read other profiles' e-mail). */
+export async function getProfilesByIdsAdmin(ids: string[]): Promise<User[]> {
+  const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+  if (uniqueIds.length === 0) return [];
+
+  const supabase = createClient();
+  const { data, error } = await supabase.from("profiles").select("*").in("id", uniqueIds);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapProfile);
 }
 
 export async function getProfilesByIds(ids: string[]): Promise<User[]> {

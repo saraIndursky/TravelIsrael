@@ -1,43 +1,30 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AdminEntityListPage } from "@/components/features/admin/admin-entity-list-page";
 import { AdminTripApproveModal } from "@/components/features/admin/admin-list-modals";
 import { tripsAdminConfig } from "@/components/features/admin/admin-entity-configs";
 import { useAuthStore } from "@/hooks/use-stores";
-import { getUsers } from "@/lib/data/auth";
+import { useAdminEntitySource } from "@/hooks/use-admin-entity-source";
+import { mapTrip } from "@/lib/supabase/mappers";
 import {
   approveTripCascade,
   getTripPendingStationContent,
   hasPendingStationContent,
   type TripPendingStationContent,
 } from "@/lib/data/trip-approval";
-import { deleteTrip, getAllTripsAdmin, rejectTrip, removeTripFromSite, restoreTrip } from "@/lib/data/trips";
+import { deleteTrip, rejectTrip, removeTripFromSite, restoreTrip } from "@/lib/data/trips";
 import { notifyContentRemoved, notifyContentStatusChange } from "@/lib/notifications/client";
-import type { Place, Trail, Trip, User } from "@/types";
+import type { Place, Trail, Trip } from "@/types";
 import { toast } from "@/components/ui/use-toast";
 import { placePath, trailPath } from "@/lib/utils/content-path";
 
 export default function AdminTripsPage() {
   const { role } = useAuthStore();
-  const [trips, setTrips] = useState<Trip[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { source, refresh: load } = useAdminEntitySource({ table: "trips", map: mapTrip });
   const [approveTrip, setApproveTrip] = useState<Trip | null>(null);
   const [pendingContent, setPendingContent] = useState<TripPendingStationContent | null>(null);
   const [approving, setApproving] = useState(false);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    const [allTrips, allUsers] = await Promise.all([getAllTripsAdmin(), getUsers()]);
-    setTrips(allTrips);
-    setUsers(allUsers);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    if (role === "admin") load();
-  }, [role, load]);
 
   const closeApproveModal = useCallback(() => {
     if (approving) return;
@@ -150,9 +137,7 @@ export default function AdminTripsPage() {
     <>
       <AdminEntityListPage
         config={tripsAdminConfig}
-        items={trips}
-        users={users}
-        loading={loading}
+        source={source}
         onApprove={async (item) => {
           try {
             const pending = await getTripPendingStationContent(item.id);

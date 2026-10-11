@@ -1,27 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { AdminReportsListPage } from "@/components/features/admin/admin-reports-list-page";
 import { useAuthStore } from "@/hooks/use-stores";
-import { getReports, resolveReport } from "@/lib/data/reports";
+import { resolveReport } from "@/lib/data/reports";
 import { notifyReportStatusChange } from "@/lib/notifications/client";
 import type { ReportWithEntityName } from "@/types";
 import { toast } from "@/components/ui/use-toast";
 
 export default function AdminReportsPage() {
   const { role } = useAuthStore();
-  const [reports, setReports] = useState<ReportWithEntityName[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setReports(await getReports());
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    if (role === "admin") load();
-  }, [role, load]);
+  const [version, setVersion] = useState(0);
 
   if (role !== "admin") return null;
 
@@ -44,24 +33,15 @@ export default function AdminReportsPage() {
       status,
     });
 
-    await load();
+    setVersion((current) => current + 1);
     toast({ title: status === "resolved" ? "הדיווח טופל" : "הדיווח נדחה" });
   }
 
   return (
     <AdminReportsListPage
-      reports={reports}
-      loading={loading}
-      onResolve={async (id) => {
-        const report = reports.find((r) => r.id === id);
-        if (!report) return;
-        await handleStatusChange(report, "resolved");
-      }}
-      onReject={async (id) => {
-        const report = reports.find((r) => r.id === id);
-        if (!report) return;
-        await handleStatusChange(report, "rejected");
-      }}
+      version={version}
+      onResolve={(report) => handleStatusChange(report, "resolved")}
+      onReject={(report) => handleStatusChange(report, "rejected")}
     />
   );
 }

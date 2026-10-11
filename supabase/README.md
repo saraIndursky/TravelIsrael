@@ -31,6 +31,9 @@
 | `schema/28_profile_privacy.sql` | פרטיות פרופילים: מייל ותפקיד נראים רק לבעלים ולמנהלים; שם ותמונה דרך התצוגה public_profiles; app_config סגור — public + demo |
 | `schema/29_security_hardening.sql` | הקשחה: שינוי תפקיד רק למנהל, יצירת תוכן רק כטיוטה/ממתין, מוני צפיות/דירוג/מועדפים בטריגרים, אילוצי אורך, הרשאות הרצה — public + demo |
 | `schema/30_role_change_reauth.sql` | שינוי תפקיד דורש אימות סיסמה טרי (עד 5 דקות), ואוסר שינוי עצמי והסרת המנהל האחרון — public + demo |
+| `schema/31_account_deletion.sql` | מחיקת חשבון עצמית (`delete_my_account`, דורשת אימות סיסמה טרי): תוכן מאושר עובר לפרופיל מערכת "TravelIsrael" (מנהל שאי אפשר להתחבר אליו), וטיוטות, תוכן ממתין, תגובות, דירוגים ומועדפים נמחקים — public + demo |
+| `schema/32_comment_edit_requeue.sql` | תגובה שנערכה חוזרת לתור הפיקוח כלא נצפתה, כדי שעריכה לא תעקוף בדיקה — public + demo |
+| `schema/33_text_limits.sql` | מגבלות אורך לטקסט משתמשים ואיסור כתובות `javascript:`/`data:` באתר של מקום — public + demo |
 
 ## הרצת SQL על הפרויקט החי
 

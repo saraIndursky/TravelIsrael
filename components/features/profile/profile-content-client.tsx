@@ -16,6 +16,7 @@ import { MyTripsEmptyState } from "@/components/features/profile/my-trips-empty-
 import { toast } from "@/components/ui/use-toast";
 import { tripEditPath } from "@/lib/utils/content-path";
 import { ClientPageLoading } from "@/components/layout/page-loading";
+import { InfiniteScrollFooter } from "@/components/ui/custom/infinite-scroll-footer";
 import { useAuthStore } from "@/hooks/use-stores";
 import {
   getFavoritePlaces,
@@ -31,6 +32,9 @@ import {
   getTrips,
   submitTripForApproval,
 } from "@/lib/data/trips";
+
+/** Cards shown at first and added each time the end of the list scrolls into view. */
+const REVEAL_STEP = 12;
 
 type MainTab = "created" | "favorites";
 type EntityTab = "trips" | "places" | "trails";
@@ -61,6 +65,7 @@ export function ProfileContentClient() {
   const [favTrails, setFavTrails] = useState<Trail[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [shown, setShown] = useState(REVEAL_STEP);
 
   const loadData = useCallback(async () => {
     if (role === "guest") {
@@ -87,6 +92,10 @@ export function ProfileContentClient() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    setShown(REVEAL_STEP);
+  }, [mainTab, entityTab, statusTab]);
 
   const createdTotal = myTrips.length + myPlaces.length + myTrails.length;
   const favoritesTotal = favTrips.length + favPlaces.length + favTrails.length;
@@ -126,6 +135,19 @@ export function ProfileContentClient() {
   const filteredPlaces = myPlaces.filter((p) => p.status === statusTab);
   const filteredTrails = myTrails.filter((t) => t.status === statusTab);
 
+  const activeLength =
+    mainTab === "created"
+      ? entityTab === "trips"
+        ? filteredTrips.length
+        : entityTab === "places"
+          ? filteredPlaces.length
+          : filteredTrails.length
+      : entityTab === "trips"
+        ? favTrips.length
+        : entityTab === "places"
+          ? favPlaces.length
+          : favTrails.length;
+
   function handleEntityChange(tab: EntityTab) {
     setEntityTab(tab);
     setStatusTab(tab === "trips" ? "draft" : "pending");
@@ -139,7 +161,7 @@ export function ProfileContentClient() {
         toast({ title: "שליחה לאישור נכשלה", variant: "destructive" });
         return;
       }
-      toast({ title: "הטיול נשליחה לאישור" });
+      toast({ title: "הטיול נשלח לאישור" });
       await loadData();
       setStatusTab("pending");
     } finally {
@@ -155,7 +177,7 @@ export function ProfileContentClient() {
         toast({ title: "שליחה לאישור נכשלה", variant: "destructive" });
         return;
       }
-      toast({ title: "המקום נשליחה לאישור" });
+      toast({ title: "המקום נשלח לאישור" });
       await loadData();
       setStatusTab("pending");
     } finally {
@@ -171,7 +193,7 @@ export function ProfileContentClient() {
         toast({ title: "שליחה לאישור נכשלה", variant: "destructive" });
         return;
       }
-      toast({ title: "המסלול נשליחה לאישור" });
+      toast({ title: "המסלול נשלח לאישור" });
       await loadData();
       setStatusTab("pending");
     } finally {
@@ -411,7 +433,7 @@ export function ProfileContentClient() {
                 />
               ) : (
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {filteredTrips.map((trip) => (
+                  {filteredTrips.slice(0, shown).map((trip) => (
                     <MyTripCard
                       key={trip.id}
                       trip={trip}
@@ -428,7 +450,7 @@ export function ProfileContentClient() {
                 <MyTripsEmptyState title="אין מקומות בקטגוריה זו" />
               ) : (
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {filteredPlaces.map((place) => (
+                  {filteredPlaces.slice(0, shown).map((place) => (
                     <MyPlaceCard
                       key={place.id}
                       place={place}
@@ -443,7 +465,7 @@ export function ProfileContentClient() {
               <MyTripsEmptyState title="אין מסלולים בקטגוריה זו" />
             ) : (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredTrails.map((trail) => (
+                {filteredTrails.slice(0, shown).map((trail) => (
                   <MyTrailCard
                     key={trail.id}
                     trail={trail}
@@ -462,7 +484,7 @@ export function ProfileContentClient() {
               />
             ) : (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {favTrips.map((trip) => (
+                {favTrips.slice(0, shown).map((trip) => (
                   <TripCard
                     key={trip.id}
                     trip={trip}
@@ -479,7 +501,7 @@ export function ProfileContentClient() {
               <MyTripsEmptyState title="עדיין לא שמרת מקומות למועדפים" showCreateButton={false} />
             ) : (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {favPlaces.map((place) => (
+                {favPlaces.slice(0, shown).map((place) => (
                   <PlaceCard
                     key={place.id}
                     place={place}
@@ -495,7 +517,7 @@ export function ProfileContentClient() {
             <MyTripsEmptyState title="עדיין לא שמרת מסלולים למועדפים" showCreateButton={false} />
           ) : (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {favTrails.map((trail) => (
+              {favTrails.slice(0, shown).map((trail) => (
                 <TrailCard
                   key={trail.id}
                   trail={trail}
@@ -507,6 +529,12 @@ export function ProfileContentClient() {
               ))}
             </div>
           )}
+          <InfiniteScrollFooter
+            hasMore={shown < activeLength}
+            loadingMore={false}
+            error={null}
+            onLoadMore={() => setShown((current) => current + REVEAL_STEP)}
+          />
         </div>
       </div>
     </div>

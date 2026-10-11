@@ -1,20 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Check, ExternalLink, Inbox, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CenteredPageLoading } from "@/components/layout/page-loading";
+import { InfiniteScrollFooter } from "@/components/ui/custom/infinite-scroll-footer";
+import { usePagedList } from "@/hooks/use-paged-list";
+import { getUnseenModerationCounts, getUnseenModerationPage } from "@/lib/data/moderation";
 import { ENTITY_TYPE_LABELS, entityHref } from "@/components/features/admin/admin-report-labels";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import type { EntityType, ModerationKind, ModerationQueueItem } from "@/types";
 import { toDisplayImageUrl } from "@/lib/utils/image-url";
 
 interface AdminModerationListPageProps {
-  items: ModerationQueueItem[];
-  loading?: boolean;
+  /** Changes after every mark-as-seen / delete so the list reloads from the first page. */
+  version: number;
   onSeen: (id: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }
@@ -25,8 +28,7 @@ const KIND_LABELS: Record<ModerationKind, string> = {
 };
 
 export function AdminModerationListPage({
-  items,
-  loading,
+  version,
   onSeen,
   onDelete,
 }: AdminModerationListPageProps) {
@@ -36,21 +38,24 @@ export function AdminModerationListPage({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ModerationQueueItem | null>(null);
 
-  const filtered = useMemo(() => {
-    return items.filter((item) => {
-      const q = searchTerm.trim();
-      const matchesSearch =
-        !q ||
-        item.entity_name.includes(q) ||
-        item.content.includes(q) ||
-        item.entity_id.includes(q);
-      const matchesEntity = !filterEntity || item.entity_type === filterEntity;
-      const matchesKind = !filterKind || item.kind === filterKind;
-      return matchesSearch && matchesEntity && matchesKind;
-    });
-  }, [items, searchTerm, filterEntity, filterKind]);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [counts, setCounts] = useState<{ total: number; comment: number; gallery_image: number } | null>(null);
 
-  if (loading) {
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const { items, total, hasMore, loading, loadingMore, error, loadMore } = usePagedList<ModerationQueueItem>(
+    (page) => getUnseenModerationPage({ search: debouncedSearch, entityType: filterEntity, kind: filterKind, page }),
+    [debouncedSearch, filterEntity, filterKind, version].join("|")
+  );
+
+  useEffect(() => {
+    getUnseenModerationCounts().then(setCounts).catch(() => undefined);
+  }, [version]);
+
+  if (loading && !counts) {
     return <CenteredPageLoading />;
   }
 
@@ -65,14 +70,14 @@ export function AdminModerationListPage({
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
-            <StatBox value={items.length} label="ממתינים לצפייה" variant="warning" />
+            <StatBox value={counts?.total ?? 0} label="ממתינים לצפייה" variant="warning" />
             <StatBox
-              value={items.filter((item) => item.kind === "comment").length}
+              value={counts?.comment ?? 0}
               label="תגובות"
               variant="info"
             />
             <StatBox
-              value={items.filter((item) => item.kind === "gallery_image").length}
+              value={counts?.gallery_image ?? 0}
               label="תמונות"
               variant="info"
             />
@@ -117,17 +122,17 @@ export function AdminModerationListPage({
 
       <div className="px-4 py-6 md:px-8">
         <p className="mb-4 text-sm text-muted-foreground">
-          מציג {filtered.length} מתוך {items.length} פריטים
+          מציג {items.length} מתוך {total} פריטים
         </p>
 
-        {filtered.length === 0 ? (
+        {!loading && items.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border/80 bg-white py-12 text-center">
             <Inbox className="mx-auto mb-3 h-12 w-12 text-muted-foreground/50" aria-hidden />
             <p className="text-muted-foreground">אין פריטים ממתינים לפיקוח</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {filtered.map((item) => (
+            {items.map((item) => (
               <div key={item.id} className="rounded-xl border border-border/60 bg-white p-5 transition hover:shadow-sm">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0 space-y-3">
@@ -195,6 +200,7 @@ export function AdminModerationListPage({
             ))}
           </div>
         )}
+        <InfiniteScrollFooter hasMore={hasMore} loadingMore={loadingMore} error={error} onLoadMore={loadMore} />
       </div>
 
       <ConfirmDeleteDialog

@@ -150,13 +150,13 @@ export function PlaceForm({ mode = "create", placeId, initialPlace }: PlaceFormP
           toast({ title: "אין הרשאה לערוך מקום זה", variant: "destructive" });
           return;
         }
-        toast({ title: keepsStatus ? "השינויים נשמרו" : "המקום עודכן ונשליחה לאישור" });
+        toast({ title: keepsStatus ? "השינויים נשמרו" : "המקום עודכן ונשלח לאישור" });
         window.location.assign(placePath(updated));
         return;
       }
 
       const place = await createPlace(payload);
-      toast({ title: "המקום נשליחה לאישור" });
+      toast({ title: "המקום נשלח לאישור" });
       const returnTo = sanitizeReturnPath(
         new URLSearchParams(window.location.search).get("returnTo")
       );

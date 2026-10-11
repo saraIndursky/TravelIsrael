@@ -248,7 +248,7 @@ export function BuildTripForm({ mode, tripId, initialTrip, editHint }: BuildTrip
         clearTripCreateDraft();
         trackEvent("trip_created", { status, mode: "create" });
         toast({
-          title: status === "draft" ? "הטיול נשמר כטיוטה" : "הטיול נשליחה לאישור",
+          title: status === "draft" ? "הטיול נשמר כטיוטה" : "הטיול נשלח לאישור",
         });
         router.push(tripPath(trip));
       } else if (tripId) {
@@ -262,7 +262,7 @@ export function BuildTripForm({ mode, tripId, initialTrip, editHint }: BuildTrip
               status === "draft" && initialTrip?.status === "draft"
                 ? "הטיול נשמר כטיוטה"
                 : status === "pending"
-                  ? "הטיול עודכן ונשליחה לאישור"
+                  ? "הטיול עודכן ונשלח לאישור"
                   : "הטיול עודכן בהצלחה",
           });
           router.push(tripPath(result));

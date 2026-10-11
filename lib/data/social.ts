@@ -126,6 +126,27 @@ export async function addComment(
   return mapComment(data);
 }
 
+export async function updateComment(commentId: string, content: string): Promise<Comment> {
+  const text = content.trim();
+  if (!text) throw new Error("הביקורת לא יכולה להיות ריקה");
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("comments")
+    .update({ content: text })
+    .eq("id", commentId)
+    .select("*")
+    .single();
+  if (error || !data) throw new Error("עדכון הביקורת נכשל");
+  return mapComment(data);
+}
+
+export async function deleteComment(commentId: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from("comments").delete().eq("id", commentId);
+  if (error) throw new Error("מחיקת הביקורת נכשלה");
+}
+
 export async function getUserComments(): Promise<Comment[]> {
   const user = await getCurrentUser();
   if (!user) return [];
