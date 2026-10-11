@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight, MapPinned, Pencil, Plus, Trash2 } from "lucide-react";
 import type { Region } from "@/types";
 import type { RegionRecord, RegionTreeNode } from "@/types/region";
-import { REGIONS } from "@/types/enums";
 import { toast } from "@/components/ui/use-toast";
 import { CenteredPageLoading } from "@/components/layout/page-loading";
 import {
@@ -91,7 +90,7 @@ export function AdminRegionsListPage({ loading: externalLoading }: AdminRegionsL
       const payload = {
         name: form.name,
         parent_id: form.parent_id || null,
-        code: form.is_selectable ? (form.code as Region) : null,
+        code: form.is_selectable ? ((editing?.code ?? form.name.trim()) as Region) : null,
         is_selectable: form.is_selectable,
         sort_order: form.sort_order,
       };
@@ -331,22 +330,21 @@ export function AdminRegionsListPage({ loading: externalLoading }: AdminRegionsL
               </label>
 
               {form.is_selectable && (
-                <label className="block space-y-1">
+                <div className="space-y-1">
                   <span className="text-sm font-medium">קוד אזור</span>
-                  <select
-                    className="ti-select w-full"
-                    value={form.code}
-                    onChange={(e) => setForm((prev) => ({ ...prev, code: e.target.value as Region | "" }))}
-                    required
-                  >
-                    <option value="">בחרי קוד</option>
-                    {REGIONS.map((region) => (
-                      <option key={region} value={region}>
-                        {region}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                  {editing?.code ? (
+                    <>
+                      <input className="ti-input w-full" value={editing.code} disabled readOnly />
+                      <p className="text-xs text-muted-foreground">
+                        הקוד נשמר כפי שהוא כדי שלא ינתק את המקומות והמסלולים שכבר משויכים לאזור.
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      הקוד ייקבע אוטומטית לפי שם האזור ({form.name.trim() || "..."}).
+                    </p>
+                  )}
+                </div>
               )}
 
               <label className="block space-y-1">

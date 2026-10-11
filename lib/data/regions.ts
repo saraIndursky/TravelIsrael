@@ -173,6 +173,7 @@ export async function createRegion(input: CreateRegionInput): Promise<RegionReco
     .select("*")
     .single();
 
+  if (error?.code === "23505") throw new Error("כבר קיים אזור עם אותו שם או קוד");
   if (error || !data) throw new Error(error?.message ?? "יצירת האזור נכשלה");
   return mapRegion(data);
 }
@@ -217,6 +218,7 @@ export async function updateRegion(id: string, input: UpdateRegionInput): Promis
     .select("*")
     .single();
 
+  if (error?.code === "23505") throw new Error("כבר קיים אזור עם אותו שם או קוד");
   if (error || !data) throw new Error(error?.message ?? "עדכון האזור נכשל");
   return mapRegion(data);
 }
