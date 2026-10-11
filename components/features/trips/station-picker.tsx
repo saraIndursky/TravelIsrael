@@ -79,7 +79,7 @@ export function StationPicker({
 
               <div className="flex gap-3">
                 <div className="relative flex-1">
-                  <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+                  <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7280]" />
                   <input
                     type="text"
                     placeholder="חפש לפי שם או אזור..."
@@ -122,7 +122,7 @@ export function StationPicker({
                 <PageLoadingSpinner size="sm" className="py-8" />
               ) : filtered.length === 0 ? (
                 <div className="py-12 text-center">
-                  <Filter className="mx-auto mb-3 h-12 w-12 text-[#9ca3af]" />
+                  <Filter className="mx-auto mb-3 h-12 w-12 text-[#6b7280]" />
                   <p className="mb-4 text-[#6b7280]">לא נמצאו תוצאות</p>
                   {(onCreatePlace || onCreateTrail) && (
                     <div className="flex flex-wrap items-center justify-center gap-2">

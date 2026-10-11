@@ -184,13 +184,13 @@ export function CreateAssistantPanel<T extends FieldValues>({
               <Bot className="h-5 w-5" />
               <div>
                 <p className="text-sm font-bold">{PROVIDER_LABELS[provider ?? "none"]}</p>
-                <p className="text-xs text-[#9ca3af]">לא משנה הטופס ללא אישור</p>
+                <p className="text-xs text-[#6b7280]">לא משנה הטופס ללא אישור</p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="rounded-full p-1.5 text-[#9ca3af] transition-colors hover:bg-white/10 hover:text-white"
+              className="rounded-full p-1.5 text-[#6b7280] transition-colors hover:bg-white/10 hover:text-white"
               aria-label="סגור עוזר"
             >
               <X className="h-5 w-5" />
@@ -218,7 +218,7 @@ export function CreateAssistantPanel<T extends FieldValues>({
             className="flex-1 space-y-2 overflow-y-auto px-3 py-3"
           >
             {messages.length === 0 && (
-              <p className="text-center text-xs text-[#9ca3af] py-4">
+              <p className="text-center text-xs text-[#6b7280] py-4">
                 כתבי מה חסר — למשל «תוסיפי תיאור ותגיות» או «מה הוחל על הטופס?»
               </p>
             )}
@@ -238,7 +238,7 @@ export function CreateAssistantPanel<T extends FieldValues>({
               </div>
             ))}
             {loading && (
-              <p className="text-xs text-[#9ca3af] animate-pulse px-1">חושב...</p>
+              <p className="text-xs text-[#6b7280] animate-pulse px-1">חושב...</p>
             )}
           </div>
 

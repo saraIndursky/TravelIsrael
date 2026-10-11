@@ -22,7 +22,6 @@ export function NotificationListItem({
     <button
       type="button"
       onClick={onClick}
-      aria-label={isUnread ? `התראה חדשה: ${notification.title}` : notification.title}
       className={cn(
         "relative flex w-full flex-col gap-1 text-right transition",
         compact ? "px-4 py-3" : "gap-1.5 px-5 py-4",
@@ -53,14 +52,14 @@ export function NotificationListItem({
             חדש
           </span>
         ) : (
-          <span className="mt-0.5 shrink-0 text-[10px] font-medium text-gray-400">נקרא</span>
+          <span className="mt-0.5 shrink-0 text-[10px] font-medium text-gray-500">נקרא</span>
         )}
       </div>
       <span
         className={cn(
           "line-clamp-2 text-right leading-relaxed",
           compact ? "text-xs" : "text-sm",
-          isUnread ? "font-medium text-gray-800" : "text-gray-400"
+          isUnread ? "font-medium text-gray-800" : "text-gray-500"
         )}
       >
         {notification.body}
@@ -69,7 +68,7 @@ export function NotificationListItem({
         className={cn(
           "text-right",
           compact ? "text-[11px]" : "text-xs",
-          isUnread ? "text-gray-500" : "text-gray-400"
+          isUnread ? "text-gray-600" : "text-gray-600"
         )}
       >
         {formattedDate}

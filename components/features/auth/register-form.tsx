@@ -72,7 +72,7 @@ export function RegisterForm() {
             </p>
           </div>
           <div className="mt-6 text-center">
-            <p className="text-xs leading-relaxed text-gray-400">
+            <p className="text-xs leading-relaxed text-gray-500">
               בהרשמה אתם מסכימים ל
               <span className="underline">תנאי השימוש</span> ול
               <span className="underline">מדיניות הפרטיות</span>

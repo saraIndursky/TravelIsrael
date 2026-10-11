@@ -122,7 +122,7 @@ export function AdminSidebar({ mobileOpen, onMobileClose }: AdminSidebarProps) {
                   "rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
                   isActive(href)
                     ? "bg-primary-foreground/20 text-primary-foreground"
-                    : "bg-amber-500 text-white"
+                    : "bg-amber-700 text-white"
                 )}
               >
                 {badgeCount(href) > 99 ? "99+" : badgeCount(href)}

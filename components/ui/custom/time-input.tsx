@@ -54,7 +54,7 @@ function TimeSegment({ id, ariaLabel, value, options, onChange }: TimeSegmentPro
         ))}
       </select>
       <ChevronDown
-        className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9ca3af]"
+        className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#6b7280]"
         aria-hidden
       />
     </div>
@@ -77,7 +77,7 @@ export function TimeInput({ value, onChange, className, label }: TimeInputProps)
           "focus-within:border-[#111827]/30 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
         )}
       >
-        <Clock className="h-4 w-4 shrink-0 text-[#9ca3af]" aria-hidden />
+        <Clock className="h-4 w-4 shrink-0 text-[#6b7280]" aria-hidden />
 
         <div dir="ltr" className="flex flex-1 items-center justify-end gap-2 sm:gap-2.5">
           <TimeSegment
@@ -89,7 +89,7 @@ export function TimeInput({ value, onChange, className, label }: TimeInputProps)
           />
 
           <span
-            className="select-none pb-px text-xl font-light leading-none text-[#9ca3af]"
+            className="select-none pb-px text-xl font-light leading-none text-[#6b7280]"
             aria-hidden
           >
             :

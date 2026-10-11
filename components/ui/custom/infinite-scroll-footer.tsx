@@ -73,6 +73,6 @@ export function InfiniteScrollFooter({
   }
 
   return endMessage ? (
-    <p className="py-8 text-center text-sm text-[#9ca3af]">{endMessage}</p>
+    <p className="py-8 text-center text-sm text-[#6b7280]">{endMessage}</p>
   ) : null;
 }

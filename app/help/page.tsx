@@ -76,7 +76,7 @@ export default function HelpPage() {
           <details key={question} className="group py-4">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium text-gray-900">
               {question}
-              <span className="text-xl text-gray-400 transition-transform group-open:rotate-45" aria-hidden="true">
+              <span className="text-xl text-gray-500 transition-transform group-open:rotate-45" aria-hidden="true">
                 +
               </span>
             </summary>

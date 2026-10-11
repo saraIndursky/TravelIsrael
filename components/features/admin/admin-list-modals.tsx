@@ -230,10 +230,10 @@ export function AdminStatsModal({ open, name, region, typeLabel, stats, onClose 
             </div>
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
               <div className="mb-2 flex items-center gap-2 text-sm text-emerald-900">
-                <Eye className="h-5 w-5 text-emerald-600" aria-hidden />
+                <Eye className="h-5 w-5 text-emerald-700" aria-hidden />
                 צפיות
               </div>
-              <div className="text-3xl font-bold text-emerald-600">{stats.views}</div>
+              <div className="text-3xl font-bold text-emerald-700">{stats.views}</div>
               <div className="mt-1 text-xs text-emerald-800">סה״כ צפיות</div>
             </div>
           </div>
@@ -243,7 +243,7 @@ export function AdminStatsModal({ open, name, region, typeLabel, stats, onClose 
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">רמת פופולריות</span>
               <span className="flex items-center gap-1 font-semibold">
-                {stats.popularity === "high" && <TrendingUp className="h-4 w-4 text-emerald-600" aria-hidden />}
+                {stats.popularity === "high" && <TrendingUp className="h-4 w-4 text-emerald-700" aria-hidden />}
                 {POPULARITY_LABELS[stats.popularity]}
               </span>
             </div>

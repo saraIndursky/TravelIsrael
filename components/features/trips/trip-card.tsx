@@ -47,7 +47,7 @@ export function TripCard({
                 setLightboxOpen(true);
               }
             }}
-            aria-label={`הגדל תמונה של ${trip.name}`}
+            aria-label={`${trip.region}: הגדל תמונה של ${trip.name}`}
           >
             <Image
               src={trip.main_image}

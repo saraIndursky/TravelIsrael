@@ -421,7 +421,7 @@ export function BuildTripForm({ mode, tripId, initialTrip, editHint }: BuildTrip
 
               {normalizedStations.length === 0 ? (
                 <div className="rounded-lg border-2 border-dashed border-[#e5e7eb] py-12 text-center">
-                  <MapPin className="mx-auto mb-3 h-12 w-12 text-[#9ca3af]" />
+                  <MapPin className="mx-auto mb-3 h-12 w-12 text-[#6b7280]" />
                   <p className="mb-4 text-[#6b7280]">עדיין אין תחנות במסלול</p>
                   <div className="flex flex-col items-center gap-3">
                     <button

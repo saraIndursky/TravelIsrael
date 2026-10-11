@@ -1,3 +1,7 @@
+"use client";
+
+import * as React from "react";
+import { useId } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -17,7 +21,7 @@ export function AuthPageShell({
   footer,
 }: AuthPageShellProps) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white p-4">
+    <main id="main-content" className="flex min-h-screen items-center justify-center bg-white p-4">
       <div
         className="fixed inset-0 bg-cover bg-center opacity-15"
         style={{ backgroundImage: `url('${backgroundImage}')` }}
@@ -51,7 +55,7 @@ export function AuthPageShell({
           </Link>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 
@@ -63,12 +67,17 @@ interface AuthFieldProps {
 }
 
 export function AuthField({ label, error, icon, children }: AuthFieldProps) {
+  const generatedId = useId();
+  const input = React.isValidElement<{ id?: string }>(children) ? children : null;
+  const fieldId = input?.props.id ?? generatedId;
   return (
     <div>
-      <label className="mb-2 block text-sm font-medium text-gray-600">{label}</label>
+      <label htmlFor={fieldId} className="mb-2 block text-sm font-medium text-gray-600">
+        {label}
+      </label>
       <div className="relative">
-        {children}
-        <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+        {input ? React.cloneElement(input, { id: fieldId }) : children}
+        <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
           {icon}
         </div>
       </div>
@@ -78,7 +87,7 @@ export function AuthField({ label, error, icon, children }: AuthFieldProps) {
 }
 
 export const authInputClassName =
-  "w-full rounded-sm border border-gray-300 bg-white px-4 py-3 pr-11 text-gray-900 transition-colors placeholder:text-gray-400 focus:border-gray-900 focus:outline-none";
+  "w-full rounded-sm border border-gray-300 bg-white px-4 py-3 pr-11 text-gray-900 transition-colors placeholder:text-gray-500 focus:border-gray-900 focus:outline-none";
 
 export const authSubmitClassName =
   "w-full rounded-sm bg-gray-900 py-3.5 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60";

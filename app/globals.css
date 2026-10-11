@@ -13,10 +13,10 @@
     --secondary: 210 20% 96%;
     --secondary-foreground: 222 47% 11%;
     --muted: 210 20% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted-foreground: 215 19% 38%;
     --accent: 43 74% 49%;
     --accent-foreground: 222 47% 11%;
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
     --border: 214 20% 90%;
     --input: 214 20% 90%;
@@ -86,32 +86,32 @@
   }
 
   .ti-difficulty-easy {
-    color: #059669;
+    color: #047857;
     background-color: #d1fae5;
   }
 
   .ti-difficulty-easy-medium {
-    color: #059669;
+    color: #047857;
     background-color: #ecfdf5;
   }
 
   .ti-difficulty-medium {
-    color: #d97706;
+    color: #92400e;
     background-color: #fef3c7;
   }
 
   .ti-difficulty-medium-hard {
-    color: #dc2626;
+    color: #b91c1c;
     background-color: #fee2e2;
   }
 
   .ti-difficulty-hard {
-    color: #dc2626;
+    color: #b91c1c;
     background-color: #fee2e2;
   }
 
   .ti-difficulty-none {
-    color: #6b7280;
+    color: #4b5563;
     background-color: #f3f4f6;
   }
 }

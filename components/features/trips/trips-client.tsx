@@ -191,7 +191,7 @@ export function TripsClient() {
             </div>
           </aside>
 
-          <main className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1">
             <div className="mb-6 flex items-center justify-end gap-3">
               <span className="text-sm text-gray-600">מיין לפי</span>
               <select
@@ -236,6 +236,7 @@ export function TripsClient() {
               סינון
             </button>
 
+            <h2 className="sr-only">רשימת הטיולים</h2>
             <div className="mb-6 text-sm text-[#6b7280]">נמצאו {total} טיולים</div>
 
             {loading ? (
@@ -262,7 +263,7 @@ export function TripsClient() {
             ) : (
               <div className="py-16 text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#f3f4f6]">
-                  <Search className="h-8 w-8 text-[#9ca3af]" />
+                  <Search className="h-8 w-8 text-[#6b7280]" />
                 </div>
                 <h3 className="mb-2 text-lg font-medium text-[#111827]">לא נמצאו טיולים</h3>
                 <p className="mb-6 text-sm text-[#6b7280]">לא נמצאו טיולים לפי הסינון שבחרת</p>
@@ -277,7 +278,7 @@ export function TripsClient() {
                 )}
               </div>
             )}
-          </main>
+          </div>
         </div>
       </div>
 

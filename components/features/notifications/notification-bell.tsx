@@ -156,7 +156,7 @@ export function NotificationBell() {
     <div className="relative shrink-0" ref={menuRef}>
       <button
         type="button"
-        aria-label="התראות"
+        aria-label={unreadCount > 0 ? `התראות, ${unreadCount > 9 ? "9+" : unreadCount} חדשות` : "התראות"}
         aria-expanded={open}
         onClick={() => {
           void unlockNotificationAudio();

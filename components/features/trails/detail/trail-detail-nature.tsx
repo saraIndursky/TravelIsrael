@@ -58,7 +58,7 @@ export function TrailDetailNature({ trail }: TrailDetailNatureProps) {
                 key={fact}
                 className="flex items-start gap-3 rounded-sm border border-[#bbf7d0] bg-[#f0fdf4] p-3"
               >
-                <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-[#059669]" />
+                <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-[#047857]" />
                 <div className="text-sm text-[#047857]">{fact}</div>
               </div>
             ))}

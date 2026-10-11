@@ -186,7 +186,7 @@ export function ContactForm() {
         />
         <div className="mt-1 flex items-start justify-between gap-4">
           <div>{fieldError("message")}</div>
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-gray-500">
             {form.message.length}/{CONTACT_LIMITS.messageMax}
           </span>
         </div>

@@ -79,7 +79,7 @@ export function BuildStationList({
   if (sorted.length === 0) {
     return (
       <div className="rounded-lg border-2 border-dashed border-[#e5e7eb] py-12 text-center">
-        <MapPin className="mx-auto mb-3 h-12 w-12 text-[#9ca3af]" />
+        <MapPin className="mx-auto mb-3 h-12 w-12 text-[#6b7280]" />
         <p className="mb-4 text-[#6b7280]">עדיין אין תחנות במסלול</p>
       </div>
     );

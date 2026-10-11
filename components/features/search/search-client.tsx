@@ -84,7 +84,7 @@ export function SearchClient() {
       <div className="mx-auto max-w-7xl px-4 py-8">
         <div className="mb-6 rounded-lg border border-[#e5e7eb] bg-white p-4">
           <div className="relative">
-            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7280]" />
             <input
               type="search"
               value={query}

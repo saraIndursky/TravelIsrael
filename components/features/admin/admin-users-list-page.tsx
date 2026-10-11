@@ -238,16 +238,16 @@ function StatBox({
     info: "border-blue-200 bg-blue-50 text-blue-700",
   };
   const valueStyles = {
-    success: "text-emerald-600",
-    warning: "text-amber-600",
-    danger: "text-red-600",
-    info: "text-blue-600",
+    success: "text-emerald-700",
+    warning: "text-amber-700",
+    danger: "text-red-700",
+    info: "text-blue-700",
   };
 
   return (
     <div className={`rounded-xl border p-4 ${styles[variant]}`}>
       <div className={`text-2xl font-bold tabular-nums ${valueStyles[variant]}`}>{value}</div>
-      <div className="text-sm opacity-90">{label}</div>
+      <div className="text-sm">{label}</div>
     </div>
   );
 }

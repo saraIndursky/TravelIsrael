@@ -35,7 +35,7 @@ export function WizardResultNav({
             disabled={!canGoPrev}
             className={cn(
               "inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition-colors",
-              !canGoPrev ? "cursor-not-allowed text-[#9ca3af]" : "text-[#111827] hover:bg-white"
+              !canGoPrev ? "cursor-not-allowed text-[#6b7280]" : "text-[#111827] hover:bg-white"
             )}
           >
             <ChevronRight className="h-4 w-4" />
@@ -51,7 +51,7 @@ export function WizardResultNav({
             className={cn(
               "inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition-colors",
               isLastInBatch && !hasMore
-                ? "cursor-not-allowed text-[#9ca3af]"
+                ? "cursor-not-allowed text-[#6b7280]"
                 : showLoadMore
                   ? "font-medium text-[#111827] hover:bg-white"
                   : "text-[#111827] hover:bg-white"

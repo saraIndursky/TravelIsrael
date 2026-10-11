@@ -284,7 +284,7 @@ export function ProfileContentClient() {
       <div className="flex min-h-[70vh] items-center justify-center bg-gradient-to-br from-[#f5f6f8] to-[#eef0f4] px-4">
         <div className="max-w-md rounded border border-gray-100 bg-white p-10 text-center shadow-sm">
           <h1 className="mb-2 text-2xl font-light text-gray-900">התוכן שלי</h1>
-          <p className="mb-6 text-sm text-gray-400">יש להתחבר כדי לראות תוכן ומועדפים</p>
+          <p className="mb-6 text-sm text-gray-500">יש להתחבר כדי לראות תוכן ומועדפים</p>
           <button
             type="button"
             onClick={() => router.push("/login")}

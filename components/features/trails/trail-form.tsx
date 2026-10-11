@@ -336,7 +336,7 @@ export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormP
             </button>
           </div>
           {fields.length === 0 && (
-            <p className="text-sm text-[#9ca3af]">אין נקודות ביניים — אופציונלי</p>
+            <p className="text-sm text-[#6b7280]">אין נקודות ביניים — אופציונלי</p>
           )}
           {fields.map((field, index) => (
             <div

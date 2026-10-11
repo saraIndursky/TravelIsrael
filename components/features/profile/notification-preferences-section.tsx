@@ -178,7 +178,7 @@ export function NotificationPreferencesSection() {
         <p
           className={cn(
             "mb-4 text-sm font-medium",
-            message.type === "success" ? "text-emerald-600" : "text-red-600"
+            message.type === "success" ? "text-emerald-700" : "text-red-600"
           )}
         >
           {message.text}

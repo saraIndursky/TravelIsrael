@@ -98,7 +98,7 @@ function InputField({
           <button
             type="button"
             onClick={onToggleVisibility}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+            className="absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-gray-500 transition-colors hover:text-gray-700"
             aria-label={showPassword ? "הסתר סיסמה" : "הצג סיסמה"}
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -113,7 +113,7 @@ function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="flex flex-col items-center gap-1 px-5">
       <span className="text-2xl font-bold tabular-nums leading-none text-gray-900">{value}</span>
-      <span className="text-center text-xs leading-tight text-gray-400">{label}</span>
+      <span className="text-center text-xs leading-tight text-gray-500">{label}</span>
     </div>
   );
 }
@@ -195,7 +195,7 @@ function ProfileHero({
           <p className="text-2xl font-bold leading-tight text-gray-900">
             {profile.firstName} {profile.lastName}
           </p>
-          <p className="mt-1 text-sm text-gray-400">{profile.email}</p>
+          <p className="mt-1 text-sm text-gray-500">{profile.email}</p>
         </div>
 
         <div className="flex w-full items-center gap-0 border-t border-gray-100 pt-5 sm:w-auto sm:border-r sm:border-t-0 sm:pr-6 sm:pt-0">
@@ -348,7 +348,7 @@ export function ProfilePersonalArea() {
       <div className="flex min-h-[70vh] items-center justify-center bg-gradient-to-br from-[#f5f6f8] to-[#eef0f4] px-4">
         <div className="max-w-md rounded-2xl border border-gray-100 bg-white p-10 text-center shadow-sm">
           <h1 className="mb-2 text-2xl font-light text-gray-900">האזור האישי שלי</h1>
-          <p className="mb-6 text-sm text-gray-400">יש להתחבר כדי לצפות ולעדכן את הפרטים האישיים</p>
+          <p className="mb-6 text-sm text-gray-500">יש להתחבר כדי לצפות ולעדכן את הפרטים האישיים</p>
           <button
             type="button"
             onClick={() => router.push("/login")}
@@ -378,7 +378,7 @@ export function ProfilePersonalArea() {
       <div className="mx-auto max-w-3xl px-4 py-12">
         <div className="mb-10">
           <h1 className="mb-2 text-4xl font-light tracking-tight text-gray-900">האזור האישי שלי</h1>
-          <p className="text-sm font-light text-gray-400">
+          <p className="text-sm font-light text-gray-500">
             כאן ניתן לצפות ולעדכן את הפרטים האישיים שלך ולנהל את הגדרות החשבון
           </p>
           <Link href="/profile/content" className="mt-3 inline-block text-sm font-medium text-gray-700 hover:underline">

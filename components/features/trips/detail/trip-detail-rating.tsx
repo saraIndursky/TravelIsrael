@@ -28,7 +28,7 @@ export function TripDetailRating({
             {avgRating > 0 ? (
               <RatingStars rating={avgRating} size="md" />
             ) : (
-              <span className="text-sm text-[#9ca3af]">עדיין אין דירוגים</span>
+              <span className="text-sm text-[#6b7280]">עדיין אין דירוגים</span>
             )}
           </div>
           {canRate && (

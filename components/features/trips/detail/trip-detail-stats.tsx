@@ -43,7 +43,7 @@ export function TripDetailStats({
                 )}
               </div>
               {item.label === "דירוג ממוצע" && ratingsCount > 0 && (
-                <div className="mt-1 text-xs text-[#9ca3af]">{ratingsCount} מדרגים</div>
+                <div className="mt-1 text-xs text-[#6b7280]">{ratingsCount} מדרגים</div>
               )}
             </div>
           );

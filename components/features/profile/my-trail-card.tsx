@@ -51,7 +51,7 @@ export function MyTrailCard({ trail, onDelete, onResubmit, busy }: MyTrailCardPr
           {STATUS_LABELS[trail.status]} · {trail.region} · {DIFFICULTY_LABELS[trail.difficulty]}
         </p>
         <p className="mt-2 line-clamp-2 text-sm text-[#6b7280]">{trail.short_description}</p>
-        <p className="mt-2 text-xs text-[#9ca3af]">{trail.length_km} ק״מ</p>
+        <p className="mt-2 text-xs text-[#6b7280]">{trail.length_km} ק״מ</p>
         {trail.status === "rejected" && trail.rejection_reason && (
           <div className="mt-2 rounded border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-700">
             {trail.rejection_reason}

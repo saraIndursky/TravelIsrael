@@ -11,7 +11,7 @@ export function getMatchStyle(score: number): MatchStyle {
   if (score >= 90) {
     return {
       text: "התאמה מושלמת",
-      color: "text-emerald-600",
+      color: "text-emerald-700",
       bgLight: "bg-emerald-50",
       bgMedium: "bg-emerald-200",
       bgStrong: "bg-emerald-600",

@@ -79,7 +79,7 @@ export function TextPage({
       <div className="mx-auto max-w-3xl px-6 py-16">
         <h1 className="mb-3 text-4xl font-light text-gray-900">{title}</h1>
         {intro && <p className="mb-2 text-lg text-gray-600">{intro}</p>}
-        {updated && <p className="mb-10 text-sm text-gray-400">עודכן לאחרונה: {updated}</p>}
+        {updated && <p className="mb-10 text-sm text-gray-500">עודכן לאחרונה: {updated}</p>}
         <div className="space-y-8 rounded-2xl border border-gray-100 bg-white p-8 shadow-sm md:p-10">{children}</div>
       </div>
     </div>

@@ -104,7 +104,7 @@ export function SummaryStep({ prefs }: SummaryStepProps) {
 
       <div className="mt-8 rounded-sm border border-emerald-300 bg-emerald-50 p-6">
         <div className="flex items-start gap-3">
-          <Compass className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+          <Compass className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
           <div>
             <div className="mb-1 font-medium text-emerald-700">מוכנים לצאת לדרך!</div>
             <div className="text-sm text-emerald-700/80">
@@ -116,7 +116,7 @@ export function SummaryStep({ prefs }: SummaryStepProps) {
 
       <div className="mt-4 rounded-sm border border-emerald-300 bg-emerald-50 p-6">
         <div className="flex items-start gap-3">
-          <Map className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+          <Map className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
           <div>
             <div className="mb-1 font-medium text-emerald-700">רוצים חוויה מותאמת אישית?</div>
             <div className="text-sm text-emerald-700/80">

@@ -52,7 +52,7 @@ export function MyPlaceCard({ place, onDelete, onResubmit, busy }: MyPlaceCardPr
           {STATUS_LABELS[place.status]} · {place.region} · {place.place_type}
         </p>
         <p className="mt-2 line-clamp-2 text-sm text-[#6b7280]">{place.short_description}</p>
-        <p className="mt-2 text-xs text-[#9ca3af]">
+        <p className="mt-2 text-xs text-[#6b7280]">
           {formatTripCardDuration(place.avg_duration_minutes)}
         </p>
         {place.status === "rejected" && place.rejection_reason && (

@@ -284,7 +284,7 @@ export function WizardResultsClient() {
   if (loadingResults) {
     return (
       <div className="min-h-screen animate-pulse bg-[#f9fafb] pt-20 text-center text-[#6b7280]">
-        מחשב התאמות...
+        <h1 className="text-base font-normal">מחשב התאמות...</h1>
       </div>
     );
   }
@@ -299,6 +299,7 @@ export function WizardResultsClient() {
 
   return (
     <div className="min-h-screen bg-white" dir="rtl">
+      <h1 className="sr-only">תוצאות ההתאמה האישית שלך</h1>
       <WizardResultHero
         trip={trip}
         matchScore={currentResult.score}

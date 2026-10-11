@@ -112,14 +112,14 @@ export function TripImageField({ value, onChange, error, label = "תמונת ה�
             >
               {uploading ? (
                 <>
-                  <Loader2 className="mb-2 h-7 w-7 animate-spin text-[#9ca3af]" />
+                  <Loader2 className="mb-2 h-7 w-7 animate-spin text-[#6b7280]" />
                   <p className="text-sm text-[#4b5563]">מעלה תמונה...</p>
                 </>
               ) : (
                 <>
-                  <Upload className="mb-2 h-7 w-7 text-[#9ca3af]" />
+                  <Upload className="mb-2 h-7 w-7 text-[#6b7280]" />
                   <p className="mb-1 text-sm text-[#4b5563]">גרור תמונה לכאן</p>
-                  <p className="mb-3 text-xs text-[#9ca3af]">או</p>
+                  <p className="mb-3 text-xs text-[#6b7280]">או</p>
                   <label className="cursor-pointer rounded-lg border border-[#111827] px-4 py-2 text-sm font-medium text-[#111827] transition-colors hover:bg-[#f9fafb]">
                     בחר קובץ
                     <input
@@ -133,7 +133,7 @@ export function TripImageField({ value, onChange, error, label = "תמונת ה�
                       }}
                     />
                   </label>
-                  <p className="mt-2 text-xs text-[#9ca3af]">עד 5MB · JPG / PNG / WEBP / GIF</p>
+                  <p className="mt-2 text-xs text-[#6b7280]">עד 5MB · JPG / PNG / WEBP / GIF</p>
                 </>
               )}
             </div>
@@ -151,7 +151,7 @@ export function TripImageField({ value, onChange, error, label = "תמונת ה�
               unoptimized={isDataUrl}
             />
           ) : (
-            <div className="flex h-full min-h-[11rem] items-center justify-center text-sm text-gray-400">
+            <div className="flex h-full min-h-[11rem] items-center justify-center text-sm text-gray-600">
               תצוגה מקדימה
             </div>
           )}

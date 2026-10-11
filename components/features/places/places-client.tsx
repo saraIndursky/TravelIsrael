@@ -86,7 +86,7 @@ export function PlacesClient() {
       <div className="mx-auto max-w-7xl px-4 py-8">
         <div className="mb-6 grid grid-cols-1 gap-3 rounded-lg border border-[#e5e7eb] bg-white p-4 sm:grid-cols-3">
           <div className="relative sm:col-span-2">
-            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7280]" />
             <input
               type="search"
               value={search}
@@ -121,6 +121,7 @@ export function PlacesClient() {
           <p className="py-12 text-center text-muted-foreground">לא נמצאו מקומות</p>
         ) : (
           <>
+            <h2 className="sr-only">רשימת המקומות</h2>
             <div className="mb-4 text-sm text-[#6b7280]">נמצאו {total} מקומות</div>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3">
               {places.map((place) => (

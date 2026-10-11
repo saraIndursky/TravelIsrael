@@ -56,7 +56,7 @@ export function TripFilters({ values, onChange, onApply, onClear, className }: T
   return (
     <div className={cn("rounded-lg border border-[#e5e7eb] bg-white p-6", className)}>
       <div className="mb-6 flex items-center justify-between">
-        <h3 className="text-lg font-medium text-[#111827]">סינון</h3>
+        <h2 className="text-lg font-medium text-[#111827]">סינון</h2>
         <button
           type="button"
           onClick={onClear}
@@ -78,7 +78,7 @@ export function TripFilters({ values, onChange, onApply, onClear, className }: T
               className="w-full rounded-sm border border-[#d1d5db] bg-white px-4 py-2.5 pr-10 text-sm text-[#111827] transition-colors focus:border-[#111827] focus:outline-none"
               onKeyDown={(e) => e.key === "Enter" && onApply()}
             />
-            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7280]" />
           </div>
         </div>
 

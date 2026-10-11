@@ -29,7 +29,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-4 text-sm font-semibold text-foreground">המוצר</h3>
+            <h2 className="mb-4 text-sm font-semibold text-foreground">המוצר</h2>
             <ul className="space-y-2">
               {footerLinks.product.map((link) => (
                 <li key={link.label}>
@@ -42,7 +42,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-4 text-sm font-semibold text-foreground">החברה</h3>
+            <h2 className="mb-4 text-sm font-semibold text-foreground">החברה</h2>
             <ul className="space-y-2">
               {footerLinks.company.map((link) => (
                 <li key={link.label}>
@@ -55,7 +55,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-4 text-sm font-semibold text-foreground">תמיכה</h3>
+            <h2 className="mb-4 text-sm font-semibold text-foreground">תמיכה</h2>
             <ul className="space-y-2">
               {footerLinks.support.map((link) => (
                 <li key={link.label}>
