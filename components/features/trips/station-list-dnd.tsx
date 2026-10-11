@@ -78,7 +78,7 @@ export function StationListDnD({ stations, onChange }: StationListDnDProps) {
   };
 
   if (stations.length === 0) {
-    return <p className="text-muted-foreground text-sm py-4">הוסף תחנות לטיול</p>;
+    return <p className="text-muted-foreground text-sm py-4">הוספת תחנות לטיול</p>;
   }
 
   return (

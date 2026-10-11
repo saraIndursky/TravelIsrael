@@ -108,7 +108,7 @@ export function AdminRejectModal({
         </div>
         <div className="flex gap-3 pt-2">
           <Button variant="danger" className="flex-1 rounded-xl" onClick={onConfirm} disabled={submitting}>
-            {submitting ? "שולח..." : isUnpublish ? "הסר מהאתר" : "דחה"}
+            {submitting ? "שולח..." : isUnpublish ? "הסרה מהאתר" : "דחייה"}
           </Button>
           <Button variant="outline" className="flex-1 rounded-xl" onClick={onClose} disabled={submitting}>
             ביטול
@@ -354,7 +354,7 @@ export function AdminTripApproveModal({
 
         <div className="flex gap-3 pt-2">
           <Button className="flex-1 rounded-xl" onClick={onConfirm} disabled={loading}>
-            {loading ? "מאשר..." : "אשר טיול ותוכן"}
+            {loading ? "מאשר..." : "אישור טיול ותוכן"}
           </Button>
           <Button variant="outline" className="flex-1 rounded-xl" onClick={onClose} disabled={loading}>
             ביטול

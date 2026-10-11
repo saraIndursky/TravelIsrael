@@ -160,7 +160,7 @@ export function TripsClient() {
         <div className="mx-auto max-w-7xl px-4 py-12 md:py-16">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="mb-3 text-4xl font-light text-[#111827]">מצא את הטיול הבא שלך</h1>
+              <h1 className="mb-3 text-4xl font-light text-[#111827]">הטיול הבא שלכם מחכה</h1>
               <p className="text-sm text-[#6b7280]">
                 סינון טיולים לפי אזור, רמת קושי, נגישות, משך זמן ועוד
               </p>
@@ -171,7 +171,7 @@ export function TripsClient() {
                 className="inline-flex items-center gap-2 rounded-lg bg-[#111827] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#1f2937]"
               >
                 <Plus className="h-4 w-4" />
-                הוסף טיול
+                הוספת טיול
               </Link>
             )}
           </div>
@@ -218,6 +218,7 @@ export function TripsClient() {
                 }
                 className="rounded-sm border border-gray-300 px-3 py-2 text-sm transition-colors hover:bg-gray-100"
                 aria-label="החלף כיוון מיון"
+                title={sortDirection === "asc" ? "מיון עולה (לחצו להיפוך)" : "מיון יורד (לחצו להיפוך)"}
               >
                 {sortDirection === "asc" ? (
                   <ArrowUp className="inline h-4 w-4 text-black" />

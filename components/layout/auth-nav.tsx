@@ -30,7 +30,7 @@ export function LoginButton({ className, onNavigate, compact = false }: LoginBut
         className
       )}
     >
-      התחבר
+      כניסה
     </button>
   );
 }

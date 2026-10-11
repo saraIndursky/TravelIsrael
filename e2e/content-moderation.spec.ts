@@ -23,7 +23,7 @@ test.describe("Place edit then admin approve", () => {
 
     await loginWithEmail(page);
     await page.goto("/places/create");
-    await expect(page.getByRole("heading", { name: "הוסף מקום חדש" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "הוספת מקום חדש" })).toBeVisible();
 
     await fillCreatePlaceForm(page, {
       name: placeName,

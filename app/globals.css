@@ -121,3 +121,40 @@
   height: 100%;
   z-index: 0;
 }
+
+/* Icon-only controls (a button or link whose only child is an icon) darken on hover. */
+button:has(> svg:only-child):not(:disabled),
+a:has(> svg:only-child),
+[role="button"]:has(> svg:only-child) {
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+button:has(> svg:only-child):not(:disabled):hover,
+a:has(> svg:only-child):hover,
+[role="button"]:has(> svg:only-child):hover {
+  filter: brightness(0.82);
+}
+
+.leaflet-container button:has(> svg:only-child):hover,
+.leaflet-container a:has(> svg:only-child):hover {
+  filter: none;
+}
+
+/* Every clickable control shows the pointer hand (Tailwind's reset makes buttons use the arrow). */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+a[href],
+summary,
+select,
+input[type="checkbox"],
+input[type="radio"],
+input[type="file"],
+label[for] {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}

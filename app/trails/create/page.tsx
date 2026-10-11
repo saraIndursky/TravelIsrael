@@ -18,8 +18,8 @@ export default function CreateTrailPage() {
   return (
     <div className="min-h-screen bg-[#f9fafb] py-12" dir="rtl">
       <div className="mx-auto max-w-7xl px-4">
-        <h1 className="mb-2 text-3xl font-light text-[#111827]">הוסף מסלול חדש</h1>
-        <p className="mb-8 text-sm text-[#6b7280]">המסלול יישלח לאישור מנהל לפני פרסום</p>
+        <h1 className="mb-2 text-3xl font-light text-[#111827]">הוספת מסלול חדש</h1>
+        <p className="mb-8 text-sm text-[#6b7280]">המסלול יישליחה לאישור מנהל לפני פרסום</p>
         <TrailGpxImport />
         <TrailForm />
       </div>

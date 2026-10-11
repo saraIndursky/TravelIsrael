@@ -1,9 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { toDisplayImageUrl } from "@/lib/utils/image-url";
 
-const HERO_IMAGE =
-  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&h=1080&fit=crop";
+// Timna Valley: red sandstone under a blue sky. The previous photo is archived in public/brand/archive/.
+const HERO_IMAGE = toDisplayImageUrl(
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Timna_valley_16583_%2811962924993%29.jpg/1920px-Timna_valley_16583_%2811962924993%29.jpg"
+);
 
 export function HomeHero() {
   return (
@@ -36,7 +39,7 @@ export function HomeHero() {
               href="/wizard"
               className="group inline-flex max-w-[220px] items-center justify-center gap-3 rounded-md bg-white px-8 py-4 text-sm font-medium text-gray-900 transition-all hover:bg-gray-50"
             >
-              מצא לי טיול
+              מציאת טיול
               <ArrowLeft className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
 
@@ -44,7 +47,7 @@ export function HomeHero() {
               href="/trips/create"
               className="group inline-flex max-w-[220px] items-center justify-center gap-3 rounded-md border border-gray-300 bg-white/60 px-8 py-4 text-sm font-medium text-gray-800 transition-all hover:bg-white hover:text-gray-900"
             >
-              תכנן טיול אישי
+              תכנון טיול אישי
               <ArrowLeft className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>

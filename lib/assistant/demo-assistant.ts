@@ -61,7 +61,7 @@ function matches(text: string, patterns: RegExp[]): boolean {
 const FIELD_HELP_PATTERNS = [
   /שדות חסר/,
   /חסרים/,
-  /מלא שדות/,
+  /מלא שדות|מילוי שדות/,
   /כל השדות/,
   /עזרה.*שדות/,
   /שדות.*עזרה/,
@@ -123,7 +123,7 @@ function buildTrailFillUpdates(snapshot: Record<string, unknown>): {
   if (!name) {
     return {
       updates: [],
-      message: "הזיני שם מסלול בטופס — ואז אוכל להציע עזרה לכל השדות.",
+      message: "הזינו שם מסלול בטופס — ואז אוכל להציע עזרה לכל השדות.",
     };
   }
 
@@ -251,7 +251,7 @@ function buildTrailFillUpdates(snapshot: Record<string, unknown>): {
 
   if (updates.length > 0) {
     parts.push(
-      `הצעתי ${updates.length} שדות — לחצי «אשר והחל על הטופס» לפני השליחה.`
+      `הצעתי ${updates.length} שדות — לחצו על «אישור והחלה על הטופס» לפני השליחה.`
     );
   } else if (stillMissing.length === 0) {
     parts.push("כל השדות העיקריים כבר מלאים.");
@@ -272,7 +272,7 @@ function buildPlaceFillUpdates(snapshot: Record<string, unknown>): {
   if (!name) {
     return {
       updates: [],
-      message: "הזיני שם מקום בטופס — ואז אוכל להציע עזרה לכל השדות.",
+      message: "הזינו שם מקום בטופס — ואז אוכל להציע עזרה לכל השדות.",
     };
   }
 
@@ -622,7 +622,7 @@ function buildTripMissingReply(
     if (stationCount === 0) {
       return {
         message:
-          "כל השדות בטופס מלאים — אבל עדיין אין תחנות במסלול. לחצי «הוסף תחנה» כדי לבנות את הטיול.",
+          "כל השדות בטופס מלאים — אבל עדיין אין תחנות במסלול. לחצו על «הוספת תחנה» כדי לבנות את הטיול.",
       };
     }
     return { message: "כל השדות העיקריים של הטיול מלאים." };
@@ -638,8 +638,8 @@ function buildTripMissingReply(
   if (!withSuggestions || !name) {
     return {
       message: name
-        ? `${intro}${stationNote}\n\nכתבי «מלא שדות חסרים» כדי שאציע תוכן.`
-        : `${intro} הזיני שם טיול כדי שאוכל להציע תוכן.${stationNote}`,
+        ? `${intro}${stationNote}\n\nכתבו «מילוי שדות חסרים» כדי שאציע תוכן.`
+        : `${intro} הזינו שם טיול כדי שאוכל להציע תוכן.${stationNote}`,
     };
   }
 
@@ -649,7 +649,7 @@ function buildTripMissingReply(
   }
 
   return {
-    message: `${intro}\n\nהצעות:${formatUpdatesSummary(updates)}${stationNote}\n\nלחצי «אשר והחל על הטופס» כדי להחיל.`,
+    message: `${intro}\n\nהצעות:${formatUpdatesSummary(updates)}${stationNote}\n\nלחצו על «אישור והחלה על הטופס» כדי להחיל.`,
     updates,
   };
 }
@@ -666,13 +666,13 @@ function helpMessage(
     if (missing.length > 0) {
       const list = missing.map((m) => m.label).join(", ");
       return {
-        message: `אפשר לעזור עם: תיאור קצר, תיאור מלא, תגיות, תמונה, או מילוי כל השדות החסרים. כרגע חסר: ${list}. כתבי למשל «הכנסי תיאור קצר» או «מלא שדות חסרים».`,
+        message: `אפשר לעזור עם: תיאור קצר, תיאור מלא, תגיות, תמונה, או מילוי כל השדות החסרים. כרגע חסר: ${list}. כתבו למשל «הכניסו תיאור קצר» או «מילוי שדות חסרים».`,
       };
     }
   }
 
   return {
-    message: `שלום! אני עוזר (דמו) ליצירת ${entityName}. כתבי מה צריך — למשל «תוסיפי תיאור מלא» או «מה חסר?» — בלי חובה להשתמש בכפתורים.`,
+    message: `שלום! אני עוזר (דמו) ליצירת ${entityName}. כתבו מה צריך — למשל «תוסיפו תיאור מלא» או «מה חסר?» — בלי חובה להשתמש בכפתורים.`,
   };
 }
 
@@ -712,7 +712,7 @@ function handlePlace(
 
   if (wantsFull) {
     if (!name) {
-      return { message: "הזיני שם מקום קודם — ואז אוכל להרחיב תיאור מלא." };
+      return { message: "הזינו שם מקום קודם — ואז אוכל להרחיב תיאור מלא." };
     }
     const full = expandFullDescription(name, shortDesc, placeType, region);
     updates.push({
@@ -778,7 +778,7 @@ function handlePlace(
       label: getFieldLabel("place", "tags"),
     });
     return {
-      message: `הצעתי תגיות: ${suggested.join(", ")}. לחצי «החל על הטופס» או בחרי ידנית.`,
+      message: `הצעתי תגיות: ${suggested.join(", ")}. לחצו על «החלה על הטופס» או בחרו ידנית.`,
       updates,
     };
   }
@@ -848,7 +848,7 @@ function handleTrail(
 
   if (wantsFull) {
     if (!name) {
-      return { message: "הזיני שם מסלול קודם." };
+      return { message: "הזינו שם מסלול קודם." };
     }
     updates.push({
       field: "full_description",
@@ -978,7 +978,7 @@ function buildTripFillUpdates(snapshot: Record<string, unknown>): {
     return {
       updates: [],
       message:
-        "הזיני שם טיול בטופס — ואז אוכל להציע תיאור קצר, תיאור מלא, תגיות ותמונה.",
+        "הזינו שם טיול בטופס — ואז אוכל להציע תיאור קצר, תיאור מלא, תגיות ותמונה.",
     };
   }
 
@@ -1020,7 +1020,7 @@ function buildTripFillUpdates(snapshot: Record<string, unknown>): {
 
   if (updates.length > 0) {
     parts.push(
-      `הכנתי ${updates.length} הצעות — בדקי את התוכן למטה ולחצי «אשר והחל על הטופס».`
+      `הכנתי ${updates.length} הצעות — בדקו את התוכן למטה ולחצו על «אישור והחלה על הטופס».`
     );
     parts.push(formatUpdatesSummary(updates).trim());
   } else if (stillMissing.length === 0) {
@@ -1060,8 +1060,8 @@ function handleTrip(
     return {
       message:
         stationCount > 0
-          ? `יש ${stationCount} תחנות בטיול. להוספת תחנות — לחצי «הוסף תחנה» ובחרי מקום או מסלול מהרשימה.`
-          : "עדיין אין תחנות. לחצי «הוסף תחנה» או «התחל להוסיף תחנות» כדי לבנות המסלול.",
+          ? `יש ${stationCount} תחנות בטיול. להוספת תחנות — לחצו על «הוספת תחנה» ובחרו מקום או מסלול מהרשימה.`
+          : "עדיין אין תחנות. לחצו על «הוספת תחנה» או «הוספת תחנות» כדי לבנות המסלול.",
     };
   }
 
@@ -1079,7 +1079,7 @@ function handleTrip(
 
   if (wantsShort) {
     if (!name) {
-      return { message: "הזיני שם טיול בטופס — ואז אוכל לכתוב תיאור קצר (שורה אחת)." };
+      return { message: "הזינו שם טיול בטופס — ואז אוכל לכתוב תיאור קצר (שורה אחת)." };
     }
     if (!isEmpty(snapshot.short_description)) {
       return {
@@ -1092,14 +1092,14 @@ function handleTrip(
       label: getFieldLabel("trip", "short_description"),
     });
     return {
-      message: `הכנתי תיאור קצר (שורה אחת, עד 80 תווים):${formatUpdatesSummary(updates)}\n\nלחצי «אשר והחל על הטופס» לפני השליחה.`,
+      message: `הכנתי תיאור קצר (שורה אחת, עד 80 תווים):${formatUpdatesSummary(updates)}\n\nלחצו על «אישור והחלה על הטופס» לפני השליחה.`,
       updates,
     };
   }
 
   if (wantsFull) {
     if (!name) {
-      return { message: "הזיני שם טיול בטופס — ואז אוכל לכתוב תיאור מלא." };
+      return { message: "הזינו שם טיול בטופס — ואז אוכל לכתוב תיאור מלא." };
     }
     if (isEmpty(snapshot.full_description)) {
       updates.push({
@@ -1135,7 +1135,7 @@ function handleTrip(
       return { message: "התיאור המלא כבר קיים. אפשר לבקש «תיאור קצר» או לערוך ידנית." };
     }
     return {
-      message: `הכנתי ${updates.length} הצעות:${formatUpdatesSummary(updates)}\n\nלחצי «אשר והחל על הטופס» לפני השליחה.`,
+      message: `הכנתי ${updates.length} הצעות:${formatUpdatesSummary(updates)}\n\nלחצו על «אישור והחלה על הטופס» לפני השליחה.`,
       updates,
     };
   }
@@ -1216,7 +1216,7 @@ function handleTrip(
     }
     if (compoundUpdates.length > 0) {
       return {
-        message: `הכנתי ${compoundUpdates.length} הצעות:${formatUpdatesSummary(compoundUpdates)}\n\nלחצי «אשר והחל על הטופס» כדי להחיל.`,
+        message: `הכנתי ${compoundUpdates.length} הצעות:${formatUpdatesSummary(compoundUpdates)}\n\nלחצו על «אישור והחלה על הטופס» כדי להחיל.`,
         updates: compoundUpdates,
       };
     }

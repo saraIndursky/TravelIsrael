@@ -15,11 +15,11 @@ export function HomeCta() {
         </p>
         {role === "guest" ? (
           <Link href="/register" className="ti-btn-primary inline-block px-8 py-3.5 text-base">
-            הצטרף עכשיו
+            הצטרפות עכשיו
           </Link>
         ) : (
           <Link href="/trips/create" className="ti-btn-primary inline-block px-8 py-3.5 text-base">
-            צור טיול חדש
+            יצירת טיול חדש
           </Link>
         )}
       </div>

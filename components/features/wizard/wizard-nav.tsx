@@ -60,7 +60,7 @@ export function WizardNav({ step, isSummary, onPrev, onNext, onFinish }: WizardN
                 href="/trips/create"
                 className="inline-flex items-center gap-2 rounded-sm border border-emerald-600 px-6 py-3 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-50"
               >
-                תכנן טיול אישי
+                תכנון טיול אישי
                 <Map className="h-4 w-4" />
               </Link>
               <button
@@ -68,7 +68,7 @@ export function WizardNav({ step, isSummary, onPrev, onNext, onFinish }: WizardN
                 onClick={onFinish}
                 className="inline-flex items-center gap-2 rounded-sm bg-emerald-600 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
               >
-                מצא לי טיול
+                מציאת טיול
                 <Compass className="h-4 w-4" />
               </button>
             </div>

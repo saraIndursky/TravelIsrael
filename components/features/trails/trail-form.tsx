@@ -109,7 +109,7 @@ export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormP
 
   const isEdit = mode === "edit";
   const keepsStatus = isEdit && role === "admin";
-  const saveLabel = keepsStatus ? "שמור שינויים" : "שמור ושלח לאישור";
+  const saveLabel = keepsStatus ? "שמירת שינויים" : "שמירה ושליחה לאישור";
 
   const {
     register,
@@ -160,13 +160,13 @@ export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormP
           toast({ title: "אין הרשאה לערוך מסלול זה", variant: "destructive" });
           return;
         }
-        toast({ title: keepsStatus ? "השינויים נשמרו" : "המסלול עודכן ונשלח לאישור" });
+        toast({ title: keepsStatus ? "השינויים נשמרו" : "המסלול עודכן ונשליחה לאישור" });
         router.push(trailPath(updated));
         return;
       }
 
       const trail = await createTrail(payload);
-      toast({ title: "המסלול נשלח לאישור" });
+      toast({ title: "המסלול נשליחה לאישור" });
       const returnTo = sanitizeReturnPath(
         new URLSearchParams(window.location.search).get("returnTo")
       );
@@ -246,7 +246,7 @@ export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormP
             onChange={(type) => setValue("trail_type", type, { shouldValidate: true })}
             error={errors.trail_type?.message}
             newTypePlaceholder="למשל: רכיבה על סוסים"
-            newTypeHint="לא מצאת סוג מתאים? כתבי אותו כאן. אחרי שהמנהל יאשר את המסלול, הסוג יתווסף לרשימה לכולם."
+            newTypeHint="לא מצאתם סוג מתאים? כתבו אותו כאן. אחרי שהמנהל יאשר את המסלול, הסוג יתווסף לרשימה לכולם."
           />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -332,7 +332,7 @@ export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormP
               className="flex items-center gap-1 text-sm font-medium text-[#111827] hover:underline"
             >
               <Plus className="h-4 w-4" />
-              הוסף נקודה
+              הוספת נקודה
             </button>
           </div>
           {fields.length === 0 && (

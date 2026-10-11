@@ -4,6 +4,7 @@ import * as React from "react";
 import { useId } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { toDisplayImageUrl } from "@/lib/utils/image-url";
 
 interface AuthPageShellProps {
   title: string;
@@ -24,7 +25,7 @@ export function AuthPageShell({
     <main id="main-content" className="flex min-h-screen items-center justify-center bg-white p-4">
       <div
         className="fixed inset-0 bg-cover bg-center opacity-15"
-        style={{ backgroundImage: `url('${backgroundImage}')` }}
+        style={{ backgroundImage: `url('${toDisplayImageUrl(backgroundImage)}')` }}
         aria-hidden
       />
 

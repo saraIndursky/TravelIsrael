@@ -52,8 +52,8 @@ export function getAdminActionsByStatus<T extends { status: Status }>(
     case "pending":
       return [
         { icon: Eye, action: () => onView(item), label: "צפייה", color: "text-blue-600 hover:bg-blue-100" },
-        { icon: Check, action: () => onApprove(item), label: "אשר", color: "text-green-600 hover:bg-green-100" },
-        { icon: X, action: () => onReject(item), label: "דחה", color: "text-red-600 hover:bg-red-100" },
+        { icon: Check, action: () => onApprove(item), label: "אישור", color: "text-green-600 hover:bg-green-100" },
+        { icon: X, action: () => onReject(item), label: "דחייה", color: "text-red-600 hover:bg-red-100" },
       ];
     case "approved":
       return [
@@ -62,9 +62,9 @@ export function getAdminActionsByStatus<T extends { status: Status }>(
           : []),
         { icon: Eye, action: () => onView(item), label: "צפייה", color: "text-blue-600 hover:bg-blue-100" },
         ...(onEdit
-          ? [{ icon: Edit3, action: () => onEdit(item), label: "ערוך", color: "text-indigo-600 hover:bg-indigo-100" }]
+          ? [{ icon: Edit3, action: () => onEdit(item), label: "עריכה", color: "text-indigo-600 hover:bg-indigo-100" }]
           : []),
-        { icon: X, action: () => (onUnpublish ?? onReject)(item), label: "הסר מהאתר", color: "text-red-600 hover:bg-red-100" },
+        { icon: X, action: () => (onUnpublish ?? onReject)(item), label: "הסרה מהאתר", color: "text-red-600 hover:bg-red-100" },
       ];
     case "removed":
       return [
@@ -82,13 +82,13 @@ export function getAdminActionsByStatus<T extends { status: Status }>(
         { icon: Eye, action: () => onView(item), label: "צפייה", color: "text-blue-600 hover:bg-blue-100" },
         { icon: RotateCcw, action: () => onRestore(item), label: "שחזר", color: "text-green-600 hover:bg-green-100" },
         { icon: AlertCircle, action: () => onViewReject(item), label: "עילת הדחייה", color: "text-red-600 hover:bg-red-100" },
-        { icon: Trash2, action: () => onDelete(item), label: "מחק", color: "text-red-600 hover:bg-red-100" },
+        { icon: Trash2, action: () => onDelete(item), label: "מחיקה", color: "text-red-600 hover:bg-red-100" },
       ];
     default:
       return [
         { icon: Eye, action: () => onView(item), label: "צפייה", color: "text-blue-600 hover:bg-blue-100" },
         ...(onEdit
-          ? [{ icon: Edit3, action: () => onEdit(item), label: "ערוך", color: "text-indigo-600 hover:bg-indigo-100" }]
+          ? [{ icon: Edit3, action: () => onEdit(item), label: "עריכה", color: "text-indigo-600 hover:bg-indigo-100" }]
           : []),
       ];
   }
@@ -104,7 +104,7 @@ export function getAdminMobileActions<T extends { status: Status }>(
   switch (item.status) {
     case "pending":
       return {
-        primary: { label: "אשר", icon: Check, action: () => onApprove(item), className: "text-green-700 bg-green-100" },
+        primary: { label: "אישור", icon: Check, action: () => onApprove(item), className: "text-green-700 bg-green-100" },
         secondary: [
           { icon: X, action: () => onReject(item), className: "text-red-600 bg-red-100" },
           { icon: Eye, action: () => onView(item), className: "text-blue-600 bg-blue-100" },

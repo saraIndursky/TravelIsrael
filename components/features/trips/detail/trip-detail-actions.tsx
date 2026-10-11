@@ -56,7 +56,7 @@ export function TripDetailActions({
                   className="flex w-full items-center justify-center gap-2 rounded-[2px] border-2 border-[#111827] bg-white py-3.5 text-sm font-medium text-[#111827] transition-colors hover:bg-[#f9fafb] disabled:opacity-60"
                 >
                   <Send className="h-4 w-4" />
-                  {trip.status === "rejected" ? "שלח מחדש לאישור" : "שלח לאישור"}
+                  {trip.status === "rejected" ? "שליחה מחדש לאישור" : "שליחה לאישור"}
                 </button>
               )}
             </>
@@ -69,7 +69,7 @@ export function TripDetailActions({
                 className="flex w-full items-center justify-center gap-2 rounded-[2px] bg-[#111827] py-3.5 text-sm font-medium text-white transition-colors hover:bg-[#1f2937] disabled:opacity-60"
               >
                 <Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
-                שמור למועדפים
+                שמירה במועדפים
               </button>
               <button
                 type="button"

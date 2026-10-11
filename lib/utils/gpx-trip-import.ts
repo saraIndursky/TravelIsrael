@@ -7,7 +7,7 @@ import { computeTripStats, type StationInput } from "@/lib/utils/trip-calculatio
 import { isTravelIsraelGpx, parseGpx, parseTravelIsraelTripGpx } from "@/lib/utils/gpx-parse";
 
 const DEFAULT_TRIP_IMAGE =
-  "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800";
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/ISR-2016-Makhtesh_Ramon-View_within_the_crater_01.jpg/1280px-ISR-2016-Makhtesh_Ramon-View_within_the_crater_01.jpg";
 
 function findApprovedPlace(places: Place[], name: string): Place | undefined {
   return places.find((place) => place.status === "approved" && place.name.trim() === name.trim());

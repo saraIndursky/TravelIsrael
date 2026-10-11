@@ -163,7 +163,7 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
             {config.addHref && (
               <Link href={config.addHref} className="ti-btn-primary shrink-0">
                 <Plus className="h-5 w-5" aria-hidden />
-                {config.addLabel ?? `הוסף ${config.entityLabel}`}
+                {config.addLabel ?? `הוספת ${config.entityLabel}`}
               </Link>
             )}
           </div>

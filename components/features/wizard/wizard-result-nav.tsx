@@ -57,7 +57,7 @@ export function WizardResultNav({
                   : "text-[#111827] hover:bg-white"
             )}
           >
-            {showLoadMore ? "מצא עוד 5" : "הבא"}
+            {showLoadMore ? "הצגת עוד 5" : "הבא"}
             <ChevronLeft className="h-4 w-4" />
           </button>
         </div>

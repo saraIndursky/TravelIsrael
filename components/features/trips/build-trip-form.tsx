@@ -48,7 +48,7 @@ import {
 } from "@/lib/utils/trip-create-draft";
 
 const DEFAULT_IMAGE =
-  "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800";
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/ISR-2016-Makhtesh_Ramon-View_within_the_crater_01.jpg/1280px-ISR-2016-Makhtesh_Ramon-View_within_the_crater_01.jpg";
 
 interface BuildTripFormProps {
   mode: "create" | "edit";
@@ -248,7 +248,7 @@ export function BuildTripForm({ mode, tripId, initialTrip, editHint }: BuildTrip
         clearTripCreateDraft();
         trackEvent("trip_created", { status, mode: "create" });
         toast({
-          title: status === "draft" ? "הטיול נשמר כטיוטה" : "הטיול נשלח לאישור",
+          title: status === "draft" ? "הטיול נשמר כטיוטה" : "הטיול נשליחה לאישור",
         });
         router.push(tripPath(trip));
       } else if (tripId) {
@@ -262,7 +262,7 @@ export function BuildTripForm({ mode, tripId, initialTrip, editHint }: BuildTrip
               status === "draft" && initialTrip?.status === "draft"
                 ? "הטיול נשמר כטיוטה"
                 : status === "pending"
-                  ? "הטיול עודכן ונשלח לאישור"
+                  ? "הטיול עודכן ונשליחה לאישור"
                   : "הטיול עודכן בהצלחה",
           });
           router.push(tripPath(result));
@@ -290,7 +290,7 @@ export function BuildTripForm({ mode, tripId, initialTrip, editHint }: BuildTrip
               {editHint ? (
                 <p className="text-sm text-[#6b7280]">{editHint}</p>
               ) : (
-                <p className="text-[#6b7280]">הוסף, הסר ושנה את סדר התחנות כרצונך</p>
+                <p className="text-[#6b7280]">אפשר להוסיף, להסיר ולשנות את סדר התחנות כרצונכם</p>
               )}
             </div>
           </div>
@@ -415,7 +415,7 @@ export function BuildTripForm({ mode, tripId, initialTrip, editHint }: BuildTrip
                   className="flex items-center gap-2 rounded-lg bg-[#111827] px-4 py-2 font-medium text-white transition-colors hover:bg-[#1f2937]"
                 >
                   <Plus className="h-4 w-4" />
-                  הוסף תחנה
+                  הוספת תחנה
                 </button>
               </div>
 
@@ -429,7 +429,7 @@ export function BuildTripForm({ mode, tripId, initialTrip, editHint }: BuildTrip
                       onClick={() => setPickerOpen(true)}
                       className="rounded-lg bg-[#111827] px-6 py-3 font-medium text-white transition-colors hover:bg-[#1f2937]"
                     >
-                      התחל להוסיף תחנות
+                      הוספת תחנות
                     </button>
                     <div className="flex flex-wrap items-center justify-center gap-2">
                       <button
@@ -437,14 +437,14 @@ export function BuildTripForm({ mode, tripId, initialTrip, editHint }: BuildTrip
                         onClick={() => saveDraftAndNavigate("place")}
                         className="rounded-lg border border-[#d1d5db] bg-white px-4 py-2 text-sm font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
                       >
-                        + צור מקום חדש
+                        + יצירת מקום חדש
                       </button>
                       <button
                         type="button"
                         onClick={() => saveDraftAndNavigate("trail")}
                         className="rounded-lg border border-[#d1d5db] bg-white px-4 py-2 text-sm font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
                       >
-                        + צור מסלול חדש
+                        + יצירת מסלול חדש
                       </button>
                     </div>
                   </div>
@@ -491,7 +491,7 @@ export function BuildTripForm({ mode, tripId, initialTrip, editHint }: BuildTrip
                   className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#111827] py-3 font-bold text-white transition-colors hover:bg-[#1f2937] disabled:opacity-50"
                 >
                   <Save className="h-4 w-4" />
-                  שמור אצלי
+                  שמירה אצלי
                 </button>
                 <button
                   type="button"
@@ -500,7 +500,7 @@ export function BuildTripForm({ mode, tripId, initialTrip, editHint }: BuildTrip
                   className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-[#111827] py-3 font-bold text-[#111827] transition-colors hover:bg-[#f9fafb] disabled:opacity-50"
                 >
                   <Send className="h-4 w-4" />
-                  שלח לאישור
+                  שליחה לאישור
                 </button>
               </div>
 
@@ -508,9 +508,9 @@ export function BuildTripForm({ mode, tripId, initialTrip, editHint }: BuildTrip
                 <h4 className="mb-3 text-sm font-bold text-[#6b7280]">טיפים</h4>
                 <ul className="space-y-2 text-sm text-[#6b7280]">
                   <li>• השתמש בחצים למעלה/למטה לשינוי סדר</li>
-                  <li>• בחר אופן הגעה בין תחנות (רכב / הליכה / אופניים)</li>
+                  <li>• בחירת אופן הגעה בין תחנות (רכב / הליכה / אופניים)</li>
                   <li>• הזמן הכולל כולל שהייה בתחנות + מעבר ביניהן</li>
-                  <li>• שמור לעיתים קרובות</li>
+                  <li>• שמירה לעיתים קרובות</li>
                 </ul>
               </div>
             </div>

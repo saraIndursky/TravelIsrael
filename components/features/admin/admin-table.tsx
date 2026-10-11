@@ -80,10 +80,10 @@ export function AdminTable<T extends { id: string; status?: Status }>({
                       variant="secondary"
                       className="h-8 gap-1 rounded-lg px-2.5"
                       onClick={() => onApprove(item.id)}
-                      aria-label="אשר"
+                      aria-label="אישור"
                     >
                       <Check className="h-3.5 w-3.5" aria-hidden />
-                      <span className="hidden sm:inline">אשר</span>
+                      <span className="hidden sm:inline">אישור</span>
                     </Button>
                   )}
                   {onReject && item.status === "pending" && (
@@ -92,7 +92,7 @@ export function AdminTable<T extends { id: string; status?: Status }>({
                       variant="danger"
                       className="h-8 gap-1 rounded-lg px-2.5"
                       onClick={() => onReject(item.id)}
-                      aria-label="דחה"
+                      aria-label="דחייה"
                     >
                       <X className="h-3.5 w-3.5" aria-hidden />
                       <span className="hidden sm:inline">דחה</span>
@@ -104,10 +104,10 @@ export function AdminTable<T extends { id: string; status?: Status }>({
                       variant="ghost"
                       className="h-8 gap-1 rounded-lg px-2.5"
                       onClick={() => onEdit(item.id)}
-                      aria-label="ערוך"
+                      aria-label="עריכה"
                     >
                       <Pencil className="h-3.5 w-3.5" aria-hidden />
-                      <span className="hidden sm:inline">ערוך</span>
+                      <span className="hidden sm:inline">עריכה</span>
                     </Button>
                   )}
                   {onDelete && (
@@ -116,10 +116,10 @@ export function AdminTable<T extends { id: string; status?: Status }>({
                       variant="ghost"
                       className="h-8 gap-1 rounded-lg px-2.5 text-destructive hover:text-destructive"
                       onClick={() => onDelete(item.id)}
-                      aria-label="מחק"
+                      aria-label="מחיקה"
                     >
                       <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                      <span className="hidden sm:inline">מחק</span>
+                      <span className="hidden sm:inline">מחיקה</span>
                     </Button>
                   )}
                 </div>

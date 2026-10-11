@@ -16,7 +16,7 @@ export function HomeFeaturedTrips({ trips }: HomeFeaturedTripsProps) {
             <h2 className="ti-section-title">פופולריים</h2>
           </div>
           <Link href="/trips" className="text-sm font-medium text-foreground hover:text-primary transition">
-            צפה בכל הטיולים
+            לכל הטיולים
           </Link>
         </div>
 

@@ -62,7 +62,7 @@ export function TripFilters({ values, onChange, onApply, onClear, className }: T
           onClick={onClear}
           className="text-sm text-[#6b7280] transition-colors hover:text-[#111827]"
         >
-          נקה הכל
+          ניקוי הכול
         </button>
       </div>
 
@@ -74,7 +74,7 @@ export function TripFilters({ values, onChange, onApply, onClear, className }: T
               type="text"
               value={values.search}
               onChange={(e) => set("search", e.target.value)}
-              placeholder="חפש טיול..."
+              placeholder="חיפוש טיול..."
               className="w-full rounded-sm border border-[#d1d5db] bg-white px-4 py-2.5 pr-10 text-sm text-[#111827] transition-colors focus:border-[#111827] focus:outline-none"
               onKeyDown={(e) => e.key === "Enter" && onApply()}
             />

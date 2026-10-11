@@ -106,7 +106,7 @@ export function AdminReportsListPage({ reports, loading, onResolve, onReject }: 
               <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
               <input
                 type="search"
-                placeholder="חפש לפי שם, סיבה או סוג..."
+                placeholder="חיפוש לפי שם, סיבה או סוג..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="ti-input pr-10"
@@ -174,7 +174,7 @@ export function AdminReportsListPage({ reports, loading, onResolve, onReject }: 
                       className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-medium transition hover:bg-muted"
                     >
                       <ExternalLink className="h-4 w-4" aria-hidden />
-                      צפה בתוכן
+                      צפייה בתוכן
                     </Link>
                     {r.status === "pending" && (
                       <>

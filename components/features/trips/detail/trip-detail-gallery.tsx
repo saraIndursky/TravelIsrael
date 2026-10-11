@@ -118,7 +118,7 @@ export function TripDetailGallery({
             className="inline-flex items-center gap-2 rounded-sm border border-[#e5e7eb] px-4 py-2 text-sm text-[#111827] transition-colors hover:bg-[#f9fafb]"
           >
             <ImagePlus className="h-4 w-4" />
-            הוסף תמונה לגלריה
+            הוספת תמונה לגלריה
           </button>
         )}
       </div>

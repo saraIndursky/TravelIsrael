@@ -68,7 +68,7 @@ export function PlacesClient() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h1 className="mb-3 text-4xl font-light text-[#111827]">מקומות לביקור</h1>
-              <p className="text-sm text-[#6b7280]">גלה מוזיאונים, חופים, אתרים ועוד ברחבי ישראל</p>
+              <p className="text-sm text-[#6b7280]">גלו מוזיאונים, חופים, אתרים ועוד ברחבי ישראל</p>
             </div>
             {role !== "guest" && (
               <Link
@@ -76,7 +76,7 @@ export function PlacesClient() {
                 className="inline-flex items-center gap-2 rounded-lg bg-[#111827] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#1f2937]"
               >
                 <Plus className="h-4 w-4" />
-                הוסף מקום
+                הוספת מקום
               </Link>
             )}
           </div>
@@ -91,7 +91,7 @@ export function PlacesClient() {
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="חפש מקום..."
+              placeholder="חיפוש מקום..."
               className={inputClass + " pr-10"}
               onKeyDown={(e) => e.key === "Enter" && applyFilters()}
             />

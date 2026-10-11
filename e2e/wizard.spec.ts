@@ -16,7 +16,7 @@ test.describe("Wizard flow", () => {
       await page.getByRole("button", { name: "הבא" }).click();
     }
 
-    await page.getByRole("button", { name: "מצא לי טיול" }).click();
+    await page.getByRole("button", { name: "מציאת טיול" }).click();
     await page.waitForURL("**/wizard/results", { timeout: 20_000 });
     await expect(page.getByText(/תוצאה \d+ מתוך \d+/)).toBeVisible({ timeout: 20_000 });
   });

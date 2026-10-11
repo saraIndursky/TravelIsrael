@@ -9,7 +9,7 @@ interface MyTripsEmptyStateProps {
 
 export function MyTripsEmptyState({
   title = "עדיין לא יצרת טיולים",
-  description = "התחילי לתכנן את הטיול הבא שלך והוסיפי אותו לרשימה.",
+  description = "אפשר להתחיל לתכנן את הטיול הבא ולהוסיף אותו לרשימה.",
   showCreateButton = true,
 }: MyTripsEmptyStateProps) {
   return (
@@ -21,7 +21,7 @@ export function MyTripsEmptyState({
       <p className="mb-6 max-w-sm text-sm text-muted-foreground">{description}</p>
       {showCreateButton && (
         <Link href="/trips/create" className="ti-btn-primary">
-          צור טיול חדש
+          יצירת טיול חדש
         </Link>
       )}
     </div>

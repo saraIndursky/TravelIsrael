@@ -29,7 +29,7 @@ export function TagsStep({ tags, onToggle, onClearAll }: TagsStepProps) {
             onClick={onClearAll}
             className="text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
           >
-            נקה בחירה בשלב זה
+            ניקוי הבחירה בשלב זה
           </button>
         </div>
       )}

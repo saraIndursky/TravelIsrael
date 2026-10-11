@@ -410,7 +410,7 @@ export function WizardResultsClient() {
               <textarea
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                placeholder="כתבי את הביקורת שלך..."
+                placeholder="כתבו את הביקורת שלכם..."
                 className="mb-4 min-h-[120px] w-full rounded-sm border border-[#d1d5db] bg-white p-4 text-sm focus:border-[#111827] focus:outline-none"
                 required
               />
@@ -426,7 +426,7 @@ export function WizardResultsClient() {
                   type="submit"
                   className="rounded-sm bg-[#111827] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#1f2937]"
                 >
-                  שלח ביקורת
+                  שליחת ביקורת
                 </button>
               </div>
             </form>

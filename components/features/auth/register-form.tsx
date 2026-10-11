@@ -60,7 +60,7 @@ export function RegisterForm() {
     <AuthPageShell
       title="מתחילים לטייל חכם"
       subtitle="הרשמה קצרה ויוצאים לדרך"
-      backgroundImage="https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=1920&h=1080&fit=crop"
+      backgroundImage="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Mount-Arbel-189.jpg/1920px-Mount-Arbel-189.jpg"
       footer={
         <>
           <div className="mt-8 text-center">
@@ -138,7 +138,7 @@ export function RegisterForm() {
           <input
             type="password"
             autoComplete="new-password"
-            placeholder="חזור על הסיסמה"
+            placeholder="אימות סיסמה"
             className={authInputClassName}
             {...register("confirmPassword")}
           />

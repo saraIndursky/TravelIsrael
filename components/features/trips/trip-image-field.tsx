@@ -121,7 +121,7 @@ export function TripImageField({ value, onChange, error, label = "תמונת ה�
                   <p className="mb-1 text-sm text-[#4b5563]">גרור תמונה לכאן</p>
                   <p className="mb-3 text-xs text-[#6b7280]">או</p>
                   <label className="cursor-pointer rounded-lg border border-[#111827] px-4 py-2 text-sm font-medium text-[#111827] transition-colors hover:bg-[#f9fafb]">
-                    בחר קובץ
+                    בחירת קובץ
                     <input
                       type="file"
                       accept="image/jpeg,image/png,image/webp,image/gif"

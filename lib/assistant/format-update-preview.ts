@@ -1,7 +1,7 @@
 import type { AssistantEntity, AssistantFieldUpdate } from "@/types/assistant";
 
 const TRIP_DEFAULT_IMAGE =
-  "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800";
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/ISR-2016-Makhtesh_Ramon-View_within_the_crater_01.jpg/1280px-ISR-2016-Makhtesh_Ramon-View_within_the_crater_01.jpg";
 
 export function formatFieldValuePreview(
   field: string,
@@ -55,7 +55,7 @@ export function buildChangesStatusReply(
       `עדיין לא הוחלו שינויים על הטופס — יש ${pending.length} הצעות ממתינות לאישור:`,
       formatUpdatesSummary(pending).trim(),
       "",
-      "לחצי «אשר והחל על הטופס» כדי להחיל, או «דחי» לביטול.",
+      "לחצו על «אישור והחלה על הטופס» כדי להחיל, או «דחייה» לביטול.",
     ].join("\n");
   }
 
@@ -66,7 +66,7 @@ export function buildChangesStatusReply(
     ].join("\n");
   }
 
-  return "עדיין לא הוחלו שינויים מהעוזר על הטופס. בקשי ממני למלא שדות — ואז תוכלי לאשר לפני ההחלה.";
+  return "עדיין לא הוחלו שינויים מהעוזר על הטופס. בקשו ממני למלא שדות — ואז תוכלו לאשר לפני ההחלה.";
 }
 
 export function getDefaultTripImage(): string {

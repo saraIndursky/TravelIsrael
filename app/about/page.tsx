@@ -174,14 +174,14 @@ export default async function AboutPage() {
                   href="/trips"
                   className="group inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-gray-500 to-gray-700 px-8 py-4 font-semibold text-white shadow-lg transition-all hover:from-gray-600 hover:to-gray-800 hover:shadow-xl"
                 >
-                  התחל לחקור טיולים
+                  בואו לחקור טיולים
                   <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
                 </Link>
                 <Link
                   href="/contact"
                   className="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/10 px-8 py-4 font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20"
                 >
-                  צור קשר
+                  יצירת קשר
                 </Link>
               </div>
             </div>

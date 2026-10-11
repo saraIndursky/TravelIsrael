@@ -17,7 +17,7 @@ export async function fillCreatePlaceForm(
 }
 
 export async function submitPlaceForm(page: Page): Promise<void> {
-  await page.getByRole("button", { name: /שמור ושלח|שמור שינויים/ }).click();
+  await page.getByRole("button", { name: /שמירה ושליחה|שמירת שינויים/ }).click();
   await page.waitForURL(
     (url) => /^\/places\/[^/]+$/.test(url.pathname) && url.pathname !== "/places/create",
     { timeout: 30_000, waitUntil: "domcontentloaded" }
@@ -55,7 +55,7 @@ export async function openAdminPlaceTab(
   placeName: string
 ): Promise<void> {
   await page.getByRole("button", { name: new RegExp(`^${tab}`) }).click();
-  await page.getByPlaceholder("חפש לפי שם או אזור...").fill(placeName);
+  await page.getByPlaceholder("חיפוש לפי שם או אזור...").fill(placeName);
   await expect(page.getByText(placeName, { exact: true }).first()).toBeVisible({
     timeout: 20_000,
   });
@@ -63,15 +63,15 @@ export async function openAdminPlaceTab(
 
 export async function approvePlaceInAdmin(page: Page, placeName: string): Promise<void> {
   await openAdminPlaceTab(page, "ממתינים לאישור", placeName);
-  await page.locator("tr", { hasText: placeName }).getByRole("button", { name: "אשר" }).click();
+  await page.locator("tr", { hasText: placeName }).getByRole("button", { name: "אישור" }).click();
   await expect(page.getByText("המקום אושר", { exact: true })).toBeVisible({ timeout: 15_000 });
 }
 
 export async function rejectPlaceInAdmin(page: Page, placeName: string, reason: string): Promise<void> {
   await openAdminPlaceTab(page, "ממתינים לאישור", placeName);
-  await page.locator("tr", { hasText: placeName }).getByRole("button", { name: "דחה" }).click();
+  await page.locator("tr", { hasText: placeName }).getByRole("button", { name: "דחייה" }).click();
   await page.getByPlaceholder("הסבר למשתמש מדוע נדחה...").fill(reason);
-  await page.getByRole("button", { name: "דחה", exact: true }).click();
+  await page.getByRole("button", { name: "דחייה", exact: true }).click();
   await expect(page.getByText("המקום נדחה", { exact: true })).toBeVisible({ timeout: 15_000 });
 }
 

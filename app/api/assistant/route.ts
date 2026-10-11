@@ -100,6 +100,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ...result, provider: result.provider ?? "demo" });
   } catch {
-    return NextResponse.json({ message: "שגיאה בעוזר — נסי שוב" }, { status: 500 });
+    return NextResponse.json({ message: "שגיאה בעוזר — נסו שוב" }, { status: 500 });
   }
 }

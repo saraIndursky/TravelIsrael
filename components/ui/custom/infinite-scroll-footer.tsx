@@ -62,7 +62,7 @@ export function InfiniteScrollFooter({
           onClick={onLoadMore}
           className="rounded-sm border border-[#d1d5db] bg-white px-4 py-2 text-[#111827] hover:bg-[#f3f4f6]"
         >
-          נסה שוב
+          נסו שוב
         </button>
       </div>
     );

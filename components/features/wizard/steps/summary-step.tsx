@@ -108,7 +108,7 @@ export function SummaryStep({ prefs }: SummaryStepProps) {
           <div>
             <div className="mb-1 font-medium text-emerald-700">מוכנים לצאת לדרך!</div>
             <div className="text-sm text-emerald-700/80">
-              לחצו על &quot;מצא לי טיול&quot; וקבלו המלצה מותאמת אישית
+              לחצו על &quot;מציאת טיול&quot; וקבלו המלצה מותאמת אישית
             </div>
           </div>
         </div>
@@ -120,7 +120,7 @@ export function SummaryStep({ prefs }: SummaryStepProps) {
           <div>
             <div className="mb-1 font-medium text-emerald-700">רוצים חוויה מותאמת אישית?</div>
             <div className="text-sm text-emerald-700/80">
-              לחצו על &quot;תכנן טיול אישי&quot; ותכננו את הטיול לפי ההעדפות שלכם
+              לחצו על &quot;תכנון טיול אישי&quot; ותכננו את הטיול לפי ההעדפות שלכם
             </div>
           </div>
         </div>

@@ -27,7 +27,7 @@ export default function RouteError({
         <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button className="rounded-xl" onClick={reset}>
             <RefreshCw className="h-4 w-4" />
-            נסה שוב
+            נסו שוב
           </Button>
           <Link href="/">
             <Button variant="outline" className="rounded-xl">

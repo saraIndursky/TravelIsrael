@@ -220,6 +220,7 @@ export function AdminRegionsListPage({ loading: externalLoading }: AdminRegionsL
                 onClick={() => openCreate(record.id)}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border hover:bg-muted"
                 aria-label={`הוסף תת-אזור ל${record.name}`}
+                title={`הוספת תת-אזור ל${record.name}`}
               >
                 <Plus className="h-4 w-4" />
               </button>
@@ -229,6 +230,7 @@ export function AdminRegionsListPage({ loading: externalLoading }: AdminRegionsL
               onClick={() => openEdit(record)}
               className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border hover:bg-muted"
               aria-label={`ערוך ${record.name}`}
+              title={`עריכת ${record.name}`}
             >
               <Pencil className="h-4 w-4" />
             </button>
@@ -238,6 +240,7 @@ export function AdminRegionsListPage({ loading: externalLoading }: AdminRegionsL
                 onClick={() => handleDelete(record)}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
                 aria-label={`מחק ${record.name}`}
+                title={`מחיקת ${record.name}`}
               >
                 <Trash2 className="h-4 w-4" />
               </button>

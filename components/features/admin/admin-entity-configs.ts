@@ -11,8 +11,8 @@ export const tripsAdminConfig: AdminEntityListConfig<Trip> = {
   entityLabel: "טיול",
   entityLabelPlural: "טיולים",
   addHref: "/trips/create",
-  addLabel: "הוסף טיול",
-  searchPlaceholder: "חפש לפי שם, אזור או יוצר...",
+  addLabel: "הוספת טיול",
+  searchPlaceholder: "חיפוש לפי שם, אזור או יוצר...",
   typeFilter: {
     label: "קושי",
     allLabel: "כל רמות הקושי",
@@ -69,8 +69,8 @@ export function placesAdminConfig(
     entityLabel: "מקום",
     entityLabelPlural: "מקומות",
     addHref: "/places/create",
-    addLabel: "הוסף מקום",
-    searchPlaceholder: "חפש לפי שם או אזור...",
+    addLabel: "הוספת מקום",
+    searchPlaceholder: "חיפוש לפי שם או אזור...",
     typeFilter: {
       label: "סוג",
       allLabel: "כל הסוגים",
@@ -99,8 +99,8 @@ export function trailsAdminConfig(
     entityLabel: "מסלול",
     entityLabelPlural: "מסלולים",
     addHref: "/trails/create",
-    addLabel: "הוסף מסלול",
-    searchPlaceholder: "חפש לפי שם או אזור...",
+    addLabel: "הוספת מסלול",
+    searchPlaceholder: "חיפוש לפי שם או אזור...",
     typeFilter: {
       label: "סוג",
       allLabel: "כל הסוגים",

@@ -4,7 +4,7 @@ import { ContactForm } from "@/components/features/contact/contact-form";
 import { PageHero, SectionHeading } from "@/components/layout/static-page";
 
 export const metadata: Metadata = {
-  title: "צור קשר — TravelIsrael",
+  title: "יצירת קשר — TravelIsrael",
   description: "שאלה, הצעה או בעיה? כתבו לנו ונחזור אליכם בהקדם.",
 };
 
@@ -51,7 +51,7 @@ export default function ContactPage() {
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       <PageHero
         icon={Mail}
-        badge="צור קשר"
+        badge="יצירת קשר"
         title="רוצים ליצור איתנו קשר?"
         highlight="אנחנו כאן כדי לעזור"
         description="בין אם יש לכם שאלה, הצעה או צורך בעזרה – נשמח לשמוע מכם ולחזור אליכם בהקדם."

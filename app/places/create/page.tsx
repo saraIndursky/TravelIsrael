@@ -18,8 +18,8 @@ export default function CreatePlacePage() {
   return (
     <div className="min-h-screen bg-[#f9fafb] py-12" dir="rtl">
       <div className="mx-auto max-w-7xl px-4">
-        <h1 className="mb-2 text-3xl font-light text-[#111827]">הוסף מקום חדש</h1>
-        <p className="mb-8 text-sm text-[#6b7280]">המקום יישלח לאישור מנהל לפני פרסום</p>
+        <h1 className="mb-2 text-3xl font-light text-[#111827]">הוספת מקום חדש</h1>
+        <p className="mb-8 text-sm text-[#6b7280]">המקום יישליחה לאישור מנהל לפני פרסום</p>
         <PlaceGpxImport />
         <PlaceForm />
       </div>

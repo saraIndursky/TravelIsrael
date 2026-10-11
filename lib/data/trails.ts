@@ -63,7 +63,7 @@ export async function getApprovedTrailTypes(): Promise<string[]> {
 }
 
 const DEFAULT_TRAIL_IMAGE =
-  "https://images.unsplash.com/photo-1551632811-561732b1c4e9?w=800";
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/ISR-2016-Makhtesh_Ramon-View_within_the_crater_01.jpg/1280px-ISR-2016-Makhtesh_Ramon-View_within_the_crater_01.jpg";
 
 function applyTrailFilters(trails: Trail[], filters?: TrailFilters): Trail[] {
   let result = trails;

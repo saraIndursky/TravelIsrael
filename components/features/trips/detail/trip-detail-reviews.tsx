@@ -61,7 +61,7 @@ export function TripDetailReviews({
           onClick={onAddReview}
           className="mt-6 w-full rounded-sm border-2 border-[#e5e7eb] bg-[#f9fafb] py-3 font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
         >
-          הוסף ביקורת
+          הוספת ביקורת
         </button>
       ) : (
         <p className="mt-6 text-center text-sm text-[#6b7280]">כבר הוספת ביקורת לטיול זה</p>

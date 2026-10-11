@@ -45,7 +45,8 @@ export function WizardResultHero({
             type="button"
             onClick={onToggleFavorite}
             className={cn(heroBtnClass, "text-[#111827]")}
-            aria-label="שמור למועדפים"
+            aria-label="שמירה במועדפים"
+            title="שמירה במועדפים"
           >
             <Heart className={cn("h-5 w-5", isFavorite && "fill-current")} />
           </button>

@@ -19,7 +19,7 @@ export function WizardResultsEmptyState({ filteredOut = false }: WizardResultsEm
         <h1 className="text-xl font-semibold text-[#111827]">לא נמצאו טיולים מתאימים</h1>
         <p className="text-sm leading-relaxed text-[#6b7280]">
           {filteredOut
-            ? `אין טיולים עם התאמה של לפחות ${MIN_MATCH_SCORE}%. נסי להרחיב את האזור, להוריד דרישות נגישות, או לדלג על כמה שלבים באשף.`
+            ? `אין טיולים עם התאמה של לפחות ${MIN_MATCH_SCORE}%. נסו להרחיב את האזור, להוריד דרישות נגישות, או לדלג על כמה שלבים באשף.`
             : "לא מצאנו טיולים מאושרים שמתאימים להעדפות שבחרת. אפשר לשנות את הבחירות ולנסות שוב."}
         </p>
       </div>

@@ -45,7 +45,7 @@ export function PlaceDetailActions({ place }: PlaceDetailActionsProps) {
             className="flex w-full items-center justify-center gap-2 rounded-[2px] border-2 border-[#111827] bg-white py-3.5 text-sm font-medium text-[#111827] transition-colors hover:bg-[#f9fafb]"
           >
             <Plus className="h-4 w-4" />
-            הוסף לטיול
+            הוספה לטיול
           </Link>
           {showEdit && (
             <Link

@@ -34,6 +34,7 @@ export function BackButton() {
       onClick={goBack}
       className="fixed top-20 right-4 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-[#e5e7eb] bg-white/95 shadow-sm backdrop-blur-sm transition-all hover:bg-white md:right-6"
       aria-label="חזור אחורה"
+      title="חזרה לעמוד הקודם"
     >
       <ArrowRight className="h-5 w-5 text-[#111827]" />
     </button>

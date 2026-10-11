@@ -1,14 +1,15 @@
 import type { Accessibility, Place, Region } from "@/types";
 import type { PlaceFormValues } from "@/lib/validations";
+import { toDisplayImageUrl } from "@/lib/utils/image-url";
 
 const DEFAULT_PLACE_IMAGE =
-  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800";
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/ISR-2016-Makhtesh_Ramon-View_within_the_crater_01.jpg/1280px-ISR-2016-Makhtesh_Ramon-View_within_the_crater_01.jpg";
 
 type PreviewPlaceBase = Pick<Place, "id" | "created_by" | "status">;
 
 export function buildPreviewPlace(values: PlaceFormValues, base?: PreviewPlaceBase): Place {
   const now = new Date().toISOString();
-  const imageUrl = values.image_url?.trim() || DEFAULT_PLACE_IMAGE;
+  const imageUrl = toDisplayImageUrl(values.image_url?.trim() || DEFAULT_PLACE_IMAGE);
 
   return {
     id: base?.id ?? "preview",

@@ -231,7 +231,7 @@ export function ContactForm() {
           </>
         ) : (
           <>
-            <span>שלח הודעה</span>
+            <span>שליחת הודעה</span>
             <Send className="h-5 w-5 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
           </>
         )}

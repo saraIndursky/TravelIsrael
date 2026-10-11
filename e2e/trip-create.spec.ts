@@ -18,9 +18,9 @@ test.describe("Create trip and submit", () => {
     await page.getByPlaceholder("תיאור הטיול").fill("תיאור מלא לבדיקת E2E — יצירת טיול עם תחנה אחת ושליחה לאישור");
     await page.getByRole("button", { name: "משפחות", exact: true }).click();
 
-    await page.getByRole("button", { name: "הוסף תחנה" }).click();
+    await page.getByRole("button", { name: "הוספת תחנה" }).click();
     const picker = page.locator("div.fixed.inset-0").filter({
-      has: page.getByRole("heading", { name: "הוסף תחנה למסלול" }),
+      has: page.getByRole("heading", { name: "הוספת תחנה למסלול" }),
     });
     await expect(picker).toBeVisible();
     await expect(picker.getByRole("button", { name: "הוסף", exact: true }).first()).toBeVisible({
@@ -28,7 +28,7 @@ test.describe("Create trip and submit", () => {
     });
     await picker.getByRole("button", { name: "הוסף", exact: true }).first().click();
 
-    await page.getByRole("button", { name: "שלח לאישור" }).click();
+    await page.getByRole("button", { name: "שליחה לאישור" }).click();
     await page.waitForURL(/\/trips\/[^/]+$/, { timeout: 30_000 });
     await expect(page.getByRole("heading", { name: tripName })).toBeVisible({ timeout: 15_000 });
   });

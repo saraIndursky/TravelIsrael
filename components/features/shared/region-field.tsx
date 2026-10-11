@@ -90,7 +90,7 @@ export function RegionField({ value, onChange, parentId, onParentChange, error }
     <div>
       <Label htmlFor={selectId}>אזור</Label>
       <select id={selectId} className={inputClass} value={choice} onChange={(e) => handleChoice(e.target.value)}>
-        <option value="">בחר אזור</option>
+        <option value="">בחירת אזור</option>
         {options.map((option) =>
           option.selectable && option.code ? (
             <option key={option.id} value={option.code}>
@@ -127,7 +127,7 @@ export function RegionField({ value, onChange, parentId, onParentChange, error }
               value={parentId}
               onChange={(e) => onParentChange(e.target.value)}
             >
-              <option value="">בחר אזור אב</option>
+              <option value="">בחירת אזור אב</option>
               {options.map((option) => (
                 <option key={option.id} value={option.id}>
                   {regionOptionLabel(option)}
@@ -136,7 +136,7 @@ export function RegionField({ value, onChange, parentId, onParentChange, error }
             </select>
           </div>
           <p className="text-xs text-[#6b7280]">
-            לא מצאת אזור מתאים? כתבי אותו ובחרי באיזה אזור הוא נמצא. אחרי שהמנהל יאשר את התוכן, האזור
+            לא מצאתם אזור מתאים? כתבו אותו ובחרו באיזה אזור הוא נמצא. אחרי שהמנהל יאשר את התוכן, האזור
             יתווסף לרשימה לכולם.
           </p>
         </div>

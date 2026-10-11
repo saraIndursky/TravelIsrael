@@ -29,7 +29,7 @@ export function TripDetailReport({ onSubmit, canReport }: TripDetailReportProps)
         className="inline-flex items-center gap-2 rounded-sm border border-[#e5e7eb] px-4 py-2.5 text-sm text-[#6b7280] transition-colors hover:border-[#d1d5db] hover:text-[#111827]"
       >
         <Flag className="h-4 w-4" />
-        דווח על בעיה
+        דיווח על בעיה
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -80,7 +80,7 @@ export function TripDetailReport({ onSubmit, canReport }: TripDetailReportProps)
               disabled={submitting}
               className="w-full rounded-sm bg-[#111827] py-2.5 text-sm font-medium text-white hover:bg-[#1f2937] disabled:opacity-60"
             >
-              שלח דיווח
+              שליחת דיווח
             </button>
           </form>
         </DialogContent>

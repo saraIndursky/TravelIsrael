@@ -89,7 +89,7 @@ export function SearchClient() {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="חפש טיול, מקום או מסלול..."
+              placeholder="חיפוש טיול, מקום או מסלול..."
               className={inputClass + " pr-10"}
               onKeyDown={(e) => e.key === "Enter" && applySearch()}
               aria-label="חיפוש גלובלי"

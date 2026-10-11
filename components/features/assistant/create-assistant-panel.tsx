@@ -24,7 +24,7 @@ const PLACE_ACTIONS: QuickAction[] = [
   { id: "coordinates", label: "הצע קואורדינטות" },
   { id: "tags", label: "הצע תגיות" },
   { id: "duration_price", label: "משך ומחיר" },
-  { id: "fill_missing", label: "מלא שדות חסרים" },
+  { id: "fill_missing", label: "מילוי שדות חסרים" },
 ];
 
 const TRAIL_ACTIONS: QuickAction[] = [
@@ -34,7 +34,7 @@ const TRAIL_ACTIONS: QuickAction[] = [
   { id: "waypoints", label: "נקודות ביניים" },
   { id: "tags", label: "הצע תגיות" },
   { id: "duration_price", label: "משך ומחיר" },
-  { id: "fill_missing", label: "מלא שדות חסרים" },
+  { id: "fill_missing", label: "מילוי שדות חסרים" },
 ];
 
 const TRIP_ACTIONS: QuickAction[] = [
@@ -42,7 +42,7 @@ const TRIP_ACTIONS: QuickAction[] = [
   { id: "full_description", label: "מלא תיאור מלא" },
   { id: "tags", label: "הצע תגיות" },
   { id: "stations_hint", label: "עזרה בתחנות" },
-  { id: "fill_missing", label: "מלא שדות חסרים" },
+  { id: "fill_missing", label: "מילוי שדות חסרים" },
 ];
 
 const PROVIDER_LABELS = {
@@ -171,6 +171,7 @@ export function CreateAssistantPanel<T extends FieldValues>({
           onClick={() => setOpen(true)}
           className="group flex h-14 w-14 items-center justify-center rounded-full bg-[#111827] text-white shadow-lg transition-all hover:bg-[#1f2937] hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#111827] focus-visible:ring-offset-2"
           aria-label="פתח עוזר יצירה"
+          title="עוזר חכם למילוי הטופס"
         >
           <MessageCircle className="h-6 w-6 transition-transform group-hover:scale-110" />
         </button>
@@ -219,7 +220,7 @@ export function CreateAssistantPanel<T extends FieldValues>({
           >
             {messages.length === 0 && (
               <p className="text-center text-xs text-[#6b7280] py-4">
-                כתבי מה חסר — למשל «תוסיפי תיאור ותגיות» או «מה הוחל על הטופס?»
+                כתבו מה חסר — למשל «תוסיפו תיאור ותגיות» או «מה הוחל על הטופס?»
               </p>
             )}
             {messages.map((msg, i) => (
@@ -285,14 +286,14 @@ export function CreateAssistantPanel<T extends FieldValues>({
                     onClick={handleApply}
                     className="flex-1 rounded-lg bg-[#111827] py-2 text-xs font-medium text-white hover:bg-[#1f2937]"
                   >
-                    אשר והחל על הטופס
+                    אישור והחלה על הטופס
                   </button>
                   <button
                     type="button"
                     onClick={clearPendingUpdates}
                     className="rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-xs text-[#6b7280] hover:bg-[#f9fafb]"
                   >
-                    דחי
+                    דחייה
                   </button>
                 </div>
               )}

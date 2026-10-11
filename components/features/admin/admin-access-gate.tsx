@@ -15,7 +15,7 @@ export function AdminAccessGate() {
         <p className="text-foreground font-medium">אזור זה מיועד למנהלים בלבד</p>
         <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
           <Link href="/login" className="text-primary underline-offset-4 hover:underline">
-            התחבר
+            התחברות
           </Link>{" "}
           עם חשבון מנהל כדי להיכנס לפאנל הניהול.
         </p>

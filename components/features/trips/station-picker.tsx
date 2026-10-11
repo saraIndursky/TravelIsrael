@@ -67,7 +67,7 @@ export function StationPicker({
           <div className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-lg bg-white">
             <div className="border-b border-[#e5e7eb] p-6">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-[#111827]">הוסף תחנה למסלול</h2>
+                <h2 className="text-2xl font-bold text-[#111827]">הוספת תחנה למסלול</h2>
                 <button
                   type="button"
                   onClick={onClose}
@@ -82,7 +82,7 @@ export function StationPicker({
                   <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7280]" />
                   <input
                     type="text"
-                    placeholder="חפש לפי שם או אזור..."
+                    placeholder="חיפוש לפי שם או אזור..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full rounded-lg border border-[#d1d5db] px-4 py-3 pr-10 transition-colors focus:border-[#111827] focus:outline-none"
@@ -135,7 +135,7 @@ export function StationPicker({
                           }}
                           className="rounded-lg border border-[#d1d5db] bg-white px-4 py-2 text-sm font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
                         >
-                          + צור מקום חדש
+                          + יצירת מקום חדש
                         </button>
                       )}
                       {onCreateTrail && (
@@ -147,7 +147,7 @@ export function StationPicker({
                           }}
                           className="rounded-lg border border-[#d1d5db] bg-white px-4 py-2 text-sm font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
                         >
-                          + צור מסלול חדש
+                          + יצירת מסלול חדש
                         </button>
                       )}
                     </div>
@@ -207,7 +207,7 @@ export function StationPicker({
                                 className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
                               >
                                 <Plus className="h-4 w-4" />
-                                הוסף
+                                הוספה
                               </button>
                             </div>
                           </div>

@@ -80,7 +80,7 @@ export function ResetPasswordForm() {
       <AuthPageShell
         title="קישור לא תקין"
         subtitle="יש לבקש איפוס סיסמה מחדש"
-        backgroundImage="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop"
+        backgroundImage="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Mount-Arbel-189.jpg/1920px-Mount-Arbel-189.jpg"
       >
         <div className="space-y-4 text-sm text-gray-600">
           <p>הקישור פג תוקף או שכבר נוצל. בקשו קישור חדש מדף איפוס הסיסמה.</p>
@@ -96,7 +96,7 @@ export function ResetPasswordForm() {
     <AuthPageShell
       title="סיסמה חדשה"
       subtitle="בחרו סיסמה חזקה (לפחות 8 תווים)"
-      backgroundImage="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop"
+      backgroundImage="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Mount-Arbel-189.jpg/1920px-Mount-Arbel-189.jpg"
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <AuthField label="סיסמה חדשה" error={errors.password?.message} icon={<Lock className="h-4 w-4" />}>

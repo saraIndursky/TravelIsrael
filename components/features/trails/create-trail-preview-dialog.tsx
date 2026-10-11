@@ -28,7 +28,7 @@ export function CreateTrailPreviewDialog({
   trail,
   onSave,
   saving = false,
-  saveLabel = "שמור ושלח לאישור",
+  saveLabel = "שמירה ושליחה לאישור",
 }: CreateTrailPreviewDialogProps) {
   if (!open) return null;
 
@@ -86,7 +86,7 @@ export function CreateTrailPreviewDialog({
             </div>
           </div>
 
-          <TripDetailRating avgRating={0} userRating={0} onRate={() => {}} canRate={false} title="דרג את המסלול" />
+          <TripDetailRating avgRating={0} userRating={0} onRate={() => {}} canRate={false} title="דירוג המסלול" />
           <div className="h-4" />
         </div>
 

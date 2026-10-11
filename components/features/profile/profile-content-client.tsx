@@ -139,7 +139,7 @@ export function ProfileContentClient() {
         toast({ title: "שליחה לאישור נכשלה", variant: "destructive" });
         return;
       }
-      toast({ title: "הטיול נשלח לאישור" });
+      toast({ title: "הטיול נשליחה לאישור" });
       await loadData();
       setStatusTab("pending");
     } finally {
@@ -155,7 +155,7 @@ export function ProfileContentClient() {
         toast({ title: "שליחה לאישור נכשלה", variant: "destructive" });
         return;
       }
-      toast({ title: "המקום נשלח לאישור" });
+      toast({ title: "המקום נשליחה לאישור" });
       await loadData();
       setStatusTab("pending");
     } finally {
@@ -171,7 +171,7 @@ export function ProfileContentClient() {
         toast({ title: "שליחה לאישור נכשלה", variant: "destructive" });
         return;
       }
-      toast({ title: "המסלול נשלח לאישור" });
+      toast({ title: "המסלול נשליחה לאישור" });
       await loadData();
       setStatusTab("pending");
     } finally {
@@ -271,11 +271,11 @@ export function ProfileContentClient() {
   const createCta = (() => {
     switch (entityTab) {
       case "trips":
-        return { href: "/trips/create", label: "צור טיול חדש" };
+        return { href: "/trips/create", label: "יצירת טיול חדש" };
       case "places":
-        return { href: "/places/create", label: "הוסף מקום" };
+        return { href: "/places/create", label: "הוספת מקום" };
       case "trails":
-        return { href: "/trails/create", label: "הוסף מסלול" };
+        return { href: "/trails/create", label: "הוספת מסלול" };
     }
   })();
 
@@ -402,7 +402,7 @@ export function ProfileContentClient() {
             entityCount === 0 ? (
               <MyTripsEmptyState
                 title="עדיין לא יצרת תוכן בקטגוריה זו"
-                description="התחילי ליצור ולשתף עם הקהילה."
+                description="אפשר להתחיל ליצור ולשתף עם הקהילה."
               />
             ) : entityTab === "trips" ? (
               filteredTrips.length === 0 ? (

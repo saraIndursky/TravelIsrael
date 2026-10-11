@@ -41,7 +41,8 @@ export function PlaceCard({
             className="absolute top-3 left-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-colors hover:bg-white disabled:opacity-60"
             onClick={() => void onFavoriteToggle?.()}
             disabled={favoriteLoading}
-            aria-label={isFavorite ? "הסר מהמועדפים" : "הוסף למועדפים"}
+            aria-label={isFavorite ? "הסרה מהמועדפים" : "הוספה למועדפים"}
+            title={isFavorite ? "הסרה מהמועדפים" : "הוספה למועדפים"}
           >
             <Heart className={`h-4 w-4 text-[#111827] ${isFavorite ? "fill-current" : ""}`} />
           </button>

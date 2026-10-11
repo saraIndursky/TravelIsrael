@@ -62,7 +62,7 @@ export function TripGpxImport() {
             }`}
           >
             <Upload className="h-4 w-4" />
-            {importing ? "מייבא..." : "בחר קובץ GPX"}
+            {importing ? "מייבא..." : "בחירת קובץ GPX"}
           </label>
         </div>
       </div>

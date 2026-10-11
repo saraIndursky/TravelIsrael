@@ -100,7 +100,7 @@ export function PlaceForm({ mode = "create", placeId, initialPlace }: PlaceFormP
 
   const isEdit = mode === "edit";
   const keepsStatus = isEdit && role === "admin";
-  const saveLabel = keepsStatus ? "שמור שינויים" : "שמור ושלח לאישור";
+  const saveLabel = keepsStatus ? "שמירת שינויים" : "שמירה ושליחה לאישור";
 
   const {
     register,
@@ -150,13 +150,13 @@ export function PlaceForm({ mode = "create", placeId, initialPlace }: PlaceFormP
           toast({ title: "אין הרשאה לערוך מקום זה", variant: "destructive" });
           return;
         }
-        toast({ title: keepsStatus ? "השינויים נשמרו" : "המקום עודכן ונשלח לאישור" });
+        toast({ title: keepsStatus ? "השינויים נשמרו" : "המקום עודכן ונשליחה לאישור" });
         window.location.assign(placePath(updated));
         return;
       }
 
       const place = await createPlace(payload);
-      toast({ title: "המקום נשלח לאישור" });
+      toast({ title: "המקום נשליחה לאישור" });
       const returnTo = sanitizeReturnPath(
         new URLSearchParams(window.location.search).get("returnTo")
       );
@@ -241,7 +241,7 @@ export function PlaceForm({ mode = "create", placeId, initialPlace }: PlaceFormP
             onChange={(type) => setValue("place_type", type, { shouldValidate: true })}
             error={errors.place_type?.message}
             newTypePlaceholder="למשל: מעיין"
-            newTypeHint="לא מצאת סוג מתאים? כתבי אותו כאן. אחרי שהמנהל יאשר את המקום, הסוג יתווסף לרשימה לכולם."
+            newTypeHint="לא מצאתם סוג מתאים? כתבו אותו כאן. אחרי שהמנהל יאשר את המקום, הסוג יתווסף לרשימה לכולם."
           />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

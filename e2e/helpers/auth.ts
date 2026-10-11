@@ -18,7 +18,7 @@ export async function loginWithEmail(
       return;
     }
     await page.getByRole("button", { name: "התנתקות" }).click();
-    await page.getByRole("button", { name: "התחבר" }).first().waitFor({ timeout: 15_000 });
+    await page.getByRole("button", { name: "כניסה" }).first().waitFor({ timeout: 15_000 });
   }
 
   await page.goto("/login");
@@ -40,5 +40,5 @@ export async function logout(page: Page): Promise<void> {
   if (!(await menu.isVisible().catch(() => false))) return;
   await menu.click();
   await page.getByRole("button", { name: "התנתקות" }).click();
-  await page.getByRole("button", { name: "התחבר" }).first().waitFor({ timeout: 15_000 });
+  await page.getByRole("button", { name: "כניסה" }).first().waitFor({ timeout: 15_000 });
 }

@@ -26,7 +26,7 @@ export function WizardResultActions({
         className="flex w-full items-center justify-center gap-2 rounded-sm bg-[#111827] py-3.5 text-sm font-bold text-white transition-colors hover:bg-[#1f2937] disabled:opacity-60"
       >
         <Bookmark className="h-4 w-4" />
-        {isFavorite ? "שמור במועדפים ✓" : "שמור אצלי"}
+        {isFavorite ? "נשמר במועדפים ✓" : "שמירה אצלי"}
       </button>
 
       <Link
@@ -34,7 +34,7 @@ export function WizardResultActions({
         className="flex w-full items-center justify-center gap-2 rounded-sm border-2 border-[#111827] py-3.5 text-sm font-bold text-[#111827] transition-colors hover:bg-[#f9fafb]"
       >
         <Edit3 className="h-4 w-4" />
-        ערוך מסלול בעצמי
+        עריכת מסלול בעצמי
       </Link>
 
       <Link
@@ -42,7 +42,7 @@ export function WizardResultActions({
         className="flex w-full items-center justify-center gap-2 rounded-sm border-2 border-[#d1d5db] py-3.5 text-sm font-bold text-[#6b7280] transition-colors hover:bg-[#f9fafb]"
       >
         <RefreshCw className="h-4 w-4" />
-        שנה העדפות
+        שינוי העדפות
       </Link>
     </div>
   );

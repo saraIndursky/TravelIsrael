@@ -153,6 +153,7 @@ function ProfileHero({
               disabled={avatarUploading}
               className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:opacity-60"
               aria-label="החלף תמונת פרופיל"
+              title="החלפת תמונת פרופיל"
             >
               <Camera className="h-4 w-4" />
             </button>
@@ -431,7 +432,7 @@ export function ProfilePersonalArea() {
               onClick={handleProfileSave}
               className="rounded-xl bg-gray-900 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-gray-700 hover:shadow-md active:translate-y-0"
             >
-              שמור שינויים
+              שמירת שינויים
             </button>
           </div>
         </div>
@@ -449,7 +450,7 @@ export function ProfilePersonalArea() {
               type={showPw.current ? "text" : "password"}
               value={passwords.current}
               onChange={(current) => setPasswords({ ...passwords, current })}
-              placeholder="הזן סיסמה נוכחית"
+              placeholder="הזנת סיסמה נוכחית"
               showPassword={showPw.current}
               onToggleVisibility={() => setShowPw({ ...showPw, current: !showPw.current })}
             />
@@ -463,7 +464,7 @@ export function ProfilePersonalArea() {
               type={showPw.newPass ? "text" : "password"}
               value={passwords.newPass}
               onChange={(newPass) => setPasswords({ ...passwords, newPass })}
-              placeholder="הזן סיסמה חדשה"
+              placeholder="הזנת סיסמה חדשה"
               showPassword={showPw.newPass}
               onToggleVisibility={() => setShowPw({ ...showPw, newPass: !showPw.newPass })}
             />
@@ -472,7 +473,7 @@ export function ProfilePersonalArea() {
               type={showPw.confirm ? "text" : "password"}
               value={passwords.confirm}
               onChange={(confirm) => setPasswords({ ...passwords, confirm })}
-              placeholder="הזן שוב את הסיסמה החדשה"
+              placeholder="הזנה חוזרת של הסיסמה החדשה"
               showPassword={showPw.confirm}
               onToggleVisibility={() => setShowPw({ ...showPw, confirm: !showPw.confirm })}
             />
@@ -484,7 +485,7 @@ export function ProfilePersonalArea() {
               onClick={handlePasswordUpdate}
               className="rounded-xl bg-gray-900 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-gray-700 hover:shadow-md active:translate-y-0"
             >
-              עדכן סיסמה
+              עדכון סיסמה
             </button>
           </div>
         </div>

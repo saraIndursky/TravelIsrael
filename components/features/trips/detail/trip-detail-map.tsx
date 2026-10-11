@@ -74,7 +74,7 @@ export function TripDetailMap({
           className="mx-auto mt-3 flex items-center gap-2 text-sm text-[#111827] hover:underline"
         >
           <Download className="h-4 w-4" />
-          הורד מסלול GPS
+          הורדת מסלול GPS
         </button>
       )}
     </section>

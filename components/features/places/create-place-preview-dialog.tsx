@@ -26,7 +26,7 @@ export function CreatePlacePreviewDialog({
   place,
   onSave,
   saving = false,
-  saveLabel = "שמור ושלח לאישור",
+  saveLabel = "שמירה ושליחה לאישור",
 }: CreatePlacePreviewDialogProps) {
   if (!open) return null;
 
@@ -83,7 +83,7 @@ export function CreatePlacePreviewDialog({
             </div>
           </div>
 
-          <TripDetailRating avgRating={0} userRating={0} onRate={() => {}} canRate={false} title="דרג את המקום" />
+          <TripDetailRating avgRating={0} userRating={0} onRate={() => {}} canRate={false} title="דירוג המקום" />
           <div className="h-4" />
         </div>
 

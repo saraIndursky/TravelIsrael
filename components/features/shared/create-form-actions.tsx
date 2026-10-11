@@ -11,7 +11,7 @@ interface CreateFormActionsProps {
 export function CreateFormActions({
   onPreview,
   submitting = false,
-  saveLabel = "שמור ושלח לאישור",
+  saveLabel = "שמירה ושליחה לאישור",
 }: CreateFormActionsProps) {
   return (
     <div className="sticky top-24 rounded-lg border border-[#e5e7eb] bg-white p-6">

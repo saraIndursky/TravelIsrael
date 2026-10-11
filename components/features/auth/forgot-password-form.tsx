@@ -38,7 +38,7 @@ export function ForgotPasswordForm() {
     try {
       await requestPasswordReset(values.email);
       setSent(true);
-      toast({ title: "אם קיים חשבון עם האימייל — נשלח קישור לאיפוס" });
+      toast({ title: "אם קיים חשבון עם האימייל — נשליחת קישור לאיפוס" });
     } catch (error) {
       toast({
         title: error instanceof Error ? error.message : "שגיאה בשליחה",
@@ -53,7 +53,7 @@ export function ForgotPasswordForm() {
     <AuthPageShell
       title="איפוס סיסמה"
       subtitle="נשלח לך קישור לאיפוס הסיסמה באימייל"
-      backgroundImage="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop"
+      backgroundImage="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Mount-Arbel-189.jpg/1920px-Mount-Arbel-189.jpg"
       footer={
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-500">
@@ -87,7 +87,7 @@ export function ForgotPasswordForm() {
           </AuthField>
 
           <button type="submit" disabled={submitting} className={authSubmitClassName}>
-            {submitting ? "שולח..." : "שלח קישור לאיפוס"}
+            {submitting ? "שולח..." : "שליחת קישור לאיפוס"}
           </button>
         </form>
       )}

@@ -31,7 +31,7 @@ export function getPlaceFeatures(place: Place): string[] {
   if (place.accessibility >= 4) features.push("נגישות גבוהה");
   else if (place.accessibility >= 2) features.push("נגישות חלקית");
   if (place.estimated_price === 0) features.push("כניסה חינם");
-  if (place.phone) features.push("ניתן ליצור קשר טלפוני");
+  if (place.phone) features.push("ניתן לייצירת קשר טלפוני");
   if (place.website) features.push("אתר אינטרנט זמין");
   if (place.tags.includes("חינם")) features.push("ללא עלות כניסה");
   if (place.tags.includes("ים") || place.tags.includes("חוף")) features.push("קרוב לים");

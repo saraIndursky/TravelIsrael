@@ -71,7 +71,7 @@ export function CustomTypeField({
     <div>
       <Label htmlFor={selectId}>{label}</Label>
       <select id={selectId} className={inputClass} value={choice} onChange={(e) => handleChoice(e.target.value)}>
-        <option value="">בחר סוג</option>
+        <option value="">בחירת סוג</option>
         {options.map((type) => (
           <option key={type} value={type}>
             {type}

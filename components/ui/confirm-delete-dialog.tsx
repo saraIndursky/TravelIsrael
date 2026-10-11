@@ -42,7 +42,7 @@ export function ConfirmDeleteDialog({
             disabled={confirming}
             onClick={onConfirm}
           >
-            {confirming ? "מוחק..." : "מחק"}
+            {confirming ? "מוחק..." : "מחיקה"}
           </Button>
           <Button variant="outline" className="flex-1 rounded-xl" disabled={confirming} onClick={onClose}>
             ביטול

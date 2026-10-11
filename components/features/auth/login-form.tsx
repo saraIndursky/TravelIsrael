@@ -57,7 +57,7 @@ export function LoginForm() {
     <AuthPageShell
       title="ברוכים השבים"
       subtitle="המשיכו לתכנן את הטיול הבא שלכם"
-      backgroundImage="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop"
+      backgroundImage="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Mount-Arbel-189.jpg/1920px-Mount-Arbel-189.jpg"
       footer={
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-500">

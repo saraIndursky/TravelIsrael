@@ -64,7 +64,7 @@ export function AdminUsersListPage({ users, loading, onRoleChange }: AdminUsersL
               <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
               <input
                 type="search"
-                placeholder="חפש לפי שם או אימייל..."
+                placeholder="חיפוש לפי שם או אימייל..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="ti-input pr-10"

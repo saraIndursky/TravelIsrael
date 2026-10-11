@@ -82,7 +82,7 @@ export function TrailsClient() {
                 className="inline-flex items-center gap-2 rounded-lg bg-[#111827] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#1f2937]"
               >
                 <Plus className="h-4 w-4" />
-                הוסף מסלול
+                הוספת מסלול
               </Link>
             )}
           </div>
@@ -97,7 +97,7 @@ export function TrailsClient() {
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="חפש מסלול..."
+              placeholder="חיפוש מסלול..."
               className={inputClass + " pr-10"}
               onKeyDown={(e) => e.key === "Enter" && applyFilters()}
             />

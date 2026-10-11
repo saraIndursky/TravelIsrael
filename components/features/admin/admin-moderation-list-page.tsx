@@ -85,7 +85,7 @@ export function AdminModerationListPage({
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
             <input
               type="search"
-              placeholder="חפש לפי שם תוכן או טקסט..."
+              placeholder="חיפוש לפי שם תוכן או טקסט..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="ti-input md:col-span-1"
@@ -164,7 +164,7 @@ export function AdminModerationListPage({
                       className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-medium transition hover:bg-muted"
                     >
                       <ExternalLink className="h-4 w-4" aria-hidden />
-                      צפה בתוכן
+                      צפייה בתוכן
                     </Link>
                     <Button
                       size="sm"

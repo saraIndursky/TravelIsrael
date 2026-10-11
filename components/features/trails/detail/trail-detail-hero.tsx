@@ -48,7 +48,8 @@ export function TrailDetailHero({
               type="button"
               onClick={onToggleSaved}
               className={`${heroBtnClass} text-[#111827]`}
-              aria-label="שמור למועדפים"
+              aria-label="שמירה במועדפים"
+              title="שמירה במועדפים"
             >
               <Heart className={`h-5 w-5 ${isSaved ? "fill-current" : ""}`} />
             </button>
@@ -61,6 +62,7 @@ export function TrailDetailHero({
             onClick={goBack}
             className={heroBtnClass}
             aria-label="חזור אחורה"
+            title="חזרה לעמוד הקודם"
           >
             <ArrowRight className="h-5 w-5 text-[#111827]" />
           </button>

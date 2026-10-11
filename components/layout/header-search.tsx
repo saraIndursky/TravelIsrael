@@ -97,7 +97,7 @@ export function HeaderSearch({
             setExpanded(false);
           }
         }}
-        placeholder="חפש טיול, מקום או מסלול..."
+        placeholder="חיפוש טיול, מקום או מסלול..."
         className={cn(
           "w-full rounded-xl border border-border bg-background py-2 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none",
           expandable ? "h-10 pl-10" : "h-10 pl-4"

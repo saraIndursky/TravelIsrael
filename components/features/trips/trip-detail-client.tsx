@@ -189,7 +189,7 @@ export default function TripDetailClient({ id }: { id: string }) {
     if (result) {
       const refreshed = await getTripById(entityId);
       if (refreshed) setTrip(refreshed);
-      toast({ title: "הטיול נשלח לאישור" });
+      toast({ title: "הטיול נשליחה לאישור" });
     } else {
       toast({ title: "שגיאה בשליחה לאישור", variant: "destructive" });
     }
@@ -468,7 +468,7 @@ export default function TripDetailClient({ id }: { id: string }) {
 
               onChange={(e) => setCommentText(e.target.value)}
 
-              placeholder="כתבי את הביקורת שלך..."
+              placeholder="כתבו את הביקורת שלכם..."
 
               className="mb-4 min-h-[120px] w-full rounded-sm border border-[#d1d5db] bg-white p-4 text-sm focus:border-[#111827] focus:outline-none"
 
@@ -486,7 +486,7 @@ export default function TripDetailClient({ id }: { id: string }) {
 
               >
 
-                שלח ביקורת
+                שליחת ביקורת
 
               </button>
 

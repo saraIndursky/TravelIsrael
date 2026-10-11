@@ -89,7 +89,7 @@ export function buildFavoriteEntityRemovedNotification(input: {
   link_path: string;
 } {
   const label = SOCIAL_ENTITY_LABELS[input.entityType];
-  let body = `${label} ששמרת במועדפים הוסר מהאתר. תוכל/י לצפות בו כל עוד השמירה פעילה.`;
+  let body = `${label} ששמרת במועדפים הוסר מהאתר. אפשר לצפות בו כל עוד השמירה פעילה.`;
   if (input.removalReason?.trim()) {
     body += ` סיבה: ${input.removalReason.trim()}`;
   }

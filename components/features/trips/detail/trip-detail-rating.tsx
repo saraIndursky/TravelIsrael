@@ -16,7 +16,7 @@ export function TripDetailRating({
   userRating,
   onRate,
   canRate,
-  title = "דרג את הטיול",
+  title = "דירוג הטיול",
 }: TripDetailRatingProps) {
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 md:px-6">

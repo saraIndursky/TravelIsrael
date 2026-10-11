@@ -1,14 +1,15 @@
 import type { Accessibility, Difficulty, Region, Trail } from "@/types";
 import type { TrailFormValues } from "@/lib/validations";
+import { toDisplayImageUrl } from "@/lib/utils/image-url";
 
 const DEFAULT_TRAIL_IMAGE =
-  "https://images.unsplash.com/photo-1551632811-561732b1c4e9?w=800";
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/ISR-2016-Makhtesh_Ramon-View_within_the_crater_01.jpg/1280px-ISR-2016-Makhtesh_Ramon-View_within_the_crater_01.jpg";
 
 type PreviewTrailBase = Pick<Trail, "id" | "created_by" | "status">;
 
 export function buildPreviewTrail(values: TrailFormValues, base?: PreviewTrailBase): Trail {
   const now = new Date().toISOString();
-  const imageUrl = values.image_url?.trim() || DEFAULT_TRAIL_IMAGE;
+  const imageUrl = toDisplayImageUrl(values.image_url?.trim() || DEFAULT_TRAIL_IMAGE);
 
   return {
     id: base?.id ?? "preview",

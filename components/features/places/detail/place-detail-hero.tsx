@@ -46,7 +46,8 @@ export function PlaceDetailHero({
               type="button"
               onClick={onToggleSaved}
               className={heroBtnClass}
-              aria-label="שמור למועדפים"
+              aria-label="שמירה במועדפים"
+              title="שמירה במועדפים"
             >
               <Heart className={`h-5 w-5 ${isSaved ? "fill-current" : ""}`} />
             </button>
@@ -59,6 +60,7 @@ export function PlaceDetailHero({
             onClick={goBack}
             className={heroBtnClass}
             aria-label="חזור אחורה"
+            title="חזרה לעמוד הקודם"
           >
             <ArrowRight className="h-5 w-5" />
           </button>
