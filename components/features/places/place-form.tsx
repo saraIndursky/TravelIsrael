@@ -1,14 +1,21 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Label } from "@/components/ui/label";
 import { REGIONS } from "@/types/enums";
 import type { Accessibility, Place, Region } from "@/types";
 import { toast } from "@/components/ui/use-toast";
-import { createPlace, updatePlace, PLACE_TYPE_OPTIONS } from "@/lib/data/places";
+import { createPlace, updatePlace, getApprovedPlaceTypes } from "@/lib/data/places";
+import {
+  BASE_PLACE_TYPES,
+  MAX_PLACE_TYPE_LENGTH,
+  OTHER_PLACE_TYPE,
+  buildPlaceTypeOptions,
+  resolvePlaceType,
+} from "@/lib/utils/place-types";
 import { placePath } from "@/lib/utils/content-path";
 import { placeFormSchema, type PlaceFormValues } from "@/lib/validations";
 import { CreatePlacePreviewDialog } from "@/components/features/places/create-place-preview-dialog";
@@ -114,6 +121,47 @@ export function PlaceForm({ mode = "create", placeId, initialPlace }: PlaceFormP
 
   const selectedTags = watch("tags") ?? [];
   const imageUrl = watch("image_url") ?? "";
+
+  const [typeOptions, setTypeOptions] = useState<string[]>(() => buildPlaceTypeOptions([]));
+  const [customTypeDraft, setCustomTypeDraft] = useState(() => {
+    const initial = initialPlace?.place_type ?? "";
+    const isKnown = (BASE_PLACE_TYPES as readonly string[]).includes(initial);
+    return initial && initial !== OTHER_PLACE_TYPE && !isKnown ? initial : "";
+  });
+  const typeValue = watch("place_type") ?? "";
+  // A type that is not in the list (e.g. a new one waiting for approval) shows as "אחר" + text.
+  const typeChoice = !typeValue
+    ? ""
+    : typeOptions.includes(typeValue)
+      ? typeValue
+      : OTHER_PLACE_TYPE;
+
+  useEffect(() => {
+    let cancelled = false;
+    getApprovedPlaceTypes()
+      .then((types) => {
+        if (!cancelled) setTypeOptions(buildPlaceTypeOptions(types));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function handleTypeChoice(choice: string) {
+    const next =
+      choice === OTHER_PLACE_TYPE
+        ? resolvePlaceType(customTypeDraft, typeOptions) || OTHER_PLACE_TYPE
+        : choice;
+    setValue("place_type", next, { shouldValidate: true });
+  }
+
+  function handleCustomType(text: string) {
+    setCustomTypeDraft(text);
+    setValue("place_type", resolvePlaceType(text, typeOptions) || OTHER_PLACE_TYPE, {
+      shouldValidate: true,
+    });
+  }
 
   async function onSubmit(values: PlaceFormValues) {
     setSubmitting(true);
@@ -232,12 +280,33 @@ export function PlaceForm({ mode = "create", placeId, initialPlace }: PlaceFormP
           </div>
           <div>
             <Label>סוג מקום</Label>
-            <select className={inputClass} {...register("place_type")}>
+            <select
+              className={inputClass}
+              value={typeChoice}
+              onChange={(e) => handleTypeChoice(e.target.value)}
+            >
               <option value="">בחר סוג</option>
-              {PLACE_TYPE_OPTIONS.map((t) => (
+              {typeOptions.map((t) => (
                 <option key={t} value={t}>{t}</option>
               ))}
+              <option value={OTHER_PLACE_TYPE}>{OTHER_PLACE_TYPE}</option>
             </select>
+            {typeChoice === OTHER_PLACE_TYPE && (
+              <div className="mt-3">
+                <Label>סוג חדש (לא חובה)</Label>
+                <input
+                  type="text"
+                  className={inputClass}
+                  value={customTypeDraft}
+                  maxLength={MAX_PLACE_TYPE_LENGTH}
+                  onChange={(e) => handleCustomType(e.target.value)}
+                  placeholder="למשל: מעיין"
+                />
+                <p className="mt-1 text-xs text-[#6b7280]">
+                  לא מצאת סוג מתאים? כתבי אותו כאן. אחרי שהמנהל יאשר את המקום, הסוג יתווסף לרשימה לכולם.
+                </p>
+              </div>
+            )}
             <FieldError message={errors.place_type?.message} />
           </div>
         </div>

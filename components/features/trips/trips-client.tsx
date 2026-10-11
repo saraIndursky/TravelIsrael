@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ArrowDown, ArrowUp, Search, SlidersHorizontal, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import type { Difficulty, Region } from "@/types";
 import { TripCard } from "@/components/features/trips/trip-card";
 import {
@@ -14,6 +15,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { InfiniteScrollFooter } from "@/components/ui/custom/infinite-scroll-footer";
 import { usePagedList } from "@/hooks/use-paged-list";
+import { useAuthStore } from "@/hooks/use-stores";
 import { PAGE_SIZE } from "@/lib/data/paged";
 import { getTripsPage, type SortDirection, type TripSort } from "@/lib/data/trips";
 
@@ -75,6 +77,7 @@ export function TripsClient() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { role } = useAuthStore();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const appliedFilters = useMemo(
@@ -155,10 +158,23 @@ export function TripsClient() {
     <div className="min-h-screen bg-[#f9fafb]">
       <div className="border-b border-[#e5e7eb] bg-white">
         <div className="mx-auto max-w-7xl px-4 py-12 md:py-16">
-          <h1 className="mb-3 text-4xl font-light text-[#111827]">מצא את הטיול הבא שלך</h1>
-          <p className="text-sm text-[#6b7280]">
-            סינון טיולים לפי אזור, רמת קושי, נגישות, משך זמן ועוד
-          </p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="mb-3 text-4xl font-light text-[#111827]">מצא את הטיול הבא שלך</h1>
+              <p className="text-sm text-[#6b7280]">
+                סינון טיולים לפי אזור, רמת קושי, נגישות, משך זמן ועוד
+              </p>
+            </div>
+            {role !== "guest" && (
+              <Link
+                href="/trips/create"
+                className="inline-flex items-center gap-2 rounded-lg bg-[#111827] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#1f2937]"
+              >
+                <Plus className="h-4 w-4" />
+                הוסף טיול
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 

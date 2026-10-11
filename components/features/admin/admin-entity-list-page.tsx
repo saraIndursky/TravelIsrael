@@ -39,6 +39,8 @@ export interface AdminEntityListConfig<T extends { id: string; status: Status }>
   getImageUrl: (item: T) => string;
   getName: (item: T) => string;
   getTypeLabel: (item: T) => string;
+  /** Optional highlight shown next to the type, e.g. a type nobody has used before. */
+  getTypeBadge?: (item: T) => string | null;
   getCreatorId: (item: T) => string;
   getRegion: (item: T) => string;
   getRejectionReason?: (item: T) => string | undefined;
@@ -281,6 +283,14 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
                       </td>
                       <td className="px-4 py-4">
                         <p className="max-w-[12rem] truncate font-medium">{config.getName(item)}</p>
+                        {config.getTypeBadge?.(item) && (
+                          <span
+                            className="mb-1 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800"
+                            title="סוג חדש: אישור הפריט יוסיף אותו לרשימה לכולם"
+                          >
+                            {config.getTypeBadge(item)}
+                          </span>
+                        )}
                         <p className="mt-0.5 text-xs text-muted-foreground">{config.getTypeLabel(item)}</p>
                       </td>
                       <td className="px-4 py-4">
@@ -348,6 +358,11 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
                       <div className="mt-1 flex flex-wrap items-center gap-2">
                         <AdminStatusBadgeInline status={item.status} />
                         <span className="text-xs text-muted-foreground">{config.getTypeLabel(item)}</span>
+                        {config.getTypeBadge?.(item) && (
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                            {config.getTypeBadge(item)}
+                          </span>
+                        )}
                       </div>
                       <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
                         <div>

@@ -74,7 +74,10 @@ export const placeFormSchema = z.object({
   lat: z.coerce.number().min(-90).max(90, "קו רוחב לא תקין"),
   lng: z.coerce.number().min(-180).max(180, "קו אורך לא תקין"),
   region: z.string().min(1, "יש לבחור אזור"),
-  place_type: z.string().min(1, "יש לבחור סוג מקום"),
+  place_type: z
+    .string()
+    .min(1, "יש לבחור סוג מקום")
+    .max(30, "שם סוג המקום ארוך מדי (עד 30 תווים)"),
   accessibility: z.coerce.number().min(1).max(5),
   tags: z.array(z.string()).min(1, "יש לבחור לפחות תגית אחת"),
   avg_duration_minutes: z.coerce.number().min(15, "משך מינימלי 15 דקות"),

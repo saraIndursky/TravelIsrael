@@ -9,6 +9,7 @@ import { getUsers } from "@/lib/data/auth";
 import { notifyContentRemoved, notifyContentStatusChange } from "@/lib/notifications/client";
 import type { Place, User } from "@/types";
 import { toast } from "@/components/ui/use-toast";
+import { isNewPlaceType } from "@/lib/utils/place-types";
 
 export default function AdminPlacesPage() {
   const { role } = useAuthStore();
@@ -28,9 +29,14 @@ export default function AdminPlacesPage() {
     if (role === "admin") load();
   }, [role, load]);
 
-  const config = useMemo(
-    () => placesAdminConfig(Array.from(new Set(places.map((p) => p.place_type))).sort()),
+  const approvedTypes = useMemo(
+    () => Array.from(new Set(places.filter((p) => p.status === "approved").map((p) => p.place_type))),
     [places]
+  );
+
+  const config = useMemo(
+    () => placesAdminConfig(Array.from(new Set(places.map((p) => p.place_type))).sort(), approvedTypes),
+    [places, approvedTypes]
   );
 
   if (role !== "admin") return null;
@@ -42,6 +48,7 @@ export default function AdminPlacesPage() {
       users={users}
       loading={loading}
       onApprove={async (item) => {
+        const isNewType = isNewPlaceType(item.place_type, approvedTypes);
         await updatePlaceStatus(item.id, "approved");
         await notifyContentStatusChange({
           entityType: "place",
@@ -53,7 +60,12 @@ export default function AdminPlacesPage() {
           regionId: item.region_id,
         });
         await load();
-        toast({ title: "המקום אושר" });
+        toast({
+          title: "המקום אושר",
+          description: isNewType
+            ? `סוג המקום החדש "${item.place_type}" נוסף לרשימה ויופיע לכולם`
+            : undefined,
+        });
       }}
       onReject={async (item, reason) => {
         await updatePlaceStatus(item.id, "rejected", reason);

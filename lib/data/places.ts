@@ -43,20 +43,13 @@ export interface CreatePlaceInput {
 
 export type UpdatePlaceInput = CreatePlaceInput;
 
-export const PLACE_TYPE_OPTIONS = [
-  "מוזיאון",
-  "חוף",
-  "אתר מורשת",
-  "גן לאומי",
-  "שוק",
-  "עיר עתיקה",
-  "מערה",
-  "מרכז קניות",
-  "מצודה",
-  "פארק",
-  "אתר דתי",
-  "אחר",
-] as const;
+/** Types used by approved places; together with the base list they make up the type picker. */
+export async function getApprovedPlaceTypes(): Promise<string[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("places").select("place_type").eq("status", "approved");
+  if (error) throw new Error(error.message);
+  return Array.from(new Set((data ?? []).map((row) => row.place_type as string)));
+}
 
 const DEFAULT_PLACE_IMAGE =
   "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800";

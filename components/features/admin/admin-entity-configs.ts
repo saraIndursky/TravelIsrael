@@ -2,6 +2,7 @@ import type { Place, Trail, Trip } from "@/types";
 import type { AdminEntityListConfig } from "@/components/features/admin/admin-entity-list-page";
 import { computePopularity } from "@/lib/utils/admin-popularity";
 import { placePath, trailPath, tripEditPath, tripPath } from "@/lib/utils/content-path";
+import { isNewPlaceType } from "@/lib/utils/place-types";
 
 export const tripsAdminConfig: AdminEntityListConfig<Trip> = {
   title: "ניהול טיולים",
@@ -35,7 +36,10 @@ export const tripsAdminConfig: AdminEntityListConfig<Trip> = {
   showPopularity: true,
 };
 
-export function placesAdminConfig(types: string[]): AdminEntityListConfig<Place> {
+export function placesAdminConfig(
+  types: string[],
+  approvedTypes: string[] = []
+): AdminEntityListConfig<Place> {
   return {
     title: "ניהול מקומות",
     subtitle: "נהל את כל המקומות במערכת",
@@ -53,6 +57,10 @@ export function placesAdminConfig(types: string[]): AdminEntityListConfig<Place>
     getImageUrl: (p) => p.image_url,
     getName: (p) => p.name,
     getTypeLabel: (p) => p.place_type,
+    getTypeBadge: (p) =>
+      p.status !== "approved" && p.status !== "removed" && isNewPlaceType(p.place_type, approvedTypes)
+        ? "סוג חדש"
+        : null,
     getCreatorId: (p) => p.created_by,
     getRegion: (p) => p.region,
     getRejectionReason: (p) => p.rejection_reason,
