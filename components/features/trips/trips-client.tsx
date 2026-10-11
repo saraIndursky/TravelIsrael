@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowDown, ArrowUp, Search, SlidersHorizontal, X } from "lucide-react";
-import type { Difficulty, Region, Trip } from "@/types";
+import type { Difficulty, Region } from "@/types";
 import { TripCard } from "@/components/features/trips/trip-card";
 import {
   TripFilters,
@@ -12,8 +12,10 @@ import {
   type TripFilterValues,
 } from "@/components/features/trips/trip-filters";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LazyList } from "@/components/ui/custom/lazy-list";
-import { getTrips, type SortDirection, type TripSort } from "@/lib/data/trips";
+import { InfiniteScrollFooter } from "@/components/ui/custom/infinite-scroll-footer";
+import { usePagedList } from "@/hooks/use-paged-list";
+import { PAGE_SIZE } from "@/lib/data/paged";
+import { getTripsPage, type SortDirection, type TripSort } from "@/lib/data/trips";
 
 function parseFiltersFromParams(params: URLSearchParams): TripFilterValues {
   return {
@@ -73,8 +75,6 @@ export function TripsClient() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [trips, setTrips] = useState<Trip[]>([]);
-  const [loading, setLoading] = useState(true);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const appliedFilters = useMemo(
@@ -91,38 +91,43 @@ export function TripsClient() {
     setDraftFilters(appliedFilters);
   }, [appliedFilters]);
 
-  const loadTrips = useCallback(async () => {
-    setLoading(true);
-    const f = appliedFilters;
-    const result = await getTrips(
-      {
-        region: (f.region as Region) || undefined,
-        difficulty: (f.difficulty as Difficulty) || undefined,
-        accessibility: f.accessibility ? Number(f.accessibility) : undefined,
-        tripType: f.tripType || undefined,
-        stationCount: f.stationCount > 0 ? f.stationCount : undefined,
-        maxDuration:
-          f.maxDurationHours < FILTER_LIMITS.maxDurationHours
-            ? f.maxDurationHours * 60
-            : undefined,
-        maxDistance:
-          f.maxDistanceKm < FILTER_LIMITS.maxDistanceKm ? f.maxDistanceKm : undefined,
-        maxPrice: f.maxPrice < FILTER_LIMITS.maxPrice ? f.maxPrice : undefined,
-        search: f.search || undefined,
-        status: "approved",
-      },
-      sortBy,
-      sortDirection,
-      0,
-      100
-    );
-    setTrips(result.trips);
-    setLoading(false);
-  }, [appliedFilters, sortBy, sortDirection]);
+  const fetchTripsPage = useCallback(
+    (page: number) => {
+      const f = appliedFilters;
+      return getTripsPage(
+        {
+          region: (f.region as Region) || undefined,
+          difficulty: (f.difficulty as Difficulty) || undefined,
+          accessibility: f.accessibility ? Number(f.accessibility) : undefined,
+          tripType: f.tripType || undefined,
+          stationCount: f.stationCount > 0 ? f.stationCount : undefined,
+          maxDuration:
+            f.maxDurationHours < FILTER_LIMITS.maxDurationHours
+              ? f.maxDurationHours * 60
+              : undefined,
+          maxDistance:
+            f.maxDistanceKm < FILTER_LIMITS.maxDistanceKm ? f.maxDistanceKm : undefined,
+          maxPrice: f.maxPrice < FILTER_LIMITS.maxPrice ? f.maxPrice : undefined,
+          search: f.search || undefined,
+        },
+        sortBy,
+        sortDirection,
+        page,
+        PAGE_SIZE
+      );
+    },
+    [appliedFilters, sortBy, sortDirection]
+  );
 
-  useEffect(() => {
-    loadTrips();
-  }, [loadTrips]);
+  const {
+    items: trips,
+    total,
+    hasMore,
+    loading,
+    loadingMore,
+    error,
+    loadMore,
+  } = usePagedList(fetchTripsPage, searchParams.toString());
 
   const pushState = (
     filters: TripFilterValues,
@@ -214,7 +219,7 @@ export function TripsClient() {
               סינון
             </button>
 
-            <div className="mb-6 text-sm text-[#6b7280]">נמצאו {trips.length} טיולים</div>
+            <div className="mb-6 text-sm text-[#6b7280]">נמצאו {total} טיולים</div>
 
             {loading ? (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3">
@@ -223,12 +228,20 @@ export function TripsClient() {
                 ))}
               </div>
             ) : trips.length > 0 ? (
-              <LazyList
-                items={trips}
-                pageSize={12}
-                className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3"
-                renderItem={(trip) => <TripCard key={trip.id} trip={trip} showFavorite />}
-              />
+              <>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3">
+                  {trips.map((trip) => (
+                    <TripCard key={trip.id} trip={trip} showFavorite />
+                  ))}
+                </div>
+                <InfiniteScrollFooter
+                  hasMore={hasMore}
+                  loadingMore={loadingMore}
+                  error={error}
+                  onLoadMore={loadMore}
+                  endMessage="הוצגו כל הטיולים"
+                />
+              </>
             ) : (
               <div className="py-16 text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#f3f4f6]">

@@ -9,6 +9,7 @@ import { canViewContent, isVisibleInDiscoveryList } from "./content-access";
 import { getCurrentRole, getCurrentUser } from "./auth";
 import { isFavoriteEntity } from "./favorites";
 import { toStoredImageUrl } from "@/lib/utils/image-url";
+import { buildSearchFilter, pageRange, toPage, type Page } from "./paged";
 
 export interface TrailFilters {
   region?: Region;
@@ -97,6 +98,33 @@ export async function getTrails(filters?: TrailFilters): Promise<Trail[]> {
   return applyTrailFilters((data ?? []).map(mapTrail), filters).filter((trail) =>
     isVisibleInDiscoveryList(trail.status, Boolean(filters?.createdBy))
   );
+}
+
+/** One page of the public (approved) trails list, filtered and paged in the database. */
+export async function getTrailsPage(
+  filters: TrailFilters,
+  page: number,
+  pageSize: number
+): Promise<Page<Trail>> {
+  const supabase = createClient();
+  const { from, to } = pageRange(page, pageSize);
+  let query = supabase.from("trails").select("*", { count: "exact" }).eq("status", "approved");
+
+  if (filters.region) query = query.eq("region", filters.region);
+  if (filters.difficulty) query = query.eq("difficulty", filters.difficulty);
+  if (filters.trail_type) query = query.eq("trail_type", filters.trail_type);
+  if (filters.accessibility) query = query.gte("accessibility", filters.accessibility);
+  if (filters.tags?.length) query = query.overlaps("tags", filters.tags);
+  const search = buildSearchFilter(filters.search);
+  if (search) query = query.or(search);
+
+  const { data, count, error } = await query
+    .order("name", { ascending: true })
+    .order("id", { ascending: true })
+    .range(from, to);
+  if (error) throw new Error(error.message);
+
+  return toPage((data ?? []).map(mapTrail), count, page, pageSize);
 }
 
 export async function getTrailById(id: string): Promise<Trail | null> {

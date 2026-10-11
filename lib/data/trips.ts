@@ -12,6 +12,7 @@ import { isFavoriteEntity } from "./favorites";
 import { getPlaces } from "./places";
 import { getTrails } from "./trails";
 import { toStoredImageUrl } from "@/lib/utils/image-url";
+import { buildSearchFilter, pageRange, toPage, type Page } from "./paged";
 
 export type TripSort =
   | "createAt"
@@ -78,6 +79,54 @@ async function fetchTripStations(tripId: string): Promise<TripStation[]> {
     .order("order_index", { ascending: true });
   if (error) throw new Error(error.message);
   return (data ?? []).map(mapTripStation);
+}
+
+const TRIP_SORT_COLUMNS: Record<TripSort, string> = {
+  createAt: "created_at",
+  name: "name",
+  price: "estimated_price",
+  duration: "total_duration_minutes",
+  lengthKM: "total_distance_km",
+  numberOfViews: "views_count",
+};
+
+/**
+ * One page of the public (approved) trips list. Filtering, sorting and paging all happen in
+ * the database, so only the requested page is transferred.
+ */
+export async function getTripsPage(
+  filters: TripFilters,
+  sort: TripSort,
+  direction: SortDirection,
+  page: number,
+  pageSize: number
+): Promise<Page<Trip>> {
+  const supabase = createClient();
+  const { from, to } = pageRange(page, pageSize);
+  let query = supabase.from("trips").select("*", { count: "exact" }).eq("status", "approved");
+
+  if (filters.region) query = query.eq("region", filters.region);
+  if (filters.difficulty) query = query.eq("difficulty", filters.difficulty);
+  if (filters.accessibility) query = query.gte("accessibility", filters.accessibility);
+  if (filters.stationCount) query = query.gte("station_count", filters.stationCount);
+  if (filters.maxDistance) query = query.lte("total_distance_km", filters.maxDistance);
+  if (filters.maxPrice !== undefined && filters.maxPrice > 0) {
+    query = query.lte("estimated_price", filters.maxPrice);
+  }
+  if (filters.minDuration) query = query.gte("total_duration_minutes", filters.minDuration);
+  if (filters.maxDuration) query = query.lte("total_duration_minutes", filters.maxDuration);
+  if (filters.tripType) query = query.contains("tags", [filters.tripType]);
+  if (filters.tags?.length) query = query.overlaps("tags", filters.tags);
+  const search = buildSearchFilter(filters.search);
+  if (search) query = query.or(search);
+
+  const { data, count, error } = await query
+    .order(TRIP_SORT_COLUMNS[sort] ?? "created_at", { ascending: direction === "asc" })
+    .order("id", { ascending: true })
+    .range(from, to);
+  if (error) throw new Error(error.message);
+
+  return toPage((data ?? []).map(mapTrip), count, page, pageSize);
 }
 
 export async function getTrips(

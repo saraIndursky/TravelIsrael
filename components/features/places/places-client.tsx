@@ -8,8 +8,10 @@ import type { Region } from "@/types";
 import { REGIONS } from "@/types/enums";
 import { PlaceCard } from "@/components/features/places/place-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LazyList } from "@/components/ui/custom/lazy-list";
-import { getPlaces } from "@/lib/data/places";
+import { InfiniteScrollFooter } from "@/components/ui/custom/infinite-scroll-footer";
+import { usePagedList } from "@/hooks/use-paged-list";
+import { PAGE_SIZE } from "@/lib/data/paged";
+import { getPlacesPage } from "@/lib/data/places";
 import { useAuthStore } from "@/hooks/use-stores";
 
 const inputClass =
@@ -20,8 +22,6 @@ export function PlacesClient() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { role } = useAuthStore();
-  const [places, setPlaces] = useState<Awaited<ReturnType<typeof getPlaces>>>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [region, setRegion] = useState(searchParams.get("region") ?? "");
 
@@ -33,20 +33,23 @@ export function PlacesClient() {
     setRegion(appliedRegion);
   }, [appliedSearch, appliedRegion]);
 
-  const loadPlaces = useCallback(async () => {
-    setLoading(true);
-    const result = await getPlaces({
-      status: "approved",
-      search: appliedSearch || undefined,
-      region: (appliedRegion as Region) || undefined,
-    });
-    setPlaces(result);
-    setLoading(false);
-  }, [appliedSearch, appliedRegion]);
+  const fetchPlacesPage = useCallback(
+    (page: number) =>
+      getPlacesPage(
+        {
+          search: appliedSearch || undefined,
+          region: (appliedRegion as Region) || undefined,
+        },
+        page,
+        PAGE_SIZE
+      ),
+    [appliedSearch, appliedRegion]
+  );
 
-  useEffect(() => {
-    loadPlaces();
-  }, [loadPlaces]);
+  const { items: places, total, hasMore, loading, loadingMore, error, loadMore } = usePagedList(
+    fetchPlacesPage,
+    `${appliedSearch}|${appliedRegion}`
+  );
 
   function applyFilters() {
     const params = new URLSearchParams();
@@ -113,14 +116,24 @@ export function PlacesClient() {
               <Skeleton key={i} className="h-96 w-full" />
             ))}
           </div>
+        ) : places.length === 0 ? (
+          <p className="py-12 text-center text-muted-foreground">לא נמצאו מקומות</p>
         ) : (
-          <LazyList
-            items={places}
-            pageSize={12}
-            className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3"
-            emptyMessage="לא נמצאו מקומות"
-            renderItem={(place) => <PlaceCard key={place.id} place={place} />}
-          />
+          <>
+            <div className="mb-4 text-sm text-[#6b7280]">נמצאו {total} מקומות</div>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3">
+              {places.map((place) => (
+                <PlaceCard key={place.id} place={place} />
+              ))}
+            </div>
+            <InfiniteScrollFooter
+              hasMore={hasMore}
+              loadingMore={loadingMore}
+              error={error}
+              onLoadMore={loadMore}
+              endMessage="הוצגו כל המקומות"
+            />
+          </>
         )}
       </div>
     </div>

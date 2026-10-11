@@ -8,8 +8,10 @@ import type { Difficulty, Region } from "@/types";
 import { DIFFICULTY_LABELS, REGIONS } from "@/types/enums";
 import { TrailCard } from "@/components/features/trails/trail-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LazyList } from "@/components/ui/custom/lazy-list";
-import { getTrails } from "@/lib/data/trails";
+import { InfiniteScrollFooter } from "@/components/ui/custom/infinite-scroll-footer";
+import { usePagedList } from "@/hooks/use-paged-list";
+import { PAGE_SIZE } from "@/lib/data/paged";
+import { getTrailsPage } from "@/lib/data/trails";
 import { useAuthStore } from "@/hooks/use-stores";
 
 const inputClass =
@@ -20,8 +22,6 @@ export function TrailsClient() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { role } = useAuthStore();
-  const [trails, setTrails] = useState<Awaited<ReturnType<typeof getTrails>>>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [region, setRegion] = useState(searchParams.get("region") ?? "");
   const [difficulty, setDifficulty] = useState(searchParams.get("difficulty") ?? "");
@@ -36,21 +36,24 @@ export function TrailsClient() {
     setDifficulty(appliedDifficulty);
   }, [appliedSearch, appliedRegion, appliedDifficulty]);
 
-  const loadTrails = useCallback(async () => {
-    setLoading(true);
-    const result = await getTrails({
-      status: "approved",
-      search: appliedSearch || undefined,
-      region: (appliedRegion as Region) || undefined,
-      difficulty: (appliedDifficulty as Difficulty) || undefined,
-    });
-    setTrails(result);
-    setLoading(false);
-  }, [appliedSearch, appliedRegion, appliedDifficulty]);
+  const fetchTrailsPage = useCallback(
+    (page: number) =>
+      getTrailsPage(
+        {
+          search: appliedSearch || undefined,
+          region: (appliedRegion as Region) || undefined,
+          difficulty: (appliedDifficulty as Difficulty) || undefined,
+        },
+        page,
+        PAGE_SIZE
+      ),
+    [appliedSearch, appliedRegion, appliedDifficulty]
+  );
 
-  useEffect(() => {
-    loadTrails();
-  }, [loadTrails]);
+  const { items: trails, total, hasMore, loading, loadingMore, error, loadMore } = usePagedList(
+    fetchTrailsPage,
+    `${appliedSearch}|${appliedRegion}|${appliedDifficulty}`
+  );
 
   function applyFilters() {
     const params = new URLSearchParams();
@@ -128,14 +131,24 @@ export function TrailsClient() {
               <Skeleton key={i} className="h-96 w-full" />
             ))}
           </div>
+        ) : trails.length === 0 ? (
+          <p className="py-12 text-center text-muted-foreground">לא נמצאו מסלולים</p>
         ) : (
-          <LazyList
-            items={trails}
-            pageSize={12}
-            className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3"
-            emptyMessage="לא נמצאו מסלולים"
-            renderItem={(trail) => <TrailCard key={trail.id} trail={trail} />}
-          />
+          <>
+            <div className="mb-4 text-sm text-[#6b7280]">נמצאו {total} מסלולים</div>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3">
+              {trails.map((trail) => (
+                <TrailCard key={trail.id} trail={trail} />
+              ))}
+            </div>
+            <InfiniteScrollFooter
+              hasMore={hasMore}
+              loadingMore={loadingMore}
+              error={error}
+              onLoadMore={loadMore}
+              endMessage="הוצגו כל המסלולים"
+            />
+          </>
         )}
       </div>
     </div>

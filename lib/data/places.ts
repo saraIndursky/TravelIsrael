@@ -9,6 +9,7 @@ import { canViewContent, isVisibleInDiscoveryList } from "./content-access";
 import { getCurrentRole, getCurrentUser } from "./auth";
 import { isFavoriteEntity } from "./favorites";
 import { toStoredImageUrl } from "@/lib/utils/image-url";
+import { buildSearchFilter, pageRange, toPage, type Page } from "./paged";
 
 export interface PlaceFilters {
   region?: Region;
@@ -99,6 +100,32 @@ export async function getPlaces(filters?: PlaceFilters): Promise<Place[]> {
   return applyPlaceFilters((data ?? []).map(mapPlace), filters).filter((place) =>
     isVisibleInDiscoveryList(place.status, Boolean(filters?.createdBy))
   );
+}
+
+/** One page of the public (approved) places list, filtered and paged in the database. */
+export async function getPlacesPage(
+  filters: PlaceFilters,
+  page: number,
+  pageSize: number
+): Promise<Page<Place>> {
+  const supabase = createClient();
+  const { from, to } = pageRange(page, pageSize);
+  let query = supabase.from("places").select("*", { count: "exact" }).eq("status", "approved");
+
+  if (filters.region) query = query.eq("region", filters.region);
+  if (filters.place_type) query = query.eq("place_type", filters.place_type);
+  if (filters.accessibility) query = query.gte("accessibility", filters.accessibility);
+  if (filters.tags?.length) query = query.overlaps("tags", filters.tags);
+  const search = buildSearchFilter(filters.search);
+  if (search) query = query.or(search);
+
+  const { data, count, error } = await query
+    .order("name", { ascending: true })
+    .order("id", { ascending: true })
+    .range(from, to);
+  if (error) throw new Error(error.message);
+
+  return toPage((data ?? []).map(mapPlace), count, page, pageSize);
 }
 
 export async function getPlaceById(id: string): Promise<Place | null> {
