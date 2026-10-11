@@ -7,9 +7,12 @@ import type {
 import { runDemoAssistant } from "./demo-assistant";
 import { buildSystemPrompt } from "./system-prompt";
 
-const DEFAULT_MODEL = "gemini-flash-latest";
-// Lighter model tried when the main one is overloaded (503) or rate limited (429).
-const FALLBACK_MODEL = "gemini-flash-lite-latest";
+// Lite answers in 1-2s and is reliable on the free tier; the full Flash can take 20s+ or
+// hang, which exceeds the serverless time limit on Vercel. It stays as the fallback.
+const DEFAULT_MODEL = "gemini-flash-lite-latest";
+const FALLBACK_MODEL = "gemini-flash-latest";
+// Per-call cap so one slow model can't eat the whole route budget (maxDuration = 30).
+const REQUEST_TIMEOUT_MS = 12_000;
 const RETRYABLE_STATUSES = new Set([429, 500, 503]);
 
 type AssistantInput = {
@@ -34,6 +37,7 @@ async function callModel(
   const init: RequestInit = {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: buildSystemPrompt(input.entity) }] },
       contents: [
@@ -58,7 +62,7 @@ async function callModel(
   let response = await fetch(url, init);
   if (RETRYABLE_STATUSES.has(response.status)) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    response = await fetch(url, init);
+    response = await fetch(url, { ...init, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
   }
 
   if (!response.ok) {
