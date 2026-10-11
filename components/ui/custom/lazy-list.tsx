@@ -13,7 +13,7 @@ interface LazyListProps<T> {
 
 export function LazyList<T>({
   items,
-  pageSize = 20,
+  pageSize = 12,
   renderItem,
   className,
   emptyMessage = "לא נמצאו פריטים",

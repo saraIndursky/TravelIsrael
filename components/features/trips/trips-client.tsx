@@ -225,7 +225,7 @@ export function TripsClient() {
             ) : trips.length > 0 ? (
               <LazyList
                 items={trips}
-                pageSize={20}
+                pageSize={12}
                 className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3"
                 renderItem={(trip) => <TripCard key={trip.id} trip={trip} showFavorite />}
               />

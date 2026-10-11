@@ -116,7 +116,7 @@ export function PlacesClient() {
         ) : (
           <LazyList
             items={places}
-            pageSize={20}
+            pageSize={12}
             className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3"
             emptyMessage="לא נמצאו מקומות"
             renderItem={(place) => <PlaceCard key={place.id} place={place} />}

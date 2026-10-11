@@ -131,7 +131,7 @@ export function TrailsClient() {
         ) : (
           <LazyList
             items={trails}
-            pageSize={20}
+            pageSize={12}
             className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3"
             emptyMessage="לא נמצאו מסלולים"
             renderItem={(trail) => <TrailCard key={trail.id} trail={trail} />}
