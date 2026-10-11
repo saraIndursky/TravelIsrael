@@ -56,7 +56,6 @@ export default function ContactPage() {
         highlight="אנחנו כאן כדי לעזור"
         description="בין אם יש לכם שאלה, הצעה או צורך בעזרה – נשמח לשמוע מכם ולחזור אליכם בהקדם."
         imageUrl={HERO_IMAGE}
-        compact
       />
 
       <div className="mx-auto max-w-5xl px-6 py-20">

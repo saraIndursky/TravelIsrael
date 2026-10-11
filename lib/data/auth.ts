@@ -441,8 +441,27 @@ export async function getUserStatistics(): Promise<UserStatistics> {
   };
 }
 
+/**
+ * Other people's profiles are only available through the public_profiles view (name and avatar):
+ * the profiles table itself holds e-mail addresses and is readable only by its owner and admins.
+ * The e-mail is therefore empty and the role is a placeholder for profiles of other users.
+ */
+type PublicProfileRow = { id: string; name: string; avatar_url: string | null; created_at: string };
+
+function mapPublicProfile(row: PublicProfileRow): User {
+  return {
+    id: row.id,
+    name: row.name,
+    email: "",
+    role: "user",
+    avatar_url: row.avatar_url ?? undefined,
+    created_at: row.created_at,
+  };
+}
+
 export async function getProfileById(userId: string): Promise<User | null> {
-  return fetchProfile(userId);
+  const [profile] = await getProfilesByIds([userId]);
+  return profile ?? null;
 }
 
 export async function getProfilesByIds(ids: string[]): Promise<User[]> {
@@ -450,7 +469,10 @@ export async function getProfilesByIds(ids: string[]): Promise<User[]> {
   if (uniqueIds.length === 0) return [];
 
   const supabase = createClient();
-  const { data, error } = await supabase.from("profiles").select("*").in("id", uniqueIds);
+  const { data, error } = await supabase
+    .from("public_profiles")
+    .select("id, name, avatar_url, created_at")
+    .in("id", uniqueIds);
   if (error) throw new Error(error.message);
-  return (data ?? []).map(mapProfile);
+  return ((data ?? []) as PublicProfileRow[]).map(mapPublicProfile);
 }

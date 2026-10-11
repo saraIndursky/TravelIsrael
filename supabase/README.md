@@ -28,6 +28,7 @@
 | `schema/25_region_requests.sql` | הצעת אזור חדש על ידי משתמש (ממתין עד אישור מנהל או אישור התוכן) — public + demo |
 | `schema/26_dedupe_regions.sql` | איחוד אזורים כפולים ("מרכז" ו"צפון" בתוך עצמם) — public + demo |
 | `schema/27_contact_messages.sql` | פניות מטופס יצירת הקשר (כולם שולחים, רק מנהל קורא) — public + demo |
+| `schema/28_profile_privacy.sql` | פרטיות פרופילים: מייל ותפקיד נראים רק לבעלים ולמנהלים; שם ותמונה דרך התצוגה public_profiles; app_config סגור — public + demo |
 
 ## הרצת SQL על הפרויקט החי
 

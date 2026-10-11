@@ -9,7 +9,7 @@ export interface HomeStats {
 }
 
 async function countRows(
-  table: "places" | "trips" | "profiles",
+  table: "places" | "trips" | "public_profiles",
   filter?: { column: string; value: string }
 ): Promise<number> {
   const supabase = createClient();
@@ -28,7 +28,8 @@ export async function getHomeStatsServer(): Promise<HomeStats> {
   const [placesCount, tripsCount, usersCount] = await Promise.all([
     countRows("places", { column: "status", value: "approved" }),
     countRows("trips", { column: "status", value: "approved" }),
-    countRows("profiles"),
+    // public_profiles has no e-mail or role, so visitors can be counted without exposing profiles
+    countRows("public_profiles"),
   ]);
 
   return { placesCount, tripsCount, usersCount };

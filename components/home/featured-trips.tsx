@@ -21,9 +21,15 @@ export function HomeFeaturedTrips({ trips }: HomeFeaturedTripsProps) {
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {trips.slice(0, 3).map((trip) => (
-            <TripCard key={trip.id} trip={trip} showFavorite />
-          ))}
+          {trips.slice(0, 3).map((trip, index, shown) => {
+            // With two columns, a lone last card would fill only half the row: let it span both.
+            const spansRow = index === shown.length - 1 && shown.length % 2 === 1;
+            return (
+              <div key={trip.id} className={spansRow ? "sm:col-span-2 lg:col-span-1" : undefined}>
+                <TripCard trip={trip} showFavorite wide={spansRow} />
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

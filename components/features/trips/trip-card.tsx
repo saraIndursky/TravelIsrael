@@ -10,6 +10,7 @@ import { formatTripCardDuration, getAccessibilityLabel, getReviewCount } from "@
 import { getDifficultyColor } from "@/lib/utils/trip-display";
 import { tripPath } from "@/lib/utils/content-path";
 import { RatingStars } from "@/components/ui/custom/rating-stars";
+import { cn } from "@/lib/utils";
 
 interface TripCardProps {
   trip: Trip;
@@ -17,6 +18,8 @@ interface TripCardProps {
   isFavorite?: boolean;
   onFavoriteToggle?: () => void | Promise<void>;
   favoriteLoading?: boolean;
+  /** Two-column layout (image beside the text) for when the card spans a full row. */
+  wide?: boolean;
 }
 
 export function TripCard({
@@ -25,14 +28,25 @@ export function TripCard({
   isFavorite = false,
   onFavoriteToggle,
   favoriteLoading = false,
+  wide = false,
 }: TripCardProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const reviewCount = getReviewCount(trip);
 
   return (
     <>
-      <div className="group flex h-full flex-col overflow-hidden rounded border border-[#e5e7eb] bg-white transition-all duration-300 hover:border-[#d1d5db]">
-        <div className="relative h-[300px] w-full overflow-hidden bg-[#f3f4f6]">
+      <div
+        className={cn(
+          "group flex h-full flex-col overflow-hidden rounded border border-[#e5e7eb] bg-white transition-all duration-300 hover:border-[#d1d5db]",
+          wide && "sm:flex-row lg:flex-col"
+        )}
+      >
+        <div
+          className={cn(
+            "relative h-[300px] w-full overflow-hidden bg-[#f3f4f6]",
+            wide && "sm:h-auto sm:min-h-[300px] sm:w-1/2 lg:h-[300px] lg:w-full"
+          )}
+        >
           <div
             role="button"
             tabIndex={0}
@@ -51,7 +65,7 @@ export function TripCard({
               alt={trip.name}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-105"
-              sizes="(max-width:768px) 100vw, 33vw"
+              sizes={wide ? "(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" : "(max-width:768px) 100vw, 33vw"}
             />
             <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/30">
               <Camera className="h-8 w-8 text-white opacity-0 transition-opacity group-hover:opacity-100" />
@@ -75,7 +89,7 @@ export function TripCard({
           )}
         </div>
 
-        <div className="flex flex-grow flex-col p-5">
+        <div className={cn("flex flex-grow flex-col p-5", wide && "sm:w-1/2 lg:w-full")}>
           <h3 className="text-lg font-medium text-[#111827] transition-colors group-hover:text-[#4b5563]">
             {trip.name}
           </h3>

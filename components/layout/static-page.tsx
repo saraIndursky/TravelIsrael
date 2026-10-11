@@ -12,7 +12,6 @@ interface PageHeroProps {
   highlight: string;
   description: string;
   imageUrl: string;
-  compact?: boolean;
 }
 
 export function PageHero({
@@ -22,10 +21,10 @@ export function PageHero({
   highlight,
   description,
   imageUrl,
-  compact = false,
 }: PageHeroProps) {
+  // One fixed height for every page hero, so About and Contact look the same.
   return (
-    <div className={`relative overflow-hidden ${compact ? "h-[46vh] md:h-[52vh]" : "h-[60vh] md:h-[70vh]"}`}>
+    <div className="relative h-[480px] overflow-hidden md:h-[560px]">
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url('${wikimediaBackground(imageUrl)}')` }}
