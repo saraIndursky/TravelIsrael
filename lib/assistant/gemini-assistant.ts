@@ -5,13 +5,23 @@ import type {
   AssistantResponse,
 } from "@/types/assistant";
 import { runDemoAssistant } from "./demo-assistant";
-import { SYSTEM_PROMPT } from "./openai-assistant";
+import { buildSystemPrompt } from "./system-prompt";
 
 const DEFAULT_MODEL = "gemini-flash-latest";
 
 /** The chat panel renders plain text, so drop the markdown Gemini likes to add. */
 function stripMarkdown(text: string): string {
   return text.replace(/\*\*(.+?)\*\*/g, "$1").replace(/^\s*\*\s+/gm, "• ");
+}
+
+const RETRYABLE_STATUSES = new Set([429, 500, 503]);
+
+/** The free tier often answers 429/503 for a moment; one short retry hides most of it. */
+async function fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
+  const first = await fetch(url, init);
+  if (!RETRYABLE_STATUSES.has(first.status)) return first;
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  return fetch(url, init);
 }
 
 export async function runGeminiAssistant(input: {
@@ -28,7 +38,7 @@ export async function runGeminiAssistant(input: {
   const model = process.env.GEMINI_MODEL?.trim() || DEFAULT_MODEL;
 
   try {
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
       {
         method: "POST",
@@ -37,7 +47,7 @@ export async function runGeminiAssistant(input: {
           "x-goog-api-key": apiKey,
         },
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          systemInstruction: { parts: [{ text: buildSystemPrompt(input.entity) }] },
           contents: [
             {
               role: "user",

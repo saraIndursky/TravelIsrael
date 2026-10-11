@@ -5,10 +5,7 @@ import type {
   AssistantResponse,
 } from "@/types/assistant";
 import { runDemoAssistant } from "./demo-assistant";
-
-export const SYSTEM_PROMPT = `אתה עוזר TravelIsrael בעברית. עוזר רק ביצירה והשלמת מקומות, מסלולים וטיולים.
-אסור לענות על נושאים מחוץ לדומיין.
-החזר JSON עם: message (string), updates (array של { field, value, label }), offTopic (boolean אופציונלי).`;
+import { buildSystemPrompt } from "./system-prompt";
 
 export async function runOpenAIAssistant(input: {
   entity: AssistantEntity;
@@ -33,7 +30,7 @@ export async function runOpenAIAssistant(input: {
         temperature: 0.4,
         response_format: { type: "json_object" },
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: buildSystemPrompt(input.entity) },
           {
             role: "user",
             content: JSON.stringify({
