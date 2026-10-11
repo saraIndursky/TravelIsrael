@@ -62,6 +62,8 @@ export async function runGeminiAssistant(input: {
     );
 
     if (!response.ok) {
+      const detail = (await response.text().catch(() => "")).slice(0, 300);
+      console.error(`[assistant] Gemini ${model} failed: HTTP ${response.status} ${detail}`);
       return runDemoAssistant(input);
     }
 
@@ -70,6 +72,7 @@ export async function runGeminiAssistant(input: {
     };
     const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!content) {
+      console.error(`[assistant] Gemini ${model} returned no text`);
       return runDemoAssistant(input);
     }
 
@@ -78,7 +81,8 @@ export async function runGeminiAssistant(input: {
       return runDemoAssistant(input);
     }
     return { ...parsed, message: stripMarkdown(parsed.message), provider: "gemini" };
-  } catch {
+  } catch (error) {
+    console.error("[assistant] Gemini call threw:", error);
     return runDemoAssistant(input);
   }
 }

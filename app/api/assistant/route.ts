@@ -63,6 +63,7 @@ export async function POST(request: Request) {
     } else if (mode === "openai" && process.env.OPENAI_API_KEY) {
       result = await runOpenAIAssistant(input);
     } else {
+      if (mode === "gemini") console.warn("[assistant] ASSISTANT_MODE=gemini but GEMINI_API_KEY is missing; using demo");
       result = runDemoAssistant(input);
     }
 
