@@ -113,6 +113,7 @@ export function AdminReportsListPage({ reports, loading, onResolve, onReject }: 
               />
             </div>
             <select
+              aria-label="סוג תוכן"
               value={filterEntity}
               onChange={(e) => setFilterEntity(e.target.value as EntityType | "")}
               className="ti-select w-full"

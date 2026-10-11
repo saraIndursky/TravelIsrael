@@ -198,18 +198,18 @@ export function PlaceForm({ mode = "create", placeId, initialPlace }: PlaceFormP
           <div className="space-y-6 lg:col-span-2">
       <Section title="פרטים בסיסיים">
         <div>
-          <Label>שם המקום</Label>
-          <input className={inputClass} {...register("name")} />
+          <Label htmlFor="place-name">שם המקום</Label>
+          <input className={inputClass} id="place-name" {...register("name")} />
           <FieldError message={errors.name?.message} />
         </div>
         <div>
-          <Label>תיאור קצר</Label>
-          <textarea className={inputClass} rows={2} {...register("short_description")} />
+          <Label htmlFor="place-short-description">תיאור קצר</Label>
+          <textarea className={inputClass} rows={2} id="place-short-description" {...register("short_description")} />
           <FieldError message={errors.short_description?.message} />
         </div>
         <div>
-          <Label>תיאור מלא</Label>
-          <textarea className={inputClass} rows={5} {...register("full_description")} />
+          <Label htmlFor="place-full-description">תיאור מלא</Label>
+          <textarea className={inputClass} rows={5} id="place-full-description" {...register("full_description")} />
           <FieldError message={errors.full_description?.message} />
         </div>
         <CommonTagsField
@@ -221,8 +221,8 @@ export function PlaceForm({ mode = "create", placeId, initialPlace }: PlaceFormP
 
       <Section title="מיקום וסוג">
         <div>
-          <Label>כתובת</Label>
-          <input className={inputClass} {...register("address")} />
+          <Label htmlFor="place-address">כתובת</Label>
+          <input className={inputClass} id="place-address" {...register("address")} />
           <FieldError message={errors.address?.message} />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -246,13 +246,13 @@ export function PlaceForm({ mode = "create", placeId, initialPlace }: PlaceFormP
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <Label>קו רוחב (lat)</Label>
-            <input className={inputClass} type="number" step="any" {...register("lat")} />
+            <Label htmlFor="place-lat">קו רוחב (lat)</Label>
+            <input className={inputClass} type="number" step="any" id="place-lat" {...register("lat")} />
             <FieldError message={errors.lat?.message} />
           </div>
           <div>
-            <Label>קו אורך (lng)</Label>
-            <input className={inputClass} type="number" step="any" {...register("lng")} />
+            <Label htmlFor="place-lng">קו אורך (lng)</Label>
+            <input className={inputClass} type="number" step="any" id="place-lng" {...register("lng")} />
             <FieldError message={errors.lng?.message} />
           </div>
         </div>
@@ -261,18 +261,18 @@ export function PlaceForm({ mode = "create", placeId, initialPlace }: PlaceFormP
       <Section title="מידע למבקרים">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <Label>משך ביקור (דקות)</Label>
-            <input className={inputClass} type="number" min={15} {...register("avg_duration_minutes")} />
+            <Label htmlFor="place-avg-duration-minutes">משך ביקור (דקות)</Label>
+            <input className={inputClass} type="number" min={15} id="place-avg-duration-minutes" {...register("avg_duration_minutes")} />
             <FieldError message={errors.avg_duration_minutes?.message} />
           </div>
           <div>
-            <Label>מחיר משוער (₪)</Label>
-            <input className={inputClass} type="number" min={0} {...register("estimated_price")} />
+            <Label htmlFor="place-estimated-price">מחיר משוער (₪)</Label>
+            <input className={inputClass} type="number" min={0} id="place-estimated-price" {...register("estimated_price")} />
             <FieldError message={errors.estimated_price?.message} />
           </div>
           <div>
-            <Label>נגישות (1–5)</Label>
-            <select className={inputClass} {...register("accessibility")}>
+            <Label htmlFor="place-accessibility">נגישות (1–5)</Label>
+            <select className={inputClass} id="place-accessibility" {...register("accessibility")}>
               {[1, 2, 3, 4, 5].map((n) => (
                 <option key={n} value={n}>
                   {n} — {getAccessibilityLabel(n)}
@@ -284,22 +284,22 @@ export function PlaceForm({ mode = "create", placeId, initialPlace }: PlaceFormP
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <Label>שעת פתיחה</Label>
-            <input className={inputClass} type="time" {...register("opening_time")} />
+            <Label htmlFor="place-opening-time">שעת פתיחה</Label>
+            <input className={inputClass} type="time" id="place-opening-time" {...register("opening_time")} />
           </div>
           <div>
-            <Label>שעת סגירה</Label>
-            <input className={inputClass} type="time" {...register("closing_time")} />
+            <Label htmlFor="place-closing-time">שעת סגירה</Label>
+            <input className={inputClass} type="time" id="place-closing-time" {...register("closing_time")} />
           </div>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <Label>טלפון</Label>
-            <input className={inputClass} type="tel" {...register("phone")} />
+            <Label htmlFor="place-phone">טלפון</Label>
+            <input className={inputClass} type="tel" id="place-phone" {...register("phone")} />
           </div>
           <div>
-            <Label>אתר אינטרנט</Label>
-            <input className={inputClass} type="url" placeholder="https://..." {...register("website")} />
+            <Label htmlFor="place-website">אתר אינטרנט</Label>
+            <input className={inputClass} type="url" placeholder="https://..." id="place-website" {...register("website")} />
             <FieldError message={errors.website?.message} />
           </div>
         </div>

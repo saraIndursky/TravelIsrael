@@ -55,6 +55,8 @@ export function ImageGallery({ images, alt, className }: ImageGalleryProps) {
             {imgs.map((_, i) => (
               <button
                 key={i}
+                type="button"
+                aria-label={`מעבר לתמונה ${i + 1}`}
                 className={cn("h-2 w-2 rounded-full", i === index ? "bg-primary" : "bg-background/60")}
                 onClick={() => setIndex(i)}
               />

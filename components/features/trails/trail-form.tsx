@@ -208,18 +208,18 @@ export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormP
           <div className="space-y-6 lg:col-span-2">
       <Section title="פרטים בסיסיים">
         <div>
-          <Label>שם המסלול</Label>
-          <input className={inputClass} {...register("name")} />
+          <Label htmlFor="trail-name">שם המסלול</Label>
+          <input className={inputClass} id="trail-name" {...register("name")} />
           <FieldError message={errors.name?.message} />
         </div>
         <div>
-          <Label>תיאור קצר</Label>
-          <textarea className={inputClass} rows={2} {...register("short_description")} />
+          <Label htmlFor="trail-short-description">תיאור קצר</Label>
+          <textarea className={inputClass} rows={2} id="trail-short-description" {...register("short_description")} />
           <FieldError message={errors.short_description?.message} />
         </div>
         <div>
-          <Label>תיאור מלא</Label>
-          <textarea className={inputClass} rows={5} {...register("full_description")} />
+          <Label htmlFor="trail-full-description">תיאור מלא</Label>
+          <textarea className={inputClass} rows={5} id="trail-full-description" {...register("full_description")} />
           <FieldError message={errors.full_description?.message} />
         </div>
         <CommonTagsField
@@ -251,18 +251,18 @@ export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormP
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <Label>אורך (ק״מ)</Label>
-            <input className={inputClass} type="number" step="0.1" min="0.1" {...register("length_km")} />
+            <Label htmlFor="trail-length-km">אורך (ק״מ)</Label>
+            <input className={inputClass} type="number" step="0.1" min="0.1" id="trail-length-km" {...register("length_km")} />
             <FieldError message={errors.length_km?.message} />
           </div>
           <div>
-            <Label>משך (דקות)</Label>
-            <input className={inputClass} type="number" min={15} {...register("duration_minutes")} />
+            <Label htmlFor="trail-duration-minutes">משך (דקות)</Label>
+            <input className={inputClass} type="number" min={15} id="trail-duration-minutes" {...register("duration_minutes")} />
             <FieldError message={errors.duration_minutes?.message} />
           </div>
           <div>
-            <Label>קושי</Label>
-            <select className={inputClass} {...register("difficulty")}>
+            <Label htmlFor="trail-difficulty">קושי</Label>
+            <select className={inputClass} id="trail-difficulty" {...register("difficulty")}>
               {(Object.keys(DIFFICULTY_LABELS) as Difficulty[]).map((d) => (
                 <option key={d} value={d}>{DIFFICULTY_LABELS[d]}</option>
               ))}
@@ -272,13 +272,13 @@ export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormP
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <Label>מחיר משוער (₪)</Label>
-            <input className={inputClass} type="number" min={0} {...register("estimated_price")} />
+            <Label htmlFor="trail-estimated-price">מחיר משוער (₪)</Label>
+            <input className={inputClass} type="number" min={0} id="trail-estimated-price" {...register("estimated_price")} />
             <FieldError message={errors.estimated_price?.message} />
           </div>
           <div>
-            <Label>נגישות (1–5)</Label>
-            <select className={inputClass} {...register("accessibility")}>
+            <Label htmlFor="trail-accessibility">נגישות (1–5)</Label>
+            <select className={inputClass} id="trail-accessibility" {...register("accessibility")}>
               {[1, 2, 3, 4, 5].map((n) => (
                 <option key={n} value={n}>
                   {n} — {getAccessibilityLabel(n)}
@@ -289,11 +289,11 @@ export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormP
           </div>
         </div>
         <div>
-          <Label>שעות פעילות</Label>
+          <Label htmlFor="trail-operating-hours">שעות פעילות</Label>
           <input
             className={inputClass}
             placeholder="למשל: 08:00–17:00"
-            {...register("operating_hours")}
+            id="trail-operating-hours" {...register("operating_hours")}
           />
         </div>
       </Section>
@@ -302,23 +302,23 @@ export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormP
         <p className="text-sm text-[#6b7280]">נקודת התחלה וסיום של המסלול</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <Label>התחלה — lat</Label>
-            <input className={inputClass} type="number" step="any" {...register("start_lat")} />
+            <Label htmlFor="trail-start-lat">התחלה — lat</Label>
+            <input className={inputClass} type="number" step="any" id="trail-start-lat" {...register("start_lat")} />
             <FieldError message={errors.start_lat?.message} />
           </div>
           <div>
-            <Label>התחלה — lng</Label>
-            <input className={inputClass} type="number" step="any" {...register("start_lng")} />
+            <Label htmlFor="trail-start-lng">התחלה — lng</Label>
+            <input className={inputClass} type="number" step="any" id="trail-start-lng" {...register("start_lng")} />
             <FieldError message={errors.start_lng?.message} />
           </div>
           <div>
-            <Label>סיום — lat</Label>
-            <input className={inputClass} type="number" step="any" {...register("end_lat")} />
+            <Label htmlFor="trail-end-lat">סיום — lat</Label>
+            <input className={inputClass} type="number" step="any" id="trail-end-lat" {...register("end_lat")} />
             <FieldError message={errors.end_lat?.message} />
           </div>
           <div>
-            <Label>סיום — lng</Label>
-            <input className={inputClass} type="number" step="any" {...register("end_lng")} />
+            <Label htmlFor="trail-end-lng">סיום — lng</Label>
+            <input className={inputClass} type="number" step="any" id="trail-end-lng" {...register("end_lng")} />
             <FieldError message={errors.end_lng?.message} />
           </div>
         </div>

@@ -87,7 +87,7 @@ export function TripFilters({ values, onChange, onApply, onClear, className }: T
             <MapPin className="ml-1 inline h-4 w-4 text-gray-600" />
             אזור
           </label>
-          <select value={values.region} onChange={(e) => set("region", e.target.value)} className={selectClass}>
+          <select aria-label="אזור" value={values.region} onChange={(e) => set("region", e.target.value)} className={selectClass}>
             <option value="">כל האזורים</option>
             {regionNames.map((r) => (
               <option key={r} value={r}>{r}</option>
@@ -100,7 +100,7 @@ export function TripFilters({ values, onChange, onApply, onClear, className }: T
             <TrendingUp className="ml-1 inline h-4 w-4 text-gray-600" />
             רמת קושי
           </label>
-          <select value={values.difficulty} onChange={(e) => set("difficulty", e.target.value)} className={selectClass}>
+          <select aria-label="רמת קושי" value={values.difficulty} onChange={(e) => set("difficulty", e.target.value)} className={selectClass}>
             <option value="">כל הרמות</option>
             <option value="easy">קל</option>
             <option value="medium">בינוני</option>
@@ -113,7 +113,7 @@ export function TripFilters({ values, onChange, onApply, onClear, className }: T
             <Accessibility className="ml-1 inline h-4 w-4 text-gray-600" />
             נגישות
           </label>
-          <select value={values.accessibility} onChange={(e) => set("accessibility", e.target.value)} className={selectClass}>
+          <select aria-label="נגישות" value={values.accessibility} onChange={(e) => set("accessibility", e.target.value)} className={selectClass}>
             <option value="">הכל</option>
             <option value="2">נגישות בסיסית ומעלה</option>
             <option value="3">נגישות בינונית ומעלה</option>
@@ -124,7 +124,7 @@ export function TripFilters({ values, onChange, onApply, onClear, className }: T
 
         <div>
           <label className="mb-2 block text-sm font-medium text-[#4b5563]">סוג טיול</label>
-          <select value={values.tripType} onChange={(e) => set("tripType", e.target.value)} className={selectClass}>
+          <select aria-label="סוג טיול" value={values.tripType} onChange={(e) => set("tripType", e.target.value)} className={selectClass}>
             <option value="">הכל</option>
             {TRIP_TYPE_OPTIONS.map((type) => (
               <option key={type} value={type}>{type}</option>
@@ -136,6 +136,7 @@ export function TripFilters({ values, onChange, onApply, onClear, className }: T
           <label className="mb-2 block text-sm font-medium text-[#4b5563]">מספר תחנות</label>
           <input
             type="number"
+            aria-label="מספר תחנות מינימלי"
             min={1}
             max={15}
             value={values.stationCount || ""}
@@ -150,6 +151,7 @@ export function TripFilters({ values, onChange, onApply, onClear, className }: T
           </label>
           <input
             type="range"
+            aria-label="משך זמן מקסימלי בשעות"
             min={1}
             max={FILTER_LIMITS.maxDurationHours}
             value={values.maxDurationHours}
@@ -164,6 +166,7 @@ export function TripFilters({ values, onChange, onApply, onClear, className }: T
           </label>
           <input
             type="range"
+            aria-label="אורך מסלול מקסימלי בקילומטרים"
             min={1}
             max={FILTER_LIMITS.maxDistanceKm}
             value={values.maxDistanceKm}
@@ -178,6 +181,7 @@ export function TripFilters({ values, onChange, onApply, onClear, className }: T
           </label>
           <input
             type="range"
+            aria-label="מחיר מקסימלי בשקלים"
             min={1}
             max={FILTER_LIMITS.maxPrice}
             value={values.maxPrice}

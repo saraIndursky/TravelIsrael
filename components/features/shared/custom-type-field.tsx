@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { MAX_TYPE_LENGTH, OTHER_TYPE, type TypeHelpers } from "@/lib/utils/custom-types";
 
@@ -34,6 +34,8 @@ export function CustomTypeField({
   newTypePlaceholder,
   newTypeHint,
 }: CustomTypeFieldProps) {
+  const selectId = useId();
+  const draftId = useId();
   const [options, setOptions] = useState<string[]>(() => helpers.buildOptions([]));
   const [draft, setDraft] = useState(() => {
     const isKnown = helpers.base.includes(value);
@@ -67,8 +69,8 @@ export function CustomTypeField({
 
   return (
     <div>
-      <Label>{label}</Label>
-      <select className={inputClass} value={choice} onChange={(e) => handleChoice(e.target.value)}>
+      <Label htmlFor={selectId}>{label}</Label>
+      <select id={selectId} className={inputClass} value={choice} onChange={(e) => handleChoice(e.target.value)}>
         <option value="">בחר סוג</option>
         {options.map((type) => (
           <option key={type} value={type}>
@@ -79,8 +81,9 @@ export function CustomTypeField({
       </select>
       {choice === OTHER_TYPE && (
         <div className="mt-3">
-          <Label>סוג חדש (לא חובה)</Label>
+          <Label htmlFor={draftId}>סוג חדש (לא חובה)</Label>
           <input
+            id={draftId}
             type="text"
             className={inputClass}
             value={draft}

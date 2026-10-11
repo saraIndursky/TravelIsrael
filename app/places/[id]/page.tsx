@@ -3,6 +3,8 @@ import { getPublicPlaceByIdServer } from "@/lib/data/server/places";
 import { buildEntityMetadata } from "@/lib/seo/metadata";
 import { placePath } from "@/lib/utils/content-path";
 import PlaceDetailClient from "@/components/features/places/place-detail-client";
+import { notFound } from "next/navigation";
+import { contentExistsServer } from "@/lib/data/server/exists";
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const place = await getPublicPlaceByIdServer(params.id);
@@ -18,6 +20,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   );
 }
 
-export default function PlacePage({ params }: { params: { id: string } }) {
+export default async function PlacePage({ params }: { params: { id: string } }) {
+  if (!(await contentExistsServer("places", params.id))) notFound();
   return <PlaceDetailClient id={params.id} />;
 }

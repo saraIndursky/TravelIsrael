@@ -29,6 +29,7 @@ export function GalleryImageCard({
     <div className="group relative overflow-hidden rounded-sm">
       <button
         type="button"
+        aria-label={alt ? `הגדל תמונה: ${alt}` : "הגדל תמונה"}
         className={`relative w-full cursor-pointer ${isSquare ? "aspect-square" : "h-40"}`}
         onClick={onOpen}
       >

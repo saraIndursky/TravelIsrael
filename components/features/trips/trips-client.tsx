@@ -195,6 +195,7 @@ export function TripsClient() {
             <div className="mb-6 flex items-center justify-end gap-3">
               <span className="text-sm text-gray-600">מיין לפי</span>
               <select
+                aria-label="מיון לפי"
                 value={sortBy}
                 onChange={(e) => pushState(appliedFilters, e.target.value as TripSort, sortDirection)}
                 className="rounded-sm border border-gray-300 px-3 py-2 text-sm"

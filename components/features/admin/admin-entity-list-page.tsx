@@ -17,7 +17,7 @@ import { AdminStatusBadgeInline } from "@/components/features/admin/admin-status
 import { POPULARITY_LABELS } from "@/lib/utils/admin-popularity";
 import { adminListShowsE2eContent, isE2eTestContentName } from "@/lib/utils/e2e-content";
 import type { Status, User as AppUser } from "@/types";
-import { REGIONS } from "@/types/enums";
+import { useRegionNames } from "@/hooks/use-region-names";
 import { CenteredPageLoading } from "@/components/layout/page-loading";
 
 type ListTab = "approved" | "pending" | "rejected" | "removed";
@@ -81,6 +81,7 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
   onDelete,
   onRestore,
 }: AdminEntityListPageProps<T>) {
+  const regionNames = useRegionNames();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("");
@@ -215,7 +216,7 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
               />
             </div>
             {config.typeFilter && (
-              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="ti-select w-full">
+              <select aria-label={config.typeFilter.label} value={filterType} onChange={(e) => setFilterType(e.target.value)} className="ti-select w-full">
                 <option value="">{config.typeFilter.allLabel}</option>
                 {config.typeFilter.options.map((opt) => (
                   <option key={opt} value={opt}>
@@ -224,9 +225,9 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
                 ))}
               </select>
             )}
-            <select value={filterRegion} onChange={(e) => setFilterRegion(e.target.value)} className="ti-select w-full">
+            <select aria-label="אזור" value={filterRegion} onChange={(e) => setFilterRegion(e.target.value)} className="ti-select w-full">
               <option value="">כל האזורים</option>
-              {REGIONS.map((region) => (
+              {regionNames.map((region) => (
                 <option key={region} value={region}>
                   {region}
                 </option>

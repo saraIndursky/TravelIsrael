@@ -25,8 +25,8 @@ export function HomeFeaturedTrips({ trips }: HomeFeaturedTripsProps) {
             // With two columns, a lone last card would fill only half the row: let it span both.
             const spansRow = index === shown.length - 1 && shown.length % 2 === 1;
             return (
-              <div key={trip.id} className={spansRow ? "sm:col-span-2 lg:col-span-1" : undefined}>
-                <TripCard trip={trip} showFavorite wide={spansRow} />
+              <div key={trip.id} className={spansRow ? "sm:col-span-2 lg:col-span-1" : "h-full"}>
+                <TripCard trip={trip} showFavorite fullRow={spansRow} />
               </div>
             );
           })}

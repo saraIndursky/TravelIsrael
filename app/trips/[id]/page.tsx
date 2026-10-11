@@ -3,6 +3,8 @@ import { getPublicTripByIdServer } from "@/lib/data/server/trips";
 import { buildEntityMetadata } from "@/lib/seo/metadata";
 import { tripPath } from "@/lib/utils/content-path";
 import TripDetailClient from "@/components/features/trips/trip-detail-client";
+import { notFound } from "next/navigation";
+import { contentExistsServer } from "@/lib/data/server/exists";
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const trip = await getPublicTripByIdServer(params.id);
@@ -18,6 +20,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   );
 }
 
-export default function TripDetailPage({ params }: { params: { id: string } }) {
+export default async function TripDetailPage({ params }: { params: { id: string } }) {
+  if (!(await contentExistsServer("trips", params.id))) notFound();
   return <TripDetailClient id={params.id} />;
 }

@@ -89,6 +89,7 @@ export function StationPicker({
                   />
                 </div>
                 <select
+                  aria-label="אזור"
                   value={region}
                   onChange={(e) => setRegion(e.target.value)}
                   className="rounded-lg border border-[#d1d5db] px-4 py-3 transition-colors focus:border-[#111827] focus:outline-none"
@@ -264,6 +265,7 @@ export function StationPicker({
         <div className="space-y-4">
           <Input placeholder="חיפוש..." value={search} onChange={(e) => setSearch(e.target.value)} />
           <select
+            aria-label="אזור"
             className="h-10 w-full rounded-md border px-3 text-sm"
             value={region}
             onChange={(e) => setRegion(e.target.value)}

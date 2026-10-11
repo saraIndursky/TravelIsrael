@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { getRegions } from "@/lib/data/regions";
 import type { RegionRecord } from "@/types/region";
@@ -29,6 +29,9 @@ interface RegionFieldProps {
  * name a new region and choose the existing region that contains it; an admin reviews it later.
  */
 export function RegionField({ value, onChange, parentId, onParentChange, error }: RegionFieldProps) {
+  const selectId = useId();
+  const nameId = useId();
+  const parentSelectId = useId();
   const [regions, setRegions] = useState<RegionRecord[]>([]);
   const [otherSelected, setOtherSelected] = useState(false);
   const [draft, setDraft] = useState("");
@@ -85,8 +88,8 @@ export function RegionField({ value, onChange, parentId, onParentChange, error }
 
   return (
     <div>
-      <Label>אזור</Label>
-      <select className={inputClass} value={choice} onChange={(e) => handleChoice(e.target.value)}>
+      <Label htmlFor={selectId}>אזור</Label>
+      <select id={selectId} className={inputClass} value={choice} onChange={(e) => handleChoice(e.target.value)}>
         <option value="">בחר אזור</option>
         {options.map((option) =>
           option.selectable && option.code ? (
@@ -105,8 +108,9 @@ export function RegionField({ value, onChange, parentId, onParentChange, error }
       {otherSelected && (
         <div className="mt-3 space-y-3 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] p-3">
           <div>
-            <Label>שם האזור החדש</Label>
+            <Label htmlFor={nameId}>שם האזור החדש</Label>
             <input
+              id={nameId}
               type="text"
               className={inputClass}
               value={draft}
@@ -116,8 +120,9 @@ export function RegionField({ value, onChange, parentId, onParentChange, error }
             />
           </div>
           <div>
-            <Label>האזור שמכיל אותו</Label>
+            <Label htmlFor={parentSelectId}>האזור שמכיל אותו</Label>
             <select
+              id={parentSelectId}
               className={inputClass}
               value={parentId}
               onChange={(e) => onParentChange(e.target.value)}

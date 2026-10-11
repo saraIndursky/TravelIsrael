@@ -71,6 +71,7 @@ export function AdminUsersListPage({ users, loading, onRoleChange }: AdminUsersL
               />
             </div>
             <select
+              aria-label="תפקיד"
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value as UserRole | "")}
               className="ti-select w-full"

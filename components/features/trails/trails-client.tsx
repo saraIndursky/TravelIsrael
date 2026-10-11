@@ -102,13 +102,14 @@ export function TrailsClient() {
               onKeyDown={(e) => e.key === "Enter" && applyFilters()}
             />
           </div>
-          <select className={inputClass} value={region} onChange={(e) => setRegion(e.target.value)}>
+          <select aria-label="אזור" className={inputClass} value={region} onChange={(e) => setRegion(e.target.value)}>
             <option value="">כל האזורים</option>
             {regionNames.map((r) => (
               <option key={r} value={r}>{r}</option>
             ))}
           </select>
           <select
+            aria-label="רמת קושי"
             className={inputClass}
             value={difficulty}
             onChange={(e) => setDifficulty(e.target.value)}

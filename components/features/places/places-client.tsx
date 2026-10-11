@@ -96,7 +96,7 @@ export function PlacesClient() {
               onKeyDown={(e) => e.key === "Enter" && applyFilters()}
             />
           </div>
-          <select className={inputClass} value={region} onChange={(e) => setRegion(e.target.value)}>
+          <select aria-label="אזור" className={inputClass} value={region} onChange={(e) => setRegion(e.target.value)}>
             <option value="">כל האזורים</option>
             {regionNames.map((r) => (
               <option key={r} value={r}>{r}</option>

@@ -91,6 +91,7 @@ export function AdminModerationListPage({
               className="ti-input md:col-span-1"
             />
             <select
+              aria-label="סוג פריט"
               value={filterKind}
               onChange={(e) => setFilterKind(e.target.value as ModerationKind | "")}
               className="ti-select w-full"
@@ -100,6 +101,7 @@ export function AdminModerationListPage({
               <option value="gallery_image">תמונות</option>
             </select>
             <select
+              aria-label="סוג תוכן"
               value={filterEntity}
               onChange={(e) => setFilterEntity(e.target.value as EntityType | "")}
               className="ti-select w-full"

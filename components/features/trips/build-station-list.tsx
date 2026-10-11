@@ -167,6 +167,7 @@ export function BuildStationList({
               <div className="mt-4 flex w-fit items-center gap-3 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-3 py-2">
                 <span className="text-xs font-medium text-[#6b7280]">מעבר ליעד הבא:</span>
                 <select
+                  aria-label="אמצעי הגעה"
                   value={station.travel_mode ?? "car"}
                   onChange={(e) => setTravelMode(index, e.target.value as TravelMode)}
                   className="cursor-pointer bg-transparent text-sm font-medium text-[#111827] outline-none"
