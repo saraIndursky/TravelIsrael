@@ -181,34 +181,9 @@ export function getTrailAudienceLabel(trail: Trail): string {
   return "כל המשפחה";
 }
 
-const REGION_GALLERY: Partial<Record<Trail["region"], string[]>> = {
-  כרמל: [
-    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
-    "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
-    "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800",
-  ],
-  גליל: [
-    "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
-    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
-    "https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=800",
-  ],
-  "ים המלח": [
-    "https://images.unsplash.com/photo-1548013146-72479768bada?w=800",
-    "https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=800",
-    "https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=800",
-  ],
-  מרכז: [
-    "https://images.unsplash.com/photo-1519331379776-fb884a27e562?w=800",
-    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
-  ],
-};
-
+/** Only the trail's own photo; community uploads are merged in by the gallery. */
 export function getTrailGalleryImages(trail: Trail): string[] {
-  const extras = REGION_GALLERY[trail.region] ?? [
-    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
-    "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800",
-  ];
-  return Array.from(new Set([trail.image_url, ...extras].filter(Boolean)));
+  return trail.image_url ? [trail.image_url] : [];
 }
 
 /** Google Maps directions to the trail start (trailhead). */
