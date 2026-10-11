@@ -17,6 +17,7 @@ export async function sendEmail(input: {
   to: string;
   subject: string;
   html: string;
+  replyTo?: string;
 }): Promise<boolean> {
   const resend = getClient();
   if (!resend) return false;
@@ -27,12 +28,13 @@ export async function sendEmail(input: {
 
 async function sendWithResend(
   resend: Resend,
-  input: { to: string; subject: string; html: string }
+  input: { to: string; subject: string; html: string; replyTo?: string }
 ) {
   return resend.emails.send({
     from: getResendFromEmail(),
     to: input.to,
     subject: input.subject,
     html: input.html,
+    ...(input.replyTo ? { replyTo: input.replyTo } : {}),
   });
 }

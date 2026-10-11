@@ -16,8 +16,8 @@ const navLinks = [
   { href: "/trips", label: "טיולים" },
   { href: "/places", label: "מקומות" },
   { href: "/trails", label: "מסלולים" },
-  { href: "/#about", label: "אודות" },
-  { href: "/#contact", label: "יצירת קשר" },
+  { href: "/about", label: "אודות" },
+  { href: "/contact", label: "יצירת קשר" },
 ];
 
 function NavLinks({ pathname, role }: { pathname: string; role: UserRole }) {

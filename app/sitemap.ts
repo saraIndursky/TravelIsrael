@@ -11,6 +11,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/trails`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
     { url: `${BASE}/wizard`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE}/search`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${BASE}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${BASE}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${BASE}/help`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${BASE}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${BASE}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
     { url: `${BASE}/login`, lastModified: now, changeFrequency: "monthly", priority: 0.3 },
     { url: `${BASE}/register`, lastModified: now, changeFrequency: "monthly", priority: 0.3 },
   ];

@@ -6,6 +6,7 @@ import {
   Flag,
   Users,
   Globe2,
+  Inbox,
   ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
@@ -25,5 +26,6 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/regions", label: "אזורים", icon: Globe2, description: "היררכיית אזורים" },
   { href: "/admin/reports", label: "דיווחים", icon: Flag, description: "טיפול בדיווחים" },
   { href: "/admin/moderation", label: "פיקוח", icon: ShieldCheck, description: "תגובות ותמונות מהקהילה" },
+  { href: "/admin/messages", label: "פניות", icon: Inbox, description: "הודעות מטופס יצירת הקשר" },
   { href: "/admin/users", label: "משתמשים", icon: Users, description: "תפקידי משתמשים" },
 ];

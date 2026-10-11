@@ -11,6 +11,7 @@ import {
   getUnseenModerationCount,
   MODERATION_QUEUE_CHANGED_EVENT,
 } from "@/lib/data/moderation";
+import { CONTACT_CHANGED_EVENT, getNewContactCount } from "@/lib/data/contact";
 
 interface AdminSidebarProps {
   mobileOpen?: boolean;
@@ -21,10 +22,12 @@ export function AdminSidebar({ mobileOpen, onMobileClose }: AdminSidebarProps) {
   const pathname = usePathname();
   const { role } = useAuthStore();
   const [moderationCount, setModerationCount] = useState(0);
+  const [messagesCount, setMessagesCount] = useState(0);
 
   useEffect(() => {
     if (role !== "admin") {
       setModerationCount(0);
+      setMessagesCount(0);
       return;
     }
 
@@ -39,18 +42,38 @@ export function AdminSidebar({ mobileOpen, onMobileClose }: AdminSidebarProps) {
       }
     }
 
+    async function loadMessages() {
+      try {
+        const count = await getNewContactCount();
+        if (!cancelled) setMessagesCount(count);
+      } catch {
+        if (!cancelled) setMessagesCount(0);
+      }
+    }
+
     void loadCount();
+    void loadMessages();
     const onChange = () => {
       void loadCount();
     };
+    const onMessagesChange = () => {
+      void loadMessages();
+    };
     window.addEventListener(MODERATION_QUEUE_CHANGED_EVENT, onChange);
+    window.addEventListener(CONTACT_CHANGED_EVENT, onMessagesChange);
     window.addEventListener("focus", onChange);
+    window.addEventListener("focus", onMessagesChange);
     return () => {
       cancelled = true;
       window.removeEventListener(MODERATION_QUEUE_CHANGED_EVENT, onChange);
+      window.removeEventListener(CONTACT_CHANGED_EVENT, onMessagesChange);
       window.removeEventListener("focus", onChange);
+      window.removeEventListener("focus", onMessagesChange);
     };
   }, [role, pathname]);
+
+  const badgeCount = (href: string) =>
+    href === "/admin/moderation" ? moderationCount : href === "/admin/messages" ? messagesCount : 0;
 
   const isActive = (href: string) =>
     href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
@@ -93,7 +116,7 @@ export function AdminSidebar({ mobileOpen, onMobileClose }: AdminSidebarProps) {
           >
             <Icon className="h-4 w-4 shrink-0" aria-hidden />
             <span className="flex-1">{label}</span>
-            {href === "/admin/moderation" && moderationCount > 0 && (
+            {badgeCount(href) > 0 && (
               <span
                 className={cn(
                   "rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
@@ -102,7 +125,7 @@ export function AdminSidebar({ mobileOpen, onMobileClose }: AdminSidebarProps) {
                     : "bg-amber-500 text-white"
                 )}
               >
-                {moderationCount > 99 ? "99+" : moderationCount}
+                {badgeCount(href) > 99 ? "99+" : badgeCount(href)}
               </span>
             )}
           </Link>

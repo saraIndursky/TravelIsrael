@@ -27,6 +27,7 @@
 | `schema/17_content_delete_hardening.sql` | חסימת מחיקה hard של תוכן מאושר |
 | `schema/25_region_requests.sql` | הצעת אזור חדש על ידי משתמש (ממתין עד אישור מנהל או אישור התוכן) — public + demo |
 | `schema/26_dedupe_regions.sql` | איחוד אזורים כפולים ("מרכז" ו"צפון" בתוך עצמם) — public + demo |
+| `schema/27_contact_messages.sql` | פניות מטופס יצירת הקשר (כולם שולחים, רק מנהל קורא) — public + demo |
 
 ## הרצת SQL על הפרויקט החי
 

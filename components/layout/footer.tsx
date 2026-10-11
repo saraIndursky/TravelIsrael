@@ -8,14 +8,13 @@ const footerLinks = {
     { href: "/wizard", label: "תכנון" },
   ],
   company: [
-    { href: "/#about", label: "אודות" },
-    { href: "/#about", label: "בלוג" },
-    { href: "/#about", label: "קריירה" },
+    { href: "/about", label: "אודות" },
+    { href: "/contact", label: "יצירת קשר" },
   ],
   support: [
-    { href: "/#contact", label: "עזרה" },
-    { href: "/#contact", label: "יצירת קשר" },
-    { href: "/#contact", label: "תנאי שימוש" },
+    { href: "/help", label: "עזרה" },
+    { href: "/terms", label: "תנאי שימוש" },
+    { href: "/privacy", label: "מדיניות פרטיות" },
   ],
 };
 
