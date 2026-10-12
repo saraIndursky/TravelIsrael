@@ -14,6 +14,8 @@ const rubik = Rubik({
 export const metadata: Metadata = {
   title: "TravelIsrael — תכנון טיולים בישראל",
   description: "פלטפורמה לתכנון, גילוי ושיתוף טיולים בישראל",
+  // proves to Google Search Console that this site is ours (the code is public by design)
+  verification: { google: "u9DyR-ojuo3pwXPLWiCdN1_naJ3B7GhgoJxCjEwF7_Q" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
