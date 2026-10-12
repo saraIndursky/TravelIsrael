@@ -22,7 +22,7 @@ export function WizardProgress({ step }: WizardProgressProps) {
               <div className="flex flex-1 flex-col items-center">
                 <div
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-full transition-all",
+                    "flex h-9 w-9 items-center justify-center rounded-full transition-all md:h-10 md:w-10",
                     (isCompleted || isActive) && "bg-primary text-primary-foreground",
                     !isCompleted && !isActive && "bg-muted text-muted-foreground"
                   )}
@@ -44,7 +44,7 @@ export function WizardProgress({ step }: WizardProgressProps) {
                 </span>
               </div>
               {index < WIZARD_STEPS.length - 1 && (
-                <div className="mx-2 h-0.5 flex-1 bg-border">
+                <div className="mx-1 h-0.5 flex-1 bg-border md:mx-2">
                   <div className={cn("h-full transition-all", isCompleted ? "bg-primary" : "bg-transparent")} />
                 </div>
               )}

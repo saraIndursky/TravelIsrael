@@ -20,7 +20,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
     <>
       <a
         href="#main-content"
-        className="sr-only z-[100] rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white focus:not-sr-only focus:fixed focus:right-4 focus:top-4"
+        className="sr-only left-0 top-0 z-[100] rounded-md bg-gray-900 text-sm font-medium text-white focus:not-sr-only focus:fixed focus:left-auto focus:right-4 focus:top-4 focus:px-4 focus:py-2"
       >
         דלג לתוכן הראשי
       </a>

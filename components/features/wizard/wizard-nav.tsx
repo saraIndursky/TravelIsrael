@@ -31,13 +31,13 @@ export function WizardNav({ step, isSummary, onPrev, onNext, onFinish }: WizardN
             : "relative mt-10 pt-8"
         )}
       >
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4">
           <button
             type="button"
             onClick={onPrev}
             disabled={isFirst}
             className={cn(
-              "inline-flex items-center gap-2 rounded-sm px-6 py-3 text-sm font-medium transition-colors",
+              "inline-flex items-center gap-2 rounded-sm px-4 py-3 text-sm sm:px-6 font-medium transition-colors",
               isFirst ? "cursor-not-allowed text-muted-foreground/60" : "text-foreground hover:bg-muted"
             )}
           >
