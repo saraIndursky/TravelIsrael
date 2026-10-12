@@ -61,7 +61,7 @@ export async function GET(request: NextRequest, { params }: { params: { token: s
   if (!same(cookie, accessValue(cfg.password, cfg.token))) return passwordPage(false);
 
   // the pin is served from the site itself, like the logo, so filters that block unknown images let it through
-  const html = SPEC_HTML.replaceAll("../public/brand/pin.png", "/brand/pin.png").replace(
+  const html = SPEC_HTML.replaceAll("../public/brand/pin.png", "/brand/pin.png").replaceAll("../app/icon.png", "/icon.png").replace(
     "<head>",
     '<head>\n<meta name="robots" content="noindex, nofollow">'
   );
