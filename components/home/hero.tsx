@@ -1,12 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { toDisplayImageUrl } from "@/lib/utils/image-url";
 
-// Timna Valley: red sandstone under a blue sky. The previous photo is archived in public/brand/archive/.
-const HERO_IMAGE = toDisplayImageUrl(
-  "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Nature_of_Israel_2018_03.jpg/1920px-Nature_of_Israel_2018_03.jpg"
-);
+// Home page hero photo. Other candidates are compared in docs/hero-options.html.
+const HERO_IMAGE = "/brand/home-hero.jpg";
 
 export function HomeHero() {
   return (

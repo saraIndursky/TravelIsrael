@@ -60,7 +60,11 @@ export async function GET(request: NextRequest, { params }: { params: { token: s
   const cookie = request.cookies.get(COOKIE)?.value ?? "";
   if (!same(cookie, accessValue(cfg.password, cfg.token))) return passwordPage(false);
 
-  const html = SPEC_HTML.replace("<head>", '<head>\n<meta name="robots" content="noindex, nofollow">');
+  // the pin is served from the site itself, like the logo, so filters that block unknown images let it through
+  const html = SPEC_HTML.replaceAll("../public/brand/pin.png", "/brand/pin.png").replace(
+    "<head>",
+    '<head>\n<meta name="robots" content="noindex, nofollow">'
+  );
   return new NextResponse(html, { headers: { ...NO_INDEX, "Content-Type": "text/html; charset=utf-8" } });
 }
 
