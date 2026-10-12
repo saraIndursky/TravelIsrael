@@ -105,7 +105,7 @@ export function AdminSidebar({ mobileOpen, onMobileClose }: AdminSidebarProps) {
         )}
       </div>
 
-      <nav className="flex-1 space-y-1 p-3" aria-label="ניווט ניהול">
+      <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="ניווט ניהול">
         {ADMIN_NAV.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
@@ -155,7 +155,7 @@ export function AdminSidebar({ mobileOpen, onMobileClose }: AdminSidebarProps) {
 
   return (
     <>
-      <aside className="hidden w-60 shrink-0 flex-col border-l border-border/60 bg-white md:flex">
+      <aside className="sticky top-[72px] hidden h-[calc(100vh-72px)] w-60 shrink-0 flex-col self-start border-l border-border/60 bg-white md:flex">
         {navContent}
       </aside>
 
