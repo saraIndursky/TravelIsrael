@@ -7,11 +7,28 @@ import { ArrowRight, Shield, X } from "lucide-react";
 import { ADMIN_NAV } from "@/components/features/admin/admin-nav";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/hooks/use-stores";
-import {
-  getUnseenModerationCount,
-  MODERATION_QUEUE_CHANGED_EVENT,
-} from "@/lib/data/moderation";
-import { CONTACT_CHANGED_EVENT, getNewContactCount } from "@/lib/data/contact";
+import { MODERATION_QUEUE_CHANGED_EVENT } from "@/lib/data/moderation";
+import { CONTACT_CHANGED_EVENT } from "@/lib/data/contact";
+import { getQueueSummary, type QueueSummary } from "@/lib/data/admin-dashboard";
+import { ageInDays, urgencyTone, type UrgencyTone } from "@/lib/utils/admin-urgency";
+
+// badge colours from green (nothing waits long) to red (waiting too long)
+const TONE_STYLES: Record<UrgencyTone, string> = {
+  green: "bg-emerald-700 text-white",
+  yellow: "bg-yellow-400 text-yellow-950",
+  orange: "bg-orange-600 text-white",
+  red: "bg-red-600 text-white",
+};
+
+/** Which queue (and how urgent it is) each menu item shows. */
+const QUEUE_FOR_HREF: Record<string, { key: keyof QueueSummary["counts"]; urgent: boolean }> = {
+  "/admin/trips": { key: "trips", urgent: false },
+  "/admin/places": { key: "places", urgent: false },
+  "/admin/trails": { key: "trails", urgent: false },
+  "/admin/reports": { key: "reports", urgent: true },
+  "/admin/moderation": { key: "moderation", urgent: false },
+  "/admin/messages": { key: "messages", urgent: true },
+};
 
 interface AdminSidebarProps {
   mobileOpen?: boolean;
@@ -21,59 +38,47 @@ interface AdminSidebarProps {
 export function AdminSidebar({ mobileOpen, onMobileClose }: AdminSidebarProps) {
   const pathname = usePathname();
   const { role } = useAuthStore();
-  const [moderationCount, setModerationCount] = useState(0);
-  const [messagesCount, setMessagesCount] = useState(0);
+  const [summary, setSummary] = useState<QueueSummary | null>(null);
 
   useEffect(() => {
     if (role !== "admin") {
-      setModerationCount(0);
-      setMessagesCount(0);
+      setSummary(null);
       return;
     }
 
     let cancelled = false;
 
-    async function loadCount() {
+    async function load() {
       try {
-        const count = await getUnseenModerationCount();
-        if (!cancelled) setModerationCount(count);
+        const result = await getQueueSummary();
+        if (!cancelled) setSummary(result);
       } catch {
-        if (!cancelled) setModerationCount(0);
+        if (!cancelled) setSummary(null);
       }
     }
 
-    async function loadMessages() {
-      try {
-        const count = await getNewContactCount();
-        if (!cancelled) setMessagesCount(count);
-      } catch {
-        if (!cancelled) setMessagesCount(0);
-      }
-    }
-
-    void loadCount();
-    void loadMessages();
+    void load();
     const onChange = () => {
-      void loadCount();
-    };
-    const onMessagesChange = () => {
-      void loadMessages();
+      void load();
     };
     window.addEventListener(MODERATION_QUEUE_CHANGED_EVENT, onChange);
-    window.addEventListener(CONTACT_CHANGED_EVENT, onMessagesChange);
+    window.addEventListener(CONTACT_CHANGED_EVENT, onChange);
     window.addEventListener("focus", onChange);
-    window.addEventListener("focus", onMessagesChange);
     return () => {
       cancelled = true;
       window.removeEventListener(MODERATION_QUEUE_CHANGED_EVENT, onChange);
-      window.removeEventListener(CONTACT_CHANGED_EVENT, onMessagesChange);
+      window.removeEventListener(CONTACT_CHANGED_EVENT, onChange);
       window.removeEventListener("focus", onChange);
-      window.removeEventListener("focus", onMessagesChange);
     };
   }, [role, pathname]);
 
-  const badgeCount = (href: string) =>
-    href === "/admin/moderation" ? moderationCount : href === "/admin/messages" ? messagesCount : 0;
+  const badge = (href: string): { count: number; tone: UrgencyTone } | null => {
+    const queue = QUEUE_FOR_HREF[href];
+    if (!queue || !summary) return null;
+    const count = summary.counts[queue.key];
+    if (count <= 0) return null;
+    return { count, tone: urgencyTone(ageInDays(summary.oldest[queue.key]), queue.urgent) };
+  };
 
   const isActive = (href: string) =>
     href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
@@ -116,18 +121,21 @@ export function AdminSidebar({ mobileOpen, onMobileClose }: AdminSidebarProps) {
           >
             <Icon className="h-4 w-4 shrink-0" aria-hidden />
             <span className="flex-1">{label}</span>
-            {badgeCount(href) > 0 && (
-              <span
-                className={cn(
-                  "rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
-                  isActive(href)
-                    ? "bg-primary-foreground/20 text-primary-foreground"
-                    : "bg-amber-700 text-white"
-                )}
-              >
-                {badgeCount(href) > 99 ? "99+" : badgeCount(href)}
-              </span>
-            )}
+            {(() => {
+              const info = badge(href);
+              if (!info) return null;
+              return (
+                <span
+                  className={cn(
+                    "rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
+                    TONE_STYLES[info.tone],
+                    isActive(href) && "ring-2 ring-primary-foreground/70"
+                  )}
+                >
+                  {info.count > 99 ? "99+" : info.count}
+                </span>
+              );
+            })()}
           </Link>
         ))}
       </nav>

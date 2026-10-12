@@ -78,10 +78,22 @@ export default function AdminMessagesPage() {
 
   return (
     <div className="min-h-full bg-secondary/30">
-      <div className="border-b border-border/60 bg-white px-4 py-6 md:px-8">
-        <h1 className="text-2xl font-light tracking-tight text-foreground md:text-3xl">פניות מהאתר</h1>
-        <p className="mt-1 text-sm text-muted-foreground">הודעות שנשלחו דרך טופס יצירת הקשר.</p>
-        <div className="mt-5 flex flex-wrap gap-2" role="tablist" aria-label="סינון פניות">
+      <div className="border-b border-border/60 bg-white">
+        <div className="px-4 py-6 md:px-8">
+          <div className="mb-6">
+            <h1 className="text-2xl font-light tracking-tight text-foreground md:text-3xl">פניות מהאתר</h1>
+            <p className="mt-1 text-sm text-muted-foreground">הודעות שנשלחו דרך טופס יצירת הקשר.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+            <StatBox value={counts.new} label="פניות חדשות" variant="warning" />
+            <StatBox value={counts.handled} label="טופלו" variant="success" />
+            <StatBox value={counts.new + counts.handled} label='סה"כ פניות' variant="info" />
+          </div>
+        </div>
+      </div>
+
+      <div className="border-b border-border/60 bg-white">
+        <div className="flex gap-1 overflow-x-auto px-4 md:px-8" role="tablist" aria-label="סינון פניות">
           {TABS.map(({ value, label }) => {
             const count = value === "all" ? counts.new + counts.handled : counts[value];
             return (
@@ -91,10 +103,10 @@ export default function AdminMessagesPage() {
                 role="tab"
                 aria-selected={tab === value}
                 onClick={() => setTab(value)}
-                className={`rounded-full border px-4 py-1.5 text-sm transition ${
+                className={`shrink-0 border-b-2 px-4 py-3 text-sm font-medium transition ${
                   tab === value
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-white text-foreground/80 hover:bg-muted"
+                    ? "border-primary text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {label} ({count})
@@ -182,6 +194,29 @@ export default function AdminMessagesPage() {
         onClose={() => setPendingDelete(null)}
         onConfirm={confirmDelete}
       />
+    </div>
+  );
+}
+
+function StatBox({
+  value,
+  label,
+  variant,
+}: {
+  value: number;
+  label: string;
+  variant: "success" | "warning" | "info";
+}) {
+  const styles = {
+    success: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    warning: "border-amber-200 bg-amber-50 text-amber-700",
+    info: "border-blue-200 bg-blue-50 text-blue-700",
+  };
+
+  return (
+    <div className={`rounded-xl border p-4 ${styles[variant]}`}>
+      <div className="text-2xl font-bold tabular-nums">{value}</div>
+      <div className="text-sm">{label}</div>
     </div>
   );
 }

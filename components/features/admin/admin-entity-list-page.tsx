@@ -210,12 +210,12 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 lg:gap-4">
             <StatBox value={count("approved")} label={`${config.entityLabelPlural} מאושרים`} variant="success" />
             <StatBox value={count("pending")} label="ממתינים לאישור" variant="warning" />
             <StatBox value={count("rejected")} label="נדחו" variant="danger" />
             <StatBox value={count("removed")} label="הוסרו" variant="danger" />
-            <StatBox value={count("total")} label={`סה״כ ${config.entityLabelPlural}`} variant="info" />
+            <StatBox value={count("total")} label={`סה״כ ${config.entityLabelPlural}`} variant="info" className="col-span-2 lg:col-span-1" />
           </div>
         </div>
       </div>
@@ -565,10 +565,12 @@ function StatBox({
   value,
   label,
   variant,
+  className = "",
 }: {
   value: number;
   label: string;
   variant: "success" | "warning" | "danger" | "info";
+  className?: string;
 }) {
   const styles = {
     success: "border-emerald-200 bg-emerald-50 text-emerald-700",
@@ -584,7 +586,7 @@ function StatBox({
   };
 
   return (
-    <div className={`rounded-xl border p-4 ${styles[variant]}`}>
+    <div className={`min-w-0 rounded-xl border p-4 ${styles[variant]} ${className}`}>
       <div className={`text-2xl font-bold tabular-nums ${valueStyles[variant]}`}>{value}</div>
       <div className="text-sm">{label}</div>
     </div>
