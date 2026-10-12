@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AuthNav } from "@/components/layout/auth-nav";
 import { HeaderSearch } from "@/components/layout/header-search";
 import { NotificationBell } from "@/components/features/notifications/notification-bell";
@@ -21,15 +21,50 @@ const navLinks = [
 ];
 
 function NavLinks({ pathname, role }: { pathname: string; role: UserRole }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const linkRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+  const [bar, setBar] = useState<{ left: number; width: number; top: number } | null>(null);
+  const [animate, setAnimate] = useState(false);
+
+  // a detail page such as /trips/abc keeps "טיולים" marked
+  const activeHref = navLinks.find(({ href }) => pathname === href || pathname.startsWith(`${href}/`))?.href ?? null;
+
+  const measure = useCallback(() => {
+    const link = activeHref ? linkRefs.current[activeHref] : null;
+    setBar(link ? { left: link.offsetLeft, width: link.offsetWidth, top: link.offsetTop + link.offsetHeight } : null);
+  }, [activeHref]);
+
+  useLayoutEffect(() => {
+    measure();
+  }, [measure]);
+
+  useEffect(() => {
+    // the bar only slides after the first paint, so it doesn't fly in from the corner on load
+    const frame = requestAnimationFrame(() => setAnimate(true));
+    window.addEventListener("resize", measure);
+    void document.fonts?.ready.then(measure);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", measure);
+    };
+  }, [measure]);
+
   return (
-    <>
+    <div
+      ref={containerRef}
+      className="relative flex max-w-full flex-wrap items-center justify-center gap-x-4 gap-y-1 md:gap-x-5 lg:gap-x-6"
+    >
       {navLinks.map(({ href, label }) => (
         <Link
           key={href}
           href={href}
+          ref={(node) => {
+            linkRefs.current[href] = node;
+          }}
+          aria-current={activeHref === href ? "page" : undefined}
           className={cn(
             "whitespace-nowrap text-sm font-medium text-foreground/80 transition hover:text-foreground",
-            pathname === href && "text-foreground"
+            activeHref === href && "font-semibold text-foreground"
           )}
         >
           {label}
@@ -48,7 +83,21 @@ function NavLinks({ pathname, role }: { pathname: string; role: UserRole }) {
           ניהול
         </Link>
       )}
-    </>
+      {/* the sliding line that shows where the visitor is */}
+      <span
+        aria-hidden="true"
+        className={cn(
+          "pointer-events-none absolute h-[3px] rounded-full bg-primary",
+          animate && "transition-[left,width,top,opacity] duration-300 ease-out"
+        )}
+        style={{
+          left: bar?.left ?? 0,
+          width: bar?.width ?? 0,
+          top: (bar?.top ?? 0) + 4,
+          opacity: bar ? 1 : 0,
+        }}
+      />
+    </div>
   );
 }
 
@@ -86,9 +135,7 @@ export function Header() {
               className="hidden min-w-0 justify-center md:flex"
               aria-label="ניווט ראשי"
             >
-              <div className="flex max-w-full flex-wrap items-center justify-center gap-x-4 gap-y-1 md:gap-x-5 lg:gap-x-6">
-                <NavLinks pathname={pathname} role={role} />
-              </div>
+              <NavLinks pathname={pathname} role={role} />
             </nav>
           )}
         </div>
