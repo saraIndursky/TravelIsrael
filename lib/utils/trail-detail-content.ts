@@ -1,5 +1,6 @@
 import type { Trail } from "@/types";
 import { DIFFICULTY_LABELS } from "@/types/enums";
+import { isHardDifficulty } from "@/lib/levels";
 import { formatDuration, formatPrice, getAccessibilityLabel } from "@/lib/utils";
 
 export interface TrailEquipmentItem {
@@ -44,7 +45,7 @@ export function getTrailEquipment(trail: Trail): TrailEquipmentItem[] {
     items.push({ icon: "👟", text: "נעלי מים או סנדלים סגורים" });
     items.push({ icon: "🩱", text: "בגד ים להחלפה" });
   }
-  if (trail.difficulty === "hard" || trail.trail_type === "טיפוס") {
+  if (isHardDifficulty(trail.difficulty) || trail.trail_type === "טיפוס") {
     items.push({ icon: "🧤", text: "כפפות לטיפוס בתלילות" });
   }
   if (trail.trail_type === "אופניים") {
@@ -64,7 +65,7 @@ export function getTrailTips(trail: Trail): TrailTip[] {
   if (trail.trail_type === "מים" || trail.tags.includes("מים")) {
     tips.push({ type: "warning", text: "המסלול כולל מעברי מים — יתכן שתרטבו" });
   }
-  if (trail.difficulty === "hard") {
+  if (isHardDifficulty(trail.difficulty)) {
     tips.push({ type: "warning", text: "מסלול מאתגר — מומלץ למטיילים מנוסים בלבד" });
   }
   if (trail.trail_type === "טיפוס") {
@@ -176,7 +177,7 @@ export function getTrailWaypoints(trail: Trail): TrailWaypointDisplay[] {
 
 export function getTrailAudienceLabel(trail: Trail): string {
   if (trail.tags.includes("משפחות")) return "משפחות, זוגות";
-  if (trail.difficulty === "hard") return "מטיילים מנוסים";
+  if (isHardDifficulty(trail.difficulty)) return "מטיילים מנוסים";
   if (trail.tags.includes("ספורט")) return "ספורטאים";
   return "כל המשפחה";
 }

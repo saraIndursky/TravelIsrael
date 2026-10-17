@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import type { Trail } from "@/types";
 import { DIFFICULTY_LABELS } from "@/types/enums";
+import { LevelInfoButton } from "@/components/features/shared/level-info-button";
+import { ACCESSIBILITY_LEVELS, DIFFICULTY_LEVELS } from "@/lib/levels";
 import { formatDistance, formatDuration, getAccessibilityLabel } from "@/lib/utils";
 import { getTrailAudienceLabel } from "@/lib/utils/trail-detail-content";
 
@@ -16,7 +18,15 @@ interface TrailDetailHighlightsProps {
 }
 
 export function TrailDetailHighlights({ trail }: TrailDetailHighlightsProps) {
-  const highlights = [
+  const accessibilityLevel = ACCESSIBILITY_LEVELS.find((level) => level.level === trail.accessibility);
+  const difficultyLevel = DIFFICULTY_LEVELS.find((level) => level.code === trail.difficulty);
+
+  const highlights: {
+    icon: typeof Clock;
+    label: string;
+    value: string;
+    info?: { title: string; description: string; note?: string };
+  }[] = [
     {
       icon: Clock,
       label: "משך זמן",
@@ -36,6 +46,10 @@ export function TrailDetailHighlights({ trail }: TrailDetailHighlightsProps) {
       icon: Accessibility,
       label: "נגישות",
       value: getAccessibilityLabel(trail.accessibility),
+      info: accessibilityLevel && {
+        title: accessibilityLevel.name,
+        description: accessibilityLevel.description,
+      },
     },
     {
       icon: Users,
@@ -46,6 +60,10 @@ export function TrailDetailHighlights({ trail }: TrailDetailHighlightsProps) {
       icon: TrendingUp,
       label: "קושי",
       value: DIFFICULTY_LABELS[trail.difficulty],
+      info: difficultyLevel && {
+        title: difficultyLevel.name,
+        description: difficultyLevel.description,
+      },
     },
   ];
 
@@ -57,8 +75,9 @@ export function TrailDetailHighlights({ trail }: TrailDetailHighlightsProps) {
           return (
             <div
               key={item.label}
-              className="rounded-[2px] border border-[#e5e7eb] bg-white p-4 text-center"
+              className="relative rounded-[2px] border border-[#e5e7eb] bg-white p-4 text-center"
             >
+              {item.info && <LevelInfoButton {...item.info} />}
               <Icon className="mx-auto mb-2 h-5 w-5 text-[#6b7280]" />
               <div className="mb-1 text-xs text-[#6b7280]">{item.label}</div>
               <div className="text-sm font-medium text-[#111827]">{item.value}</div>

@@ -26,7 +26,7 @@ const emptyForm: RegionFormState = {
   name: "",
   parent_id: "",
   code: "",
-  is_selectable: false,
+  is_selectable: true,
   sort_order: 0,
 };
 

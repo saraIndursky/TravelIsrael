@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Filter, Plus, Search, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,8 +11,9 @@ import { LazyList } from "@/components/ui/custom/lazy-list";
 import { getPlaces } from "@/lib/data/places";
 import { getTrails } from "@/lib/data/trails";
 import type { Place, Trail } from "@/types";
-import { useRegionNames } from "@/hooks/use-region-names";
+import { RegionFilterSelect } from "@/components/features/shared/region-filter-select";
 import { formatStopDuration } from "@/lib/utils/trip-time";
+import { formatNearbyDistance, haversineKm, type LatLng } from "@/lib/utils/geo";
 import { getDifficultyColor, getDifficultyLabel, getTypeStyle } from "@/lib/utils/trip-display";
 import { PageLoadingSpinner } from "@/components/layout/page-loading";
 
@@ -23,9 +24,22 @@ interface StationPickerProps {
   variant?: "list" | "grid";
   onCreatePlace?: () => void;
   onCreateTrail?: () => void;
+  /** Ids of places and trails already in the trip; they are not offered again. */
+  excludedIds?: ReadonlySet<string>;
+  /** Where the trip currently ends. Results are sorted by distance from it. */
+  anchor?: (LatLng & { name: string }) | null;
 }
 
-type StationItem = { type: "place" | "trail"; item: Place | Trail };
+type StationItem = { type: "place" | "trail"; item: Place | Trail; distanceKm?: number };
+
+/** A place is measured to its point, a trail to where it starts (that is where the visit begins). */
+function itemPoint(type: "place" | "trail", item: Place | Trail): LatLng | null {
+  const point =
+    type === "place"
+      ? { lat: (item as Place).lat, lng: (item as Place).lng }
+      : { lat: (item as Trail).start_lat, lng: (item as Trail).start_lng };
+  return Number.isFinite(point.lat) && Number.isFinite(point.lng) ? point : null;
+}
 
 export function StationPicker({
   open,
@@ -34,8 +48,9 @@ export function StationPicker({
   variant = "list",
   onCreatePlace,
   onCreateTrail,
+  excludedIds,
+  anchor,
 }: StationPickerProps) {
-  const regionNames = useRegionNames();
   const [search, setSearch] = useState("");
   const [region, setRegion] = useState("");
   const [items, setItems] = useState<StationItem[]>([]);
@@ -58,7 +73,18 @@ export function StationPicker({
     });
   }, [open, search, region]);
 
-  const filtered = items.filter((i) => tab === "all" || i.type === tab);
+  const filtered = useMemo(() => {
+    const available = items.filter(
+      (i) => (tab === "all" || i.type === tab) && !excludedIds?.has(i.item.id)
+    );
+    if (!anchor) return available;
+    return available
+      .map((entry) => {
+        const point = itemPoint(entry.type, entry.item);
+        return { ...entry, distanceKm: point ? haversineKm(anchor, point) : undefined };
+      })
+      .sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
+  }, [items, tab, excludedIds, anchor]);
 
   if (variant === "grid") {
     return (
@@ -88,19 +114,11 @@ export function StationPicker({
                     className="w-full rounded-lg border border-[#d1d5db] px-4 py-3 pr-10 transition-colors focus:border-[#111827] focus:outline-none"
                   />
                 </div>
-                <select
-                  aria-label="אזור"
+                <RegionFilterSelect
                   value={region}
-                  onChange={(e) => setRegion(e.target.value)}
+                  onChange={setRegion}
                   className="rounded-lg border border-[#d1d5db] px-4 py-3 transition-colors focus:border-[#111827] focus:outline-none"
-                >
-                  <option value="">כל האזורים</option>
-                  {regionNames.map((r) => (
-                    <option key={r} value={r}>
-                      {r}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div className="mt-3 flex gap-2">
@@ -115,6 +133,11 @@ export function StationPicker({
                   </Button>
                 ))}
               </div>
+              {anchor && (
+                <p className="mt-3 text-sm text-[#6b7280]">
+                  ממוין לפי קרבה לתחנה האחרונה: <span className="font-medium text-[#111827]">{anchor.name}</span>
+                </p>
+              )}
             </div>
 
             <div className="max-h-[calc(90vh-220px)] overflow-y-auto p-6">
@@ -155,7 +178,7 @@ export function StationPicker({
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {filtered.map(({ type, item }) => {
+                  {filtered.map(({ type, item, distanceKm }) => {
                     const duration =
                       type === "place"
                         ? (item as Place).avg_duration_minutes
@@ -194,6 +217,14 @@ export function StationPicker({
                               </span>
                               <span>•</span>
                               <span>{formatStopDuration(duration)}</span>
+                              {distanceKm !== undefined && (
+                                <>
+                                  <span>•</span>
+                                  <span className="whitespace-nowrap font-medium text-[#111827]">
+                                    {formatNearbyDistance(distanceKm)}
+                                  </span>
+                                </>
+                              )}
                             </div>
                             <div className="flex items-center justify-between">
                               <span
@@ -264,19 +295,11 @@ export function StationPicker({
         </DialogHeader>
         <div className="space-y-4">
           <Input placeholder="חיפוש..." value={search} onChange={(e) => setSearch(e.target.value)} />
-          <select
-            aria-label="אזור"
-            className="h-10 w-full rounded-md border px-3 text-sm"
+          <RegionFilterSelect
             value={region}
-            onChange={(e) => setRegion(e.target.value)}
-          >
-            <option value="">כל האזורים</option>
-            {regionNames.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
+            onChange={setRegion}
+            className="h-10 w-full rounded-md border px-3 text-sm"
+          />
           <div className="flex gap-2">
             {(["all", "place", "trail"] as const).map((t) => (
               <Button
@@ -289,6 +312,9 @@ export function StationPicker({
               </Button>
             ))}
           </div>
+          {anchor && (
+            <p className="text-xs text-muted-foreground">ממוין לפי קרבה לתחנה האחרונה: {anchor.name}</p>
+          )}
           {loading ? (
             <PageLoadingSpinner size="sm" className="py-4" />
           ) : (
@@ -296,7 +322,7 @@ export function StationPicker({
               items={filtered}
               pageSize={10}
               className="space-y-2"
-              renderItem={({ type, item }) => (
+              renderItem={({ type, item, distanceKm }) => (
                 <button
                   key={item.id}
                   type="button"
@@ -308,6 +334,9 @@ export function StationPicker({
                     <span className="font-medium">{item.name}</span>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">{item.short_description}</p>
+                  {distanceKm !== undefined && (
+                    <p className="mt-1 text-xs font-medium">{formatNearbyDistance(distanceKm)} מהתחנה האחרונה</p>
+                  )}
                 </button>
               )}
             />

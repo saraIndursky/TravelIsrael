@@ -7,6 +7,7 @@ import type {
   QuickActionId,
 } from "@/types/assistant";
 import { COMMON_TAGS } from "@/types/enums";
+import { isHardDifficulty } from "@/lib/levels";
 import type { Accessibility } from "@/types";
 import { getFieldLabel } from "./field-labels";
 import {
@@ -398,7 +399,7 @@ function suggestAccessibilityForPlace(placeType: string, tags: string[]): Access
 }
 
 function suggestAccessibilityForTrail(trailType: string, difficulty: string): Accessibility {
-  if (trailType === "מים" || difficulty === "hard") return 2;
+  if (trailType === "מים" || isHardDifficulty(difficulty)) return 2;
   if (trailType === "הליכה" && difficulty === "easy") return 3;
   if (trailType === "רכיבה") return 2;
   return 3;

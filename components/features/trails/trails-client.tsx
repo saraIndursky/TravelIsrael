@@ -5,8 +5,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Plus, Search } from "lucide-react";
 import type { Difficulty, Region } from "@/types";
-import { DIFFICULTY_LABELS } from "@/types/enums";
-import { useRegionNames } from "@/hooks/use-region-names";
+import { useDifficultyLevels } from "@/hooks/use-levels";
+import { RegionFilterSelect } from "@/components/features/shared/region-filter-select";
 import { TrailCard } from "@/components/features/trails/trail-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InfiniteScrollFooter } from "@/components/ui/custom/infinite-scroll-footer";
@@ -19,13 +19,13 @@ const inputClass =
   "w-full rounded-sm border border-[#d1d5db] bg-white px-4 py-2.5 text-sm text-[#111827] focus:border-[#111827] focus:outline-none";
 
 export function TrailsClient() {
-  const regionNames = useRegionNames();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { role } = useAuthStore();
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [region, setRegion] = useState(searchParams.get("region") ?? "");
+  const difficultyLevels = useDifficultyLevels();
   const [difficulty, setDifficulty] = useState(searchParams.get("difficulty") ?? "");
 
   const appliedSearch = searchParams.get("search") ?? "";
@@ -102,12 +102,7 @@ export function TrailsClient() {
               onKeyDown={(e) => e.key === "Enter" && applyFilters()}
             />
           </div>
-          <select aria-label="אזור" className={inputClass} value={region} onChange={(e) => setRegion(e.target.value)}>
-            <option value="">כל האזורים</option>
-            {regionNames.map((r) => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
+          <RegionFilterSelect value={region} onChange={setRegion} className={inputClass} />
           <select
             aria-label="רמת קושי"
             className={inputClass}
@@ -115,8 +110,8 @@ export function TrailsClient() {
             onChange={(e) => setDifficulty(e.target.value)}
           >
             <option value="">כל רמות הקושי</option>
-            {(Object.keys(DIFFICULTY_LABELS) as Difficulty[]).map((d) => (
-              <option key={d} value={d}>{DIFFICULTY_LABELS[d]}</option>
+            {difficultyLevels.map((level) => (
+              <option key={level.code} value={level.code}>{level.name}</option>
             ))}
           </select>
           <button

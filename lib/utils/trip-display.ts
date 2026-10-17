@@ -1,57 +1,34 @@
 import type { Difficulty } from "@/types";
 import { DIFFICULTY_LABELS } from "@/types/enums";
 
-export type DifficultyLabel =
-  | "קל"
-  | "קל-בינוני"
-  | "בינוני"
-  | "בינוני-קשה"
-  | "קשה"
-  | "ללא";
+export type DifficultyLabel = string;
 
-const difficultyClassMap: Record<DifficultyLabel, string> = {
-  קל: "ti-difficulty-easy",
-  "קל-בינוני": "ti-difficulty-easy-medium",
-  בינוני: "ti-difficulty-medium",
-  "בינוני-קשה": "ti-difficulty-medium-hard",
-  קשה: "ti-difficulty-hard",
-  ללא: "ti-difficulty-none",
+const difficultyClassMap: Record<Difficulty, string> = {
+  easy: "ti-difficulty-easy",
+  easy_medium: "ti-difficulty-easy-medium",
+  medium: "ti-difficulty-medium",
+  medium_hard: "ti-difficulty-medium-hard",
+  hard: "ti-difficulty-hard",
+  challenging: "ti-difficulty-challenging",
 };
 
-const difficultyKeyMap: Record<Difficulty, DifficultyLabel> = {
-  easy: "קל",
-  medium: "בינוני",
-  hard: "קשה",
-};
-
-function resolveDifficultyLabel(
-  difficulty?: Difficulty | DifficultyLabel | string
-): DifficultyLabel {
-  if (!difficulty) return "ללא";
-
-  if (difficulty in difficultyKeyMap) {
-    return difficultyKeyMap[difficulty as Difficulty];
-  }
-
-  if (difficulty in difficultyClassMap) {
-    return difficulty as DifficultyLabel;
-  }
-
-  const label = DIFFICULTY_LABELS[difficulty as Difficulty];
-  if (label && label in difficultyClassMap) {
-    return label as DifficultyLabel;
-  }
-
-  return "ללא";
+/** Accepts a stored difficulty code or its Hebrew name; returns the code, or undefined if unknown. */
+function resolveDifficulty(difficulty?: Difficulty | DifficultyLabel): Difficulty | undefined {
+  if (!difficulty) return undefined;
+  if (difficulty in DIFFICULTY_LABELS) return difficulty as Difficulty;
+  return (Object.keys(DIFFICULTY_LABELS) as Difficulty[]).find(
+    (code) => DIFFICULTY_LABELS[code] === difficulty
+  );
 }
 
-export function getDifficultyColor(difficulty?: Difficulty | DifficultyLabel | string): string {
-  return difficultyClassMap[resolveDifficultyLabel(difficulty)];
+export function getDifficultyColor(difficulty?: Difficulty | DifficultyLabel): string {
+  const code = resolveDifficulty(difficulty);
+  return code ? difficultyClassMap[code] : "ti-difficulty-none";
 }
 
-export function getDifficultyLabel(difficulty?: Difficulty | DifficultyLabel | string): string {
-  const resolved = resolveDifficultyLabel(difficulty);
-  return resolved === "ללא" ? "לא צוין" : resolved;
+export function getDifficultyLabel(difficulty?: Difficulty | DifficultyLabel): string {
+  const code = resolveDifficulty(difficulty);
+  return code ? DIFFICULTY_LABELS[code] : "לא צוין";
 }
 
 const typeColorClasses = [

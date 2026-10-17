@@ -2,6 +2,8 @@ import { Clock, DollarSign, MapPin, Star, Users, Accessibility } from "lucide-re
 import type { Place } from "@/types";
 import { formatDuration, formatPrice, getAccessibilityLabel } from "@/lib/utils";
 import { getPlaceAudienceLabel } from "@/lib/utils/place-detail-content";
+import { LevelInfoButton } from "@/components/features/shared/level-info-button";
+import { ACCESSIBILITY_LEVELS } from "@/lib/levels";
 
 interface PlaceDetailHighlightsProps {
   place: Place;
@@ -9,7 +11,14 @@ interface PlaceDetailHighlightsProps {
 }
 
 export function PlaceDetailHighlights({ place, avgRating }: PlaceDetailHighlightsProps) {
-  const highlights = [
+  const accessibilityLevel = ACCESSIBILITY_LEVELS.find((level) => level.level === place.accessibility);
+
+  const highlights: {
+    icon: typeof Star;
+    label: string;
+    value: string;
+    info?: { title: string; description: string; note?: string };
+  }[] = [
     {
       icon: Star,
       label: "דירוג",
@@ -39,6 +48,10 @@ export function PlaceDetailHighlights({ place, avgRating }: PlaceDetailHighlight
       icon: Accessibility,
       label: "נגישות",
       value: getAccessibilityLabel(place.accessibility),
+      info: accessibilityLevel && {
+        title: accessibilityLevel.name,
+        description: accessibilityLevel.description,
+      },
     },
   ];
 
@@ -50,8 +63,9 @@ export function PlaceDetailHighlights({ place, avgRating }: PlaceDetailHighlight
           return (
             <div
               key={item.label}
-              className="rounded-[2px] border border-[#e5e7eb] bg-white p-4 text-center"
+              className="relative rounded-[2px] border border-[#e5e7eb] bg-white p-4 text-center"
             >
+              {item.info && <LevelInfoButton {...item.info} />}
               <Icon className="mx-auto mb-2 h-5 w-5 text-[#6b7280]" />
               <div className="mb-1 text-xs text-[#6b7280]">{item.label}</div>
               <div className="text-sm font-medium text-[#111827]">{item.value}</div>

@@ -22,22 +22,6 @@ export const WIZARD_STEPS: { key: string; label: string; icon: LucideIcon }[] = 
   { key: "summary", label: "סיכום", icon: FileText },
 ];
 
-export const DIFFICULTY_OPTIONS: { label: string; value: Difficulty }[] = [
-  { label: "קל", value: "easy" },
-  { label: "קל-בינוני", value: "easy" },
-  { label: "בינוני", value: "medium" },
-  { label: "בינוני-קשה", value: "medium" },
-  { label: "קשה", value: "hard" },
-];
-
-export const ACCESSIBILITY_OPTIONS: { label: string; value: number }[] = [
-  { label: "לא נגיש בכלל", value: 1 },
-  { label: "נגישות נמוכה", value: 2 },
-  { label: "נגישות חלקית", value: 3 },
-  { label: "נגיש לכיסאות גלגלים", value: 4 },
-  { label: "נגישות מלאה", value: 5 },
-];
-
 export const TRIP_TYPE_OPTIONS = [
   "טיול טבע",
   "טיול תרבות",

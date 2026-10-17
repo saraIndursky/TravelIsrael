@@ -64,7 +64,7 @@ export default function WizardPage() {
           )}
           {safeStep === 1 && (
             <DifficultyStep
-              difficultyLabel={store.difficultyLabel}
+              difficulty={store.difficulty}
               onSelect={(label, value) => setPrefs({ difficultyLabel: label, difficulty: value as Difficulty })}
             />
           )}

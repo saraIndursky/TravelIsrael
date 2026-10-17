@@ -1,6 +1,7 @@
 import type { Region } from "@/types";
 import type { RegionRecord, RegionStatus, RegionTreeNode } from "@/types/region";
 import { createClient } from "@/lib/supabase/client";
+import { expandRegionFilter } from "@/lib/utils/region-options";
 import { getCurrentRole, getCurrentUser } from "./auth";
 
 type RegionRow = {
@@ -119,6 +120,34 @@ export async function getRegions(): Promise<RegionRecord[]> {
 
   if (error) throw new Error(error.message);
   return (data ?? []).map(mapRegion);
+}
+
+const REGION_CACHE_MS = 60_000;
+let regionCache: { at: number; promise: Promise<RegionRecord[]> } | null = null;
+
+/** Regions for filter lookups. A short cache avoids one extra query per search. */
+function getRegionsCached(): Promise<RegionRecord[]> {
+  const now = Date.now();
+  if (!regionCache || now - regionCache.at > REGION_CACHE_MS) {
+    const promise = getRegions();
+    promise.catch(() => {
+      if (regionCache?.promise === promise) regionCache = null;
+    });
+    regionCache = { at: now, promise };
+  }
+  return regionCache.promise;
+}
+
+/**
+ * The region codes a region filter stands for: the chosen region and everything inside it.
+ * Falls back to the value itself if the regions can't be loaded, so the filter still works.
+ */
+export async function resolveRegionCodes(value: string): Promise<string[]> {
+  try {
+    return expandRegionFilter(await getRegionsCached(), value);
+  } catch {
+    return [value];
+  }
 }
 
 export async function getRegionTree(): Promise<RegionTreeNode[]> {

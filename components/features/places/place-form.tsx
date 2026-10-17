@@ -18,7 +18,8 @@ import { CreatePlacePreviewDialog } from "@/components/features/places/create-pl
 import { CommonTagsField } from "@/components/features/shared/common-tags-field";
 import { CreateFormActions } from "@/components/features/shared/create-form-actions";
 import { TripImageField } from "@/components/features/trips/trip-image-field";
-import { getAccessibilityLabel } from "@/lib/utils";
+import { LevelSelect } from "@/components/features/shared/level-select";
+import { useAccessibilityLevels } from "@/hooks/use-levels";
 import { buildPreviewPlace } from "@/lib/utils/preview-place";
 import { CreateAssistantPanel } from "@/components/features/assistant/create-assistant-panel";
 import { useAuthStore } from "@/hooks/use-stores";
@@ -115,6 +116,12 @@ export function PlaceForm({ mode = "create", placeId, initialPlace }: PlaceFormP
     defaultValues: initialPlace ? toFormValues(initialPlace) : emptyValues,
   });
 
+  const accessibilityLevels = useAccessibilityLevels();
+  const accessibilityOptions = accessibilityLevels.map((level) => ({
+    value: String(level.level),
+    label: `${level.level} — ${level.name}`,
+    description: level.description,
+  }));
   const selectedTags = watch("tags") ?? [];
   const imageUrl = watch("image_url") ?? "";
 
@@ -259,7 +266,7 @@ export function PlaceForm({ mode = "create", placeId, initialPlace }: PlaceFormP
       </Section>
 
       <Section title="מידע למבקרים">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <Label htmlFor="place-avg-duration-minutes">משך ביקור (דקות)</Label>
             <input className={inputClass} type="number" min={15} id="place-avg-duration-minutes" {...register("avg_duration_minutes")} />
@@ -270,18 +277,16 @@ export function PlaceForm({ mode = "create", placeId, initialPlace }: PlaceFormP
             <input className={inputClass} type="number" min={0} id="place-estimated-price" {...register("estimated_price")} />
             <FieldError message={errors.estimated_price?.message} />
           </div>
-          <div>
-            <Label htmlFor="place-accessibility">נגישות (1–5)</Label>
-            <select className={inputClass} id="place-accessibility" {...register("accessibility")}>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <option key={n} value={n}>
-                  {n} — {getAccessibilityLabel(n)}
-                </option>
-              ))}
-            </select>
-            <FieldError message={errors.accessibility?.message} />
-          </div>
         </div>
+        <LevelSelect
+          id="place-accessibility"
+          label="נגישות"
+          className={inputClass}
+          options={accessibilityOptions}
+          value={watch("accessibility")}
+          selectProps={register("accessibility")}
+          error={errors.accessibility?.message}
+        />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <Label htmlFor="place-opening-time">שעת פתיחה</Label>

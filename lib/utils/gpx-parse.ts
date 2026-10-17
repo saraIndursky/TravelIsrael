@@ -1,4 +1,5 @@
 import type { Accessibility, Difficulty, Region } from "@/types";
+import { haversineKm } from "@/lib/utils/geo";
 
 const NUMBERED_STATION_NAME = /^(\d+)\.\s*(.+)$/;
 const MAX_IMPORT_WAYPOINTS = 40;
@@ -155,18 +156,6 @@ function extractTracks(xml: string): ParsedGpxTrack[] {
     match = trkRe.exec(xml);
   }
   return tracks;
-}
-
-function haversineKm(a: GpxPoint, b: GpxPoint): number {
-  const R = 6371;
-  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
-  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
-  const lat1 = (a.lat * Math.PI) / 180;
-  const lat2 = (b.lat * Math.PI) / 180;
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(h));
 }
 
 function trackLengthKm(points: GpxPoint[]): number {

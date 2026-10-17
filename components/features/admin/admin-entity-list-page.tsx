@@ -16,7 +16,7 @@ import { getAdminActionsByStatus, getAdminMobileActions } from "@/components/fea
 import { AdminStatusBadgeInline } from "@/components/features/admin/admin-status-badge-inline";
 import { POPULARITY_LABELS } from "@/lib/utils/admin-popularity";
 import type { Status, User as AppUser } from "@/types";
-import { useRegionNames } from "@/hooks/use-region-names";
+import { RegionFilterSelect } from "@/components/features/shared/region-filter-select";
 import { CenteredPageLoading } from "@/components/layout/page-loading";
 import { InfiniteScrollFooter } from "@/components/ui/custom/infinite-scroll-footer";
 import { usePagedList } from "@/hooks/use-paged-list";
@@ -84,7 +84,6 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
   onDelete,
   onRestore,
 }: AdminEntityListPageProps<T>) {
-  const regionNames = useRegionNames();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("");
@@ -267,14 +266,7 @@ export function AdminEntityListPage<T extends { id: string; status: Status }>({
                 ))}
               </select>
             )}
-            <select aria-label="אזור" value={filterRegion} onChange={(e) => setFilterRegion(e.target.value)} className="ti-select w-full">
-              <option value="">כל האזורים</option>
-              {regionNames.map((region) => (
-                <option key={region} value={region}>
-                  {region}
-                </option>
-              ))}
-            </select>
+            <RegionFilterSelect value={filterRegion} onChange={setFilterRegion} className="ti-select w-full" />
           </div>
 
           {(searchTerm || filterType || filterRegion) && (

@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { ACCESSIBILITY_LEVELS } from "@/lib/levels";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -35,11 +36,8 @@ export function formatDistance(km: number): string {
 }
 
 export function getAccessibilityLabel(level: number): string {
-  if (level >= 5) return "נגישות מלאה";
-  if (level >= 4) return "נגישות גבוהה";
-  if (level >= 3) return "נגישות בינונית";
-  if (level >= 2) return "נגישות מוגבלת";
-  return "לא נגיש";
+  const rounded = Math.min(5, Math.max(1, Math.round(level)));
+  return ACCESSIBILITY_LEVELS.find((entry) => entry.level === rounded)?.name ?? "לא נגיש";
 }
 
 export function getReviewCount(trip: { views_count: number; favorites_count: number; avg_rating: number }): number {

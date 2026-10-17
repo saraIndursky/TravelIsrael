@@ -1,27 +1,30 @@
 "use client";
 
 import type { Difficulty } from "@/types";
-import { DIFFICULTY_OPTIONS } from "../wizard-constants";
+import { useDifficultyLevels } from "@/hooks/use-levels";
 import { WizardSelectionButton } from "../wizard-selection-button";
 import { WizardStepHeading } from "../wizard-step-heading";
 
 interface DifficultyStepProps {
-  difficultyLabel?: string;
+  difficulty?: Difficulty;
   onSelect: (label: string, value: Difficulty) => void;
 }
 
-export function DifficultyStep({ difficultyLabel, onSelect }: DifficultyStepProps) {
+export function DifficultyStep({ difficulty, onSelect }: DifficultyStepProps) {
+  const levels = useDifficultyLevels();
+
   return (
     <div>
       <WizardStepHeading title="מה רמת הקושי המתאימה?" subtitle="בחרו את רמת האתגר הרצויה" />
       <div className="space-y-4">
-        {DIFFICULTY_OPTIONS.map((opt) => (
+        {levels.map((level) => (
           <WizardSelectionButton
-            key={opt.label}
-            selected={difficultyLabel === opt.label}
-            onClick={() => onSelect(opt.label, opt.value)}
+            key={level.code}
+            selected={difficulty === level.code}
+            description={level.description}
+            onClick={() => onSelect(level.name, level.code)}
           >
-            {opt.label}
+            {level.name}
           </WizardSelectionButton>
         ))}
       </div>

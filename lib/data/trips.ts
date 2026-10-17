@@ -13,6 +13,7 @@ import { getPlaces } from "./places";
 import { getTrails } from "./trails";
 import { toStoredImageUrl } from "@/lib/utils/image-url";
 import { buildSearchFilter, pageRange, toPage, type Page } from "./paged";
+import { resolveRegionCodes } from "./regions";
 
 export type TripSort =
   | "createAt"
@@ -104,8 +105,9 @@ export async function getTripsPage(
   const supabase = createClient();
   const { from, to } = pageRange(page, pageSize);
   let query = supabase.from("trips").select("*", { count: "exact" }).eq("status", "approved");
+  const regionCodes = filters.region ? await resolveRegionCodes(filters.region) : [];
 
-  if (filters.region) query = query.eq("region", filters.region);
+  if (regionCodes.length) query = query.in("region", regionCodes);
   if (filters.difficulty) query = query.eq("difficulty", filters.difficulty);
   if (filters.accessibility) query = query.gte("accessibility", filters.accessibility);
   if (filters.stationCount) query = query.gte("station_count", filters.stationCount);
@@ -138,10 +140,11 @@ export async function getTrips(
 ): Promise<{ trips: Trip[]; total: number }> {
   const supabase = createClient();
   let query = supabase.from("trips").select("*");
+  const regionCodes = filters?.region ? await resolveRegionCodes(filters.region) : [];
 
   if (filters?.status) query = query.eq("status", filters.status);
   if (filters?.createdBy) query = query.eq("created_by", filters.createdBy);
-  if (filters?.region) query = query.eq("region", filters.region);
+  if (regionCodes.length) query = query.in("region", regionCodes);
   if (filters?.difficulty) query = query.eq("difficulty", filters.difficulty);
   if (filters?.accessibility) query = query.gte("accessibility", filters.accessibility);
   if (filters?.stationCount) query = query.gte("station_count", filters.stationCount);

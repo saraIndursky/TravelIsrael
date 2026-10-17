@@ -1,4 +1,9 @@
 import { z } from "zod";
+import { DIFFICULTY_LEVELS } from "@/lib/levels";
+
+const difficultySchema = z.enum(
+  DIFFICULTY_LEVELS.map((level) => level.code) as [string, ...string[]]
+);
 
 export const tripFormSchema = z.object({
   name: z.string().min(2, "שם הטיול חייב להכיל לפחות 2 תווים"),
@@ -20,7 +25,7 @@ export const tripFormSchema = z.object({
 
 export const wizardSchema = z.object({
   region: z.string().optional(),
-  difficulty: z.enum(["easy", "medium", "hard"]).optional(),
+  difficulty: difficultySchema.optional(),
   accessibility: z.number().min(1).max(5).optional(),
   tripType: z.string().optional(),
   tags: z.array(z.string()).optional(),
@@ -112,7 +117,7 @@ export const trailFormSchema = z.object({
     .max(30, "שם סוג המסלול ארוך מדי (עד 30 תווים)"),
   length_km: z.coerce.number().min(0.1, "אורך המסלול חייב להיות חיובי"),
   duration_minutes: z.coerce.number().min(15, "משך מינימלי 15 דקות"),
-  difficulty: z.enum(["easy", "medium", "hard"]),
+  difficulty: difficultySchema,
   accessibility: z.coerce.number().min(1).max(5),
   tags: z.array(z.string()).min(1, "יש לבחור לפחות תגית אחת"),
   estimated_price: z.coerce.number().min(0),

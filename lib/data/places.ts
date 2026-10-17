@@ -10,6 +10,7 @@ import { getCurrentRole, getCurrentUser } from "./auth";
 import { isFavoriteEntity } from "./favorites";
 import { toStoredImageUrl } from "@/lib/utils/image-url";
 import { buildSearchFilter, pageRange, toPage, type Page } from "./paged";
+import { resolveRegionCodes } from "./regions";
 
 export interface PlaceFilters {
   region?: Region;
@@ -54,11 +55,15 @@ export async function getApprovedPlaceTypes(): Promise<string[]> {
 const DEFAULT_PLACE_IMAGE =
   "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/ISR-2016-Makhtesh_Ramon-View_within_the_crater_01.jpg/1280px-ISR-2016-Makhtesh_Ramon-View_within_the_crater_01.jpg";
 
-function applyPlaceFilters(places: Place[], filters?: PlaceFilters): Place[] {
+function applyPlaceFilters(
+  places: Place[],
+  filters?: PlaceFilters,
+  regionCodes?: readonly string[]
+): Place[] {
   let result = places;
   if (filters?.createdBy) result = result.filter((p) => p.created_by === filters.createdBy);
   if (filters?.status) result = result.filter((p) => p.status === filters.status);
-  if (filters?.region) result = result.filter((p) => p.region === filters.region);
+  if (regionCodes?.length) result = result.filter((p) => regionCodes.includes(p.region));
   if (filters?.place_type) result = result.filter((p) => p.place_type === filters.place_type);
   if (filters?.accessibility) {
     result = result.filter((p) => p.accessibility >= filters.accessibility!);
@@ -81,16 +86,17 @@ function applyPlaceFilters(places: Place[], filters?: PlaceFilters): Place[] {
 export async function getPlaces(filters?: PlaceFilters): Promise<Place[]> {
   const supabase = createClient();
   let query = supabase.from("places").select("*");
+  const regionCodes = filters?.region ? await resolveRegionCodes(filters.region) : undefined;
 
   if (filters?.status) query = query.eq("status", filters.status);
   if (filters?.createdBy) query = query.eq("created_by", filters.createdBy);
-  if (filters?.region) query = query.eq("region", filters.region);
+  if (regionCodes?.length) query = query.in("region", regionCodes);
   if (filters?.place_type) query = query.eq("place_type", filters.place_type);
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
 
-  return applyPlaceFilters((data ?? []).map(mapPlace), filters).filter((place) =>
+  return applyPlaceFilters((data ?? []).map(mapPlace), filters, regionCodes).filter((place) =>
     isVisibleInDiscoveryList(place.status, Boolean(filters?.createdBy))
   );
 }
@@ -104,8 +110,9 @@ export async function getPlacesPage(
   const supabase = createClient();
   const { from, to } = pageRange(page, pageSize);
   let query = supabase.from("places").select("*", { count: "exact" }).eq("status", "approved");
+  const regionCodes = filters.region ? await resolveRegionCodes(filters.region) : [];
 
-  if (filters.region) query = query.eq("region", filters.region);
+  if (regionCodes.length) query = query.in("region", regionCodes);
   if (filters.place_type) query = query.eq("place_type", filters.place_type);
   if (filters.accessibility) query = query.gte("accessibility", filters.accessibility);
   if (filters.tags?.length) query = query.overlaps("tags", filters.tags);

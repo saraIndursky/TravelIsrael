@@ -101,13 +101,18 @@
   }
 
   .ti-difficulty-medium-hard {
-    color: #b91c1c;
-    background-color: #fee2e2;
+    color: #c2410c;
+    background-color: #ffedd5;
   }
 
   .ti-difficulty-hard {
     color: #b91c1c;
     background-color: #fee2e2;
+  }
+
+  .ti-difficulty-challenging {
+    color: #7f1d1d;
+    background-color: #fecaca;
   }
 
   .ti-difficulty-none {

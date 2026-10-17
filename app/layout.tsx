@@ -5,6 +5,8 @@ import { SiteChrome } from "@/components/layout/site-chrome";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthSyncProvider } from "@/components/providers/auth-sync";
 import { AnalyticsScripts } from "@/components/analytics/analytics-scripts";
+import { LevelsHydrator } from "@/components/providers/levels-hydrator";
+import { loadLevelOverrides } from "@/lib/data/server/levels";
 
 const rubik = Rubik({
   subsets: ["hebrew", "latin"],
@@ -18,10 +20,13 @@ export const metadata: Metadata = {
   verification: { google: "u9DyR-ojuo3pwXPLWiCdN1_naJ3B7GhgoJxCjEwF7_Q" },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const levelOverrides = await loadLevelOverrides();
+
   return (
     <html lang="he" dir="rtl">
       <body className={`${rubik.className} min-h-screen flex flex-col`}>
+        <LevelsHydrator overrides={levelOverrides} />
         <AuthSyncProvider>
           <SiteChrome>{children}</SiteChrome>
           <Toaster />

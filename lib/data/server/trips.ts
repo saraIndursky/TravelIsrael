@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { mapTrip } from "@/lib/supabase/mappers";
 import { slugOrIdColumn } from "@/lib/utils/slug";
 import type { Trip } from "@/types";
+import type { RegionRecord } from "@/types/region";
+import { expandRegionFilter } from "@/lib/utils/region-options";
 import type { TripFilters, TripSort, SortDirection } from "@/lib/data/trips";
 
 function sortTrips(trips: Trip[], sort: TripSort, direction: SortDirection): Trip[] {
@@ -36,6 +38,20 @@ function sortTrips(trips: Trip[], sort: TripSort, direction: SortDirection): Tri
   }
 }
 
+/** Region codes a filter value stands for (the region and everything inside it), read on the server. */
+async function resolveRegionCodesServer(value: string): Promise<string[]> {
+  try {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("regions")
+      .select("id, name, code, parent_id, is_selectable, status");
+    if (error) throw new Error(error.message);
+    return expandRegionFilter((data ?? []) as RegionRecord[], value);
+  } catch {
+    return [value];
+  }
+}
+
 export async function getTripsServer(
   filters?: TripFilters,
   sort: TripSort = "createAt",
@@ -45,10 +61,11 @@ export async function getTripsServer(
 ): Promise<{ trips: Trip[]; total: number }> {
   const supabase = createClient();
   let query = supabase.from("trips").select("*");
+  const regionCodes = filters?.region ? await resolveRegionCodesServer(filters.region) : [];
 
   if (filters?.status) query = query.eq("status", filters.status);
   if (filters?.createdBy) query = query.eq("created_by", filters.createdBy);
-  if (filters?.region) query = query.eq("region", filters.region);
+  if (regionCodes.length) query = query.in("region", regionCodes);
   if (filters?.difficulty) query = query.eq("difficulty", filters.difficulty);
   if (filters?.accessibility) query = query.gte("accessibility", filters.accessibility);
   if (filters?.stationCount) query = query.gte("station_count", filters.stationCount);

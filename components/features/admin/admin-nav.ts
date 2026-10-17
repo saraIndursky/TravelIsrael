@@ -8,6 +8,7 @@ import {
   Globe2,
   Inbox,
   ShieldCheck,
+  SlidersHorizontal,
   type LucideIcon,
 } from "lucide-react";
 
@@ -27,5 +28,6 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/moderation", label: "פיקוח", icon: ShieldCheck, description: "תגובות ותמונות מהקהילה" },
   { href: "/admin/messages", label: "פניות", icon: Inbox, description: "הודעות מטופס יצירת הקשר" },
   { href: "/admin/regions", label: "אזורים", icon: Globe2, description: "היררכיית אזורים" },
+  { href: "/admin/levels", label: "רמות", icon: SlidersHorizontal, description: "הסברי נגישות וקושי" },
   { href: "/admin/users", label: "משתמשים", icon: Users, description: "תפקידי משתמשים" },
 ];

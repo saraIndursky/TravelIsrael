@@ -1,7 +1,7 @@
 import type { Accessibility, Difficulty, Place, Region, Trail, TripStation } from "@/types";
 import { calculateTotalTripMinutes } from "@/lib/utils/trip-time";
+import { difficultyRank } from "@/lib/levels";
 
-const DIFFICULTY_ORDER: Difficulty[] = ["easy", "medium", "hard"];
 
 export interface TripStats {
   total_duration_minutes: number;
@@ -55,7 +55,7 @@ export function computeTripStats(
       if (trail) {
         totalDistance += trail.length_km;
         totalPrice += trail.estimated_price;
-        if (DIFFICULTY_ORDER.indexOf(trail.difficulty) > DIFFICULTY_ORDER.indexOf(maxDifficulty)) {
+        if (difficultyRank(trail.difficulty) > difficultyRank(maxDifficulty)) {
           maxDifficulty = trail.difficulty;
         }
         minAccessibility = Math.min(minAccessibility, trail.accessibility) as Accessibility;

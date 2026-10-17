@@ -7,7 +7,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import type { Accessibility, Difficulty, Region, Trail } from "@/types";
-import { DIFFICULTY_LABELS } from "@/types/enums";
 import { toast } from "@/components/ui/use-toast";
 import { createTrail, updateTrail, getApprovedTrailTypes } from "@/lib/data/trails";
 import { ensureRegion } from "@/lib/data/regions";
@@ -20,7 +19,8 @@ import { CreateTrailPreviewDialog } from "@/components/features/trails/create-tr
 import { CommonTagsField } from "@/components/features/shared/common-tags-field";
 import { CreateFormActions } from "@/components/features/shared/create-form-actions";
 import { TripImageField } from "@/components/features/trips/trip-image-field";
-import { getAccessibilityLabel } from "@/lib/utils";
+import { LevelSelect } from "@/components/features/shared/level-select";
+import { useAccessibilityLevels, useDifficultyLevels } from "@/hooks/use-levels";
 import { buildPreviewTrail } from "@/lib/utils/preview-trail";
 import { CreateAssistantPanel } from "@/components/features/assistant/create-assistant-panel";
 import { useAuthStore } from "@/hooks/use-stores";
@@ -126,6 +126,18 @@ export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormP
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "waypoints" });
+  const accessibilityLevels = useAccessibilityLevels();
+  const difficultyLevels = useDifficultyLevels();
+  const accessibilityOptions = accessibilityLevels.map((level) => ({
+    value: String(level.level),
+    label: `${level.level} — ${level.name}`,
+    description: level.description,
+  }));
+  const difficultyOptions = difficultyLevels.map((level) => ({
+    value: level.code,
+    label: level.name,
+    description: level.description,
+  }));
   const selectedTags = watch("tags") ?? [];
   const imageUrl = watch("image_url") ?? "";
 
@@ -261,32 +273,30 @@ export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormP
             <FieldError message={errors.duration_minutes?.message} />
           </div>
           <div>
-            <Label htmlFor="trail-difficulty">קושי</Label>
-            <select className={inputClass} id="trail-difficulty" {...register("difficulty")}>
-              {(Object.keys(DIFFICULTY_LABELS) as Difficulty[]).map((d) => (
-                <option key={d} value={d}>{DIFFICULTY_LABELS[d]}</option>
-              ))}
-            </select>
-            <FieldError message={errors.difficulty?.message} />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
             <Label htmlFor="trail-estimated-price">מחיר משוער (₪)</Label>
             <input className={inputClass} type="number" min={0} id="trail-estimated-price" {...register("estimated_price")} />
             <FieldError message={errors.estimated_price?.message} />
           </div>
-          <div>
-            <Label htmlFor="trail-accessibility">נגישות (1–5)</Label>
-            <select className={inputClass} id="trail-accessibility" {...register("accessibility")}>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <option key={n} value={n}>
-                  {n} — {getAccessibilityLabel(n)}
-                </option>
-              ))}
-            </select>
-            <FieldError message={errors.accessibility?.message} />
-          </div>
+        </div>
+        <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
+          <LevelSelect
+            id="trail-difficulty"
+            label="קושי"
+            className={inputClass}
+            options={difficultyOptions}
+            value={watch("difficulty")}
+            selectProps={register("difficulty")}
+            error={errors.difficulty?.message}
+          />
+          <LevelSelect
+            id="trail-accessibility"
+            label="נגישות"
+            className={inputClass}
+            options={accessibilityOptions}
+            value={watch("accessibility")}
+            selectProps={register("accessibility")}
+            error={errors.accessibility?.message}
+          />
         </div>
         <div>
           <Label htmlFor="trail-operating-hours">שעות פעילות</Label>

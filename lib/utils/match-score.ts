@@ -1,5 +1,6 @@
 import type { Difficulty, Region, Trip } from "@/types";
 import { DIFFICULTY_LABELS } from "@/types/enums";
+import { difficultyRank } from "@/lib/levels";
 import { getRegionsInGroup } from "@/lib/utils/region-groups";
 
 export interface WizardPreferences {
@@ -35,9 +36,11 @@ function regionMatch(tripRegion: Region, prefs: Pick<WizardPreferences, "region"
   return 0.5;
 }
 
+/** Full score for the same level, losing a quarter for each step away on the difficulty scale. */
 function difficultyMatch(tripDifficulty: Difficulty, pref?: Difficulty): number {
   if (!pref) return 0.5;
-  return tripDifficulty === pref ? 1 : 0.5;
+  const distance = Math.abs(difficultyRank(tripDifficulty) - difficultyRank(pref));
+  return Math.max(0, 1 - distance * 0.25);
 }
 
 function accessibilityMatch(tripAccessibility: number, pref?: number): number {

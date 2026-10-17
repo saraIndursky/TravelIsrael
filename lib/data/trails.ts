@@ -10,6 +10,7 @@ import { getCurrentRole, getCurrentUser } from "./auth";
 import { isFavoriteEntity } from "./favorites";
 import { toStoredImageUrl } from "@/lib/utils/image-url";
 import { buildSearchFilter, pageRange, toPage, type Page } from "./paged";
+import { resolveRegionCodes } from "./regions";
 
 export interface TrailFilters {
   region?: Region;
@@ -65,11 +66,15 @@ export async function getApprovedTrailTypes(): Promise<string[]> {
 const DEFAULT_TRAIL_IMAGE =
   "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/ISR-2016-Makhtesh_Ramon-View_within_the_crater_01.jpg/1280px-ISR-2016-Makhtesh_Ramon-View_within_the_crater_01.jpg";
 
-function applyTrailFilters(trails: Trail[], filters?: TrailFilters): Trail[] {
+function applyTrailFilters(
+  trails: Trail[],
+  filters?: TrailFilters,
+  regionCodes?: readonly string[]
+): Trail[] {
   let result = trails;
   if (filters?.createdBy) result = result.filter((t) => t.created_by === filters.createdBy);
   if (filters?.status) result = result.filter((t) => t.status === filters.status);
-  if (filters?.region) result = result.filter((t) => t.region === filters.region);
+  if (regionCodes?.length) result = result.filter((t) => regionCodes.includes(t.region));
   if (filters?.difficulty) result = result.filter((t) => t.difficulty === filters.difficulty);
   if (filters?.trail_type) result = result.filter((t) => t.trail_type === filters.trail_type);
   if (filters?.accessibility) {
@@ -93,17 +98,18 @@ function applyTrailFilters(trails: Trail[], filters?: TrailFilters): Trail[] {
 export async function getTrails(filters?: TrailFilters): Promise<Trail[]> {
   const supabase = createClient();
   let query = supabase.from("trails").select("*");
+  const regionCodes = filters?.region ? await resolveRegionCodes(filters.region) : undefined;
 
   if (filters?.status) query = query.eq("status", filters.status);
   if (filters?.createdBy) query = query.eq("created_by", filters.createdBy);
-  if (filters?.region) query = query.eq("region", filters.region);
+  if (regionCodes?.length) query = query.in("region", regionCodes);
   if (filters?.difficulty) query = query.eq("difficulty", filters.difficulty);
   if (filters?.trail_type) query = query.eq("trail_type", filters.trail_type);
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
 
-  return applyTrailFilters((data ?? []).map(mapTrail), filters).filter((trail) =>
+  return applyTrailFilters((data ?? []).map(mapTrail), filters, regionCodes).filter((trail) =>
     isVisibleInDiscoveryList(trail.status, Boolean(filters?.createdBy))
   );
 }
@@ -117,8 +123,9 @@ export async function getTrailsPage(
   const supabase = createClient();
   const { from, to } = pageRange(page, pageSize);
   let query = supabase.from("trails").select("*", { count: "exact" }).eq("status", "approved");
+  const regionCodes = filters.region ? await resolveRegionCodes(filters.region) : [];
 
-  if (filters.region) query = query.eq("region", filters.region);
+  if (regionCodes.length) query = query.in("region", regionCodes);
   if (filters.difficulty) query = query.eq("difficulty", filters.difficulty);
   if (filters.trail_type) query = query.eq("trail_type", filters.trail_type);
   if (filters.accessibility) query = query.gte("accessibility", filters.accessibility);

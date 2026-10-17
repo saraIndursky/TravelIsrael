@@ -202,7 +202,34 @@ export function BuildTripForm({ mode, tripId, initialTrip, editHint }: BuildTrip
 
   const stats = computeTripStats(normalizedStations, places, trails);
 
+  // Places and trails already in the trip are not offered again, and the picker is sorted by
+  // distance from where the trip currently ends.
+  const excludedIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const station of stations) {
+      if (station.place_id) ids.add(station.place_id);
+      if (station.trail_id) ids.add(station.trail_id);
+    }
+    return ids;
+  }, [stations]);
+
+  const pickerAnchor = useMemo(() => {
+    const last = normalizedStations[normalizedStations.length - 1];
+    if (!last) return null;
+    if (last.station_type === "place") {
+      const place = places.find((p) => p.id === last.place_id);
+      return place ? { lat: place.lat, lng: place.lng, name: place.name } : null;
+    }
+    const trail = trails.find((t) => t.id === last.trail_id);
+    return trail ? { lat: trail.end_lat, lng: trail.end_lng, name: trail.name } : null;
+  }, [normalizedStations, places, trails]);
+
   const addStation = (type: "place" | "trail", id: string) => {
+    if (excludedIds.has(id)) {
+      toast({ title: "התחנה כבר נמצאת בטיול" });
+      setPickerOpen(false);
+      return;
+    }
     const station: TripStation = {
       id: generateId(),
       trip_id: tripId ?? "",
@@ -531,6 +558,8 @@ export function BuildTripForm({ mode, tripId, initialTrip, editHint }: BuildTrip
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         onSelect={addStation}
+        excludedIds={excludedIds}
+        anchor={pickerAnchor}
         variant="grid"
         onCreatePlace={() => saveDraftAndNavigate("place")}
         onCreateTrail={() => saveDraftAndNavigate("trail")}

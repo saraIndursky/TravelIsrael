@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { adminListShowsE2eContent, E2E_CONTENT_PREFIX } from "@/lib/utils/e2e-content";
 import type { Status } from "@/types";
 import { pageRange, toPage, type Page } from "./paged";
+import { resolveRegionCodes } from "./regions";
 
 export const ADMIN_PAGE_SIZE = 20;
 
@@ -46,7 +47,10 @@ export async function getAdminEntityPage<Row, T>(
     .range(from, to);
 
   if (params.typeColumn && params.typeValue) query = query.eq(params.typeColumn, params.typeValue);
-  if (params.region) query = query.eq("region", params.region);
+  if (params.region) {
+    const regionCodes = await resolveRegionCodes(params.region);
+    if (regionCodes.length) query = query.in("region", regionCodes);
+  }
   if (!adminListShowsE2eContent(params.search)) query = query.not("name", "like", `${E2E_CONTENT_PREFIX}%`);
 
   const term = cleanSearchTerm(params.search);

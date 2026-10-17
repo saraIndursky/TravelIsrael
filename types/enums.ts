@@ -1,5 +1,11 @@
 export type Status = "draft" | "pending" | "approved" | "rejected" | "removed";
-export type Difficulty = "easy" | "medium" | "hard";
+export type Difficulty =
+  | "easy"
+  | "easy_medium"
+  | "medium"
+  | "medium_hard"
+  | "hard"
+  | "challenging";
 export type StationType = "place" | "trail";
 export type TravelMode = "walking" | "car" | "bike";
 
@@ -41,8 +47,11 @@ export const REGIONS: Region[] = [
 
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   easy: "קל",
+  easy_medium: "קל-בינוני",
   medium: "בינוני",
+  medium_hard: "בינוני-קשה",
   hard: "קשה",
+  challenging: "מאתגר",
 };
 
 export const STATUS_LABELS: Record<Status, string> = {

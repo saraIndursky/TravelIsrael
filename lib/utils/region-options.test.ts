@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { RegionRecord } from "@/types/region";
 import {
+  buildRegionFilterOptions,
   buildRegionPickerOptions,
+  expandRegionFilter,
   findSelectableRegion,
   regionOptionLabel,
 } from "./region-options";
@@ -91,5 +93,49 @@ describe("trail types", () => {
     expect(isNewTrailType("שייט", [])).toBe(true);
     expect(isNewTrailType("הליכה", [])).toBe(false);
     expect(isNewTrailType("שייט", ["שייט"])).toBe(false);
+  });
+});
+
+describe("expandRegionFilter", () => {
+  const tree: RegionRecord[] = [
+    region({ id: "il", name: "ישראל" }),
+    region({ id: "north", name: "צפון", parent_id: "il", code: "צפון" as never, is_selectable: true }),
+    region({ id: "galil", name: "גליל", parent_id: "north", code: "גליל" as never, is_selectable: true }),
+    region({ id: "carmel", name: "כרמל", parent_id: "north", code: "כרמל" as never, is_selectable: true }),
+    region({ id: "jer", name: "ירושלים והסביבה", parent_id: "il" }),
+    region({ id: "jerusalem", name: "ירושלים", parent_id: "jer", code: "ירושלים" as never, is_selectable: true }),
+    region({ id: "bad", name: "נדחה", parent_id: "north", code: "נדחה" as never, is_selectable: true, status: "rejected" }),
+  ];
+
+  it("includes the region itself and everything nested under it", () => {
+    expect(expandRegionFilter(tree, "צפון").sort()).toEqual(["גליל", "כרמל", "צפון"]);
+  });
+
+  it("returns just the code for a leaf region", () => {
+    expect(expandRegionFilter(tree, "גליל")).toEqual(["גליל"]);
+  });
+
+  it("resolves a group heading that has no code of its own", () => {
+    expect(expandRegionFilter(tree, "ירושלים והסביבה")).toEqual(["ירושלים"]);
+  });
+
+  it("skips rejected regions and keeps unknown values as they are", () => {
+    expect(expandRegionFilter(tree, "צפון")).not.toContain("נדחה");
+    expect(expandRegionFilter(tree, "אטלנטיס")).toEqual(["אטלנטיס"]);
+    expect(expandRegionFilter(tree, "")).toEqual([]);
+  });
+});
+
+describe("buildRegionFilterOptions", () => {
+  it("drops the single root, indents children and keeps headings selectable", () => {
+    const options = buildRegionFilterOptions(buildRegionPickerOptions(regions));
+    expect(options[0]).toEqual({ value: "צפון", label: "צפון" });
+    expect(options.find((o) => o.value === "גליל")?.label).toBe("    גליל");
+    expect(options.some((o) => o.value === "ישראל")).toBe(false);
+  });
+
+  it("leaves out regions that are still pending approval", () => {
+    const options = buildRegionFilterOptions(buildRegionPickerOptions(regions));
+    expect(options.some((o) => o.value === "תל אביב")).toBe(false);
   });
 });

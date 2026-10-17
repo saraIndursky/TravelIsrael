@@ -1,5 +1,6 @@
 import type { AssistantEntity } from "@/types/assistant";
 import { COMMON_TAGS, REGIONS } from "@/types/enums";
+import { DIFFICULTY_LEVELS } from "@/lib/levels";
 import { PLACE_FIELD_LABELS, TRAIL_FIELD_LABELS, TRIP_FIELD_LABELS } from "./field-labels";
 
 const FIELD_LABELS: Record<AssistantEntity, Record<string, string>> = {
@@ -13,7 +14,7 @@ const SKIPPED_FIELDS = new Set(["image_url", "main_image"]);
 
 const FIELD_RULES = `כללי ערכים:
 - accessibility: מספר שלם 1 עד 5.
-- difficulty: אחד מ-easy, medium, hard.
+- difficulty: אחד מ-${DIFFICULTY_LEVELS.map((level) => `${level.code} (${level.name})`).join(", ")}.
 - region: אחד מ-${REGIONS.join(", ")}.
 - tags: מערך של מחרוזות, עדיף מתוך: ${COMMON_TAGS.join(", ")}.
 - lat, lng, start_lat, start_lng, end_lat, end_lng, length_km, estimated_price ו-avg_duration_minutes: מספרים.

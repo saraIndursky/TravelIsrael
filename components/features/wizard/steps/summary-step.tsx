@@ -12,7 +12,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 import type { WizardPreferences } from "@/lib/utils/match-score";
-import { ACCESSIBILITY_OPTIONS, getDifficultyDisplayLabel } from "../wizard-constants";
+import { getAccessibilityLabel } from "@/lib/utils";
+import { getDifficultyDisplayLabel } from "../wizard-constants";
 
 interface SummaryStepProps {
   prefs: WizardPreferences;
@@ -49,8 +50,7 @@ function SummaryRow({
 }
 
 export function SummaryStep({ prefs }: SummaryStepProps) {
-  const accessibilityLabel =
-    ACCESSIBILITY_OPTIONS.find((o) => o.value === prefs.accessibility)?.label ?? "";
+  const accessibilityLabel = prefs.accessibility ? getAccessibilityLabel(prefs.accessibility) : "";
 
   return (
     <div>

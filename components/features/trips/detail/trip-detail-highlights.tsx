@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import type { Trip } from "@/types";
 import { DIFFICULTY_LABELS } from "@/types/enums";
+import { LevelInfoButton } from "@/components/features/shared/level-info-button";
+import { ACCESSIBILITY_LEVELS, DIFFICULTY_LEVELS } from "@/lib/levels";
 import { formatTripCardDuration, formatPrice, getAccessibilityLabel } from "@/lib/utils";
 
 interface TripDetailHighlightsProps {
@@ -29,7 +31,15 @@ export function TripDetailHighlights({
         ? `${trip.total_distance_km.toFixed(2)} ק"מ`
         : "—";
 
-  const highlights = [
+  const accessibilityLevel = ACCESSIBILITY_LEVELS.find((level) => level.level === trip.accessibility);
+  const difficultyLevel = DIFFICULTY_LEVELS.find((level) => level.code === trip.difficulty);
+
+  const highlights: {
+    icon: typeof Clock;
+    label: string;
+    value: string;
+    info?: { title: string; description: string; note?: string };
+  }[] = [
     {
       icon: Clock,
       label: "משך זמן",
@@ -49,6 +59,11 @@ export function TripDetailHighlights({
       icon: Accessibility,
       label: "נגישות",
       value: getAccessibilityLabel(trip.accessibility),
+      info: accessibilityLevel && {
+        title: accessibilityLevel.name,
+        description: accessibilityLevel.description,
+        note: "נגישות הטיול נקבעת לפי התחנה הפחות נגישה בו.",
+      },
     },
     {
       icon: CircleDollarSign,
@@ -59,6 +74,11 @@ export function TripDetailHighlights({
       icon: TrendingUp,
       label: "קושי",
       value: DIFFICULTY_LABELS[trip.difficulty],
+      info: difficultyLevel && {
+        title: difficultyLevel.name,
+        description: difficultyLevel.description,
+        note: "קושי הטיול נקבע לפי המסלול הקשה ביותר בו.",
+      },
     },
   ];
 
@@ -76,8 +96,9 @@ export function TripDetailHighlights({
           return (
             <div
               key={item.label}
-              className="rounded-[2px] border border-[#e5e7eb] bg-white p-4 text-center"
+              className="relative rounded-[2px] border border-[#e5e7eb] bg-white p-4 text-center"
             >
+              {item.info && <LevelInfoButton {...item.info} />}
               <Icon className="mx-auto mb-2 h-5 w-5 text-[#6b7280]" />
               <div className="mb-1 text-xs text-[#6b7280]">{item.label}</div>
               <div className="text-sm font-medium text-[#111827]">{item.value}</div>

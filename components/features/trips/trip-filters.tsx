@@ -1,8 +1,9 @@
 "use client";
 
 import { Accessibility, MapPin, Search, TrendingUp } from "lucide-react";
-import { useRegionNames } from "@/hooks/use-region-names";
+import { RegionFilterSelect } from "@/components/features/shared/region-filter-select";
 import { cn } from "@/lib/utils";
+import { useAccessibilityLevels, useDifficultyLevels } from "@/hooks/use-levels";
 
 export const TRIP_TYPE_OPTIONS = ["טבע", "תרבות", "ים", "מדבר", "משפחות", "היסטוריה", "אוכל"] as const;
 
@@ -48,14 +49,17 @@ const selectClass =
   "w-full rounded-sm border border-[#d1d5db] bg-white px-4 py-2.5 text-sm text-[#111827] transition-colors focus:border-[#111827] focus:outline-none";
 
 export function TripFilters({ values, onChange, onApply, onClear, className }: TripFiltersProps) {
-  const regionNames = useRegionNames();
+  const difficultyLevels = useDifficultyLevels();
+  const accessibilityLevels = useAccessibilityLevels();
+  const selectedDifficulty = difficultyLevels.find((level) => level.code === values.difficulty);
+  const selectedAccessibility = accessibilityLevels.find((level) => String(level.level) === values.accessibility);
   const set = <K extends keyof TripFilterValues>(key: K, value: TripFilterValues[K]) => {
     onChange({ ...values, [key]: value });
   };
 
   return (
-    <div className={cn("rounded-lg border border-[#e5e7eb] bg-white p-6", className)}>
-      <div className="mb-6 flex items-center justify-between">
+    <div className={cn("flex min-h-0 flex-col rounded-lg border border-[#e5e7eb] bg-white p-6", className)}>
+      <div className="mb-6 flex shrink-0 items-center justify-between">
         <h2 className="text-lg font-medium text-[#111827]">סינון</h2>
         <button
           type="button"
@@ -66,7 +70,7 @@ export function TripFilters({ values, onChange, onApply, onClear, className }: T
         </button>
       </div>
 
-      <div className="space-y-5">
+      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-1 py-1">
         <div>
           <label className="mb-2 block text-sm font-medium text-[#4b5563]">חיפוש</label>
           <div className="relative">
@@ -87,12 +91,7 @@ export function TripFilters({ values, onChange, onApply, onClear, className }: T
             <MapPin className="ml-1 inline h-4 w-4 text-gray-600" />
             אזור
           </label>
-          <select aria-label="אזור" value={values.region} onChange={(e) => set("region", e.target.value)} className={selectClass}>
-            <option value="">כל האזורים</option>
-            {regionNames.map((r) => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
+          <RegionFilterSelect value={values.region} onChange={(region) => set("region", region)} className={selectClass} />
         </div>
 
         <div>
@@ -102,10 +101,13 @@ export function TripFilters({ values, onChange, onApply, onClear, className }: T
           </label>
           <select aria-label="רמת קושי" value={values.difficulty} onChange={(e) => set("difficulty", e.target.value)} className={selectClass}>
             <option value="">כל הרמות</option>
-            <option value="easy">קל</option>
-            <option value="medium">בינוני</option>
-            <option value="hard">קשה</option>
+            {difficultyLevels.map((level) => (
+              <option key={level.code} value={level.code}>{level.name}</option>
+            ))}
           </select>
+          {selectedDifficulty?.description && (
+            <p className="mt-1.5 text-xs leading-relaxed text-[#6b7280]">{selectedDifficulty.description}</p>
+          )}
         </div>
 
         <div>
@@ -115,11 +117,17 @@ export function TripFilters({ values, onChange, onApply, onClear, className }: T
           </label>
           <select aria-label="נגישות" value={values.accessibility} onChange={(e) => set("accessibility", e.target.value)} className={selectClass}>
             <option value="">הכל</option>
-            <option value="2">נגישות בסיסית ומעלה</option>
-            <option value="3">נגישות בינונית ומעלה</option>
-            <option value="4">נגישות גבוהה ומעלה</option>
-            <option value="5">נגישות מלאה</option>
+            {accessibilityLevels
+              .filter((level) => level.level >= 2)
+              .map((level) => (
+                <option key={level.level} value={String(level.level)}>
+                  {level.level === 5 ? level.name : `${level.name} ומעלה`}
+                </option>
+              ))}
           </select>
+          {selectedAccessibility?.description && (
+            <p className="mt-1.5 text-xs leading-relaxed text-[#6b7280]">{selectedAccessibility.description}</p>
+          )}
         </div>
 
         <div>
@@ -194,7 +202,7 @@ export function TripFilters({ values, onChange, onApply, onClear, className }: T
       <button
         type="button"
         onClick={onApply}
-        className="mt-6 w-full rounded-sm bg-[#111827] py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1f2937]"
+        className="mt-4 w-full shrink-0 rounded-sm bg-[#111827] py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1f2937]"
       >
         החל סינון
       </button>

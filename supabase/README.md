@@ -34,6 +34,7 @@
 | `schema/31_account_deletion.sql` | מחיקת חשבון עצמית (`delete_my_account`, דורשת אימות סיסמה טרי): תוכן מאושר עובר לפרופיל מערכת "TravelIsrael" (מנהל שאי אפשר להתחבר אליו), וטיוטות, תוכן ממתין, תגובות, דירוגים ומועדפים נמחקים — public + demo |
 | `schema/32_comment_edit_requeue.sql` | תגובה שנערכה חוזרת לתור הפיקוח כלא נצפתה, כדי שעריכה לא תעקוף בדיקה — public + demo |
 | `schema/33_text_limits.sql` | מגבלות אורך לטקסט משתמשים ואיסור כתובות `javascript:`/`data:` באתר של מקום — public + demo |
+| `schema/34_level_tables.sql` | רמות נגישות (1–5) ורמות קושי (6 רמות) כטבלאות עם שם והסבר, קריאה לכולם וכתיבה למנהל; `difficulty` בטלאים וטיולים עובר מ-enum ל-text עם מפתח זר; אחרי ההרצה: `select pg_notify(pgrst, reload schema)` — **הורץ על demo בלבד**, ב-public עדיין לא — public + demo |
 
 ## הרצת SQL על הפרויקט החי
 

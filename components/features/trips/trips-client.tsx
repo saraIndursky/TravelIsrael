@@ -181,7 +181,7 @@ export function TripsClient() {
       <div className="w-full px-6 py-8 xl:px-12 2xl:px-20">
         <div className="flex gap-8">
           <aside className="hidden w-80 shrink-0 lg:block">
-            <div className="sticky top-8">
+            <div className="sticky top-24 flex max-h-[calc(100vh-7rem)] flex-col">
               <TripFilters
                 values={draftFilters}
                 onChange={setDraftFilters}
@@ -290,9 +290,9 @@ export function TripsClient() {
             onClick={() => setMobileFiltersOpen(false)}
             role="presentation"
           />
-          <div className="absolute right-0 top-0 h-full w-full max-w-sm overflow-y-auto bg-white">
-            <div className="p-6">
-              <div className="mb-6 flex items-center justify-between">
+          <div className="absolute right-0 top-0 flex h-full w-full max-w-sm flex-col bg-white">
+            <div className="flex min-h-0 flex-1 flex-col p-6">
+              <div className="mb-6 flex shrink-0 items-center justify-between">
                 <h3 className="text-lg font-medium text-[#111827]">סינון</h3>
                 <button
                   type="button"
@@ -308,7 +308,7 @@ export function TripsClient() {
                 onChange={setDraftFilters}
                 onApply={() => applyFilters(draftFilters)}
                 onClear={clearFilters}
-                className="border-0 p-0"
+                className="flex-1 border-0 p-0"
               />
             </div>
           </div>

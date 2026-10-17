@@ -4,6 +4,8 @@ import { computePopularity } from "@/lib/utils/admin-popularity";
 import { placePath, trailPath, tripEditPath, tripPath } from "@/lib/utils/content-path";
 import { isNewPlaceType } from "@/lib/utils/place-types";
 import { isNewTrailType } from "@/lib/utils/trail-types";
+import { DIFFICULTY_LEVELS } from "@/lib/levels";
+import { DIFFICULTY_LABELS } from "@/types/enums";
 
 export const tripsAdminConfig: AdminEntityListConfig<Trip> = {
   title: "ניהול טיולים",
@@ -16,10 +18,10 @@ export const tripsAdminConfig: AdminEntityListConfig<Trip> = {
   typeFilter: {
     label: "קושי",
     allLabel: "כל רמות הקושי",
-    options: ["קל", "בינוני", "קשה"],
-    getValue: (t) => ({ easy: "קל", medium: "בינוני", hard: "קשה" }[t.difficulty]),
+    options: DIFFICULTY_LEVELS.map((level) => level.name),
+    getValue: (t) => DIFFICULTY_LABELS[t.difficulty],
     column: "difficulty",
-    toStored: (label) => ({ קל: "easy", בינוני: "medium", קשה: "hard" })[label] ?? label,
+    toStored: (label) => DIFFICULTY_LEVELS.find((level) => level.name === label)?.code ?? label,
   },
   getImageUrl: (t) => t.main_image,
   getName: (t) => t.name,

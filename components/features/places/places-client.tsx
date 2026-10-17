@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Plus, Search } from "lucide-react";
 import type { Region } from "@/types";
-import { useRegionNames } from "@/hooks/use-region-names";
+import { RegionFilterSelect } from "@/components/features/shared/region-filter-select";
 import { PlaceCard } from "@/components/features/places/place-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InfiniteScrollFooter } from "@/components/ui/custom/infinite-scroll-footer";
@@ -18,7 +18,6 @@ const inputClass =
   "w-full rounded-sm border border-[#d1d5db] bg-white px-4 py-2.5 text-sm text-[#111827] focus:border-[#111827] focus:outline-none";
 
 export function PlacesClient() {
-  const regionNames = useRegionNames();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -96,12 +95,7 @@ export function PlacesClient() {
               onKeyDown={(e) => e.key === "Enter" && applyFilters()}
             />
           </div>
-          <select aria-label="אזור" className={inputClass} value={region} onChange={(e) => setRegion(e.target.value)}>
-            <option value="">כל האזורים</option>
-            {regionNames.map((r) => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
+          <RegionFilterSelect value={region} onChange={setRegion} className={inputClass} />
           <button
             type="button"
             onClick={applyFilters}

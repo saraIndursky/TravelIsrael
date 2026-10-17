@@ -1,6 +1,6 @@
 "use client";
 
-import { ACCESSIBILITY_OPTIONS } from "../wizard-constants";
+import { useAccessibilityLevels } from "@/hooks/use-levels";
 import { WizardSelectionButton } from "../wizard-selection-button";
 import { WizardStepHeading } from "../wizard-step-heading";
 
@@ -10,17 +10,23 @@ interface AccessibilityStepProps {
 }
 
 export function AccessibilityStep({ accessibility, onSelect }: AccessibilityStepProps) {
+  const levels = useAccessibilityLevels();
+
   return (
     <div>
-      <WizardStepHeading title="מהי רמת נגישות המתאימה?" subtitle="בחרו את רמת הנגישות הרצויה" />
+      <WizardStepHeading
+        title="מהי רמת נגישות המתאימה?"
+        subtitle="בחרו את רמת הנגישות הרצויה. טיולים ברמה שבחרתם ומעלה יתאימו יותר"
+      />
       <div className="space-y-4">
-        {ACCESSIBILITY_OPTIONS.map((opt) => (
+        {levels.map((level) => (
           <WizardSelectionButton
-            key={opt.value}
-            selected={accessibility === opt.value}
-            onClick={() => onSelect(opt.value)}
+            key={level.level}
+            selected={accessibility === level.level}
+            description={level.description}
+            onClick={() => onSelect(level.level)}
           >
-            {opt.label}
+            {level.name}
           </WizardSelectionButton>
         ))}
       </div>
