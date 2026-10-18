@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { wazeNavigationUrl } from "@/lib/utils/navigation-links";
 import { Navigation, Pencil, Plus } from "lucide-react";
 import type { Trail } from "@/types";
 import { canEditTrail } from "@/lib/data/trails";
@@ -16,6 +17,7 @@ export function TrailDetailActions({ trail }: TrailDetailActionsProps) {
   const { role, userId } = useAuthStore();
   const showEdit = canEditTrail(trail, role, userId || null);
   const navUrl = getTrailNavigationUrl(trail);
+  const wazeUrl = wazeNavigationUrl({ lat: trail.start_lat, lng: trail.start_lng });
 
   return (
     <section className="mx-auto max-w-7xl px-4 pb-16 pt-4 md:px-6">
@@ -30,6 +32,17 @@ export function TrailDetailActions({ trail }: TrailDetailActionsProps) {
             <Navigation className="h-4 w-4" />
             התחלת ניווט
           </a>
+          {wazeUrl && (
+            <a
+              href={wazeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex w-full items-center justify-center gap-2 rounded-[2px] border-2 border-[#111827] bg-white py-3.5 text-sm font-medium text-[#111827] transition-colors hover:bg-[#f9fafb]"
+            >
+              <Navigation className="h-4 w-4" />
+              ניווט ב-Waze
+            </a>
+          )}
           <Link
             href="/trips/create"
             className="flex w-full items-center justify-center gap-2 rounded-[2px] border-2 border-[#111827] bg-white py-3.5 text-sm font-medium text-[#111827] transition-colors hover:bg-[#f9fafb]"

@@ -163,3 +163,21 @@ button:disabled,
 [role="button"][aria-disabled="true"] {
   cursor: not-allowed;
 }
+
+/* Printing a trip (or saving it as PDF): only the content, no site chrome or map controls. */
+@media print {
+  header,
+  footer,
+  [data-site-footer],
+  .leaflet-control-container {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  a[href]::after {
+    content: none !important;
+  }
+}

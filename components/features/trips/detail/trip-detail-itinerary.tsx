@@ -8,6 +8,8 @@ import { resolveStationDetails } from "@/lib/utils/trip-calculations";
 import { placePath, trailPath } from "@/lib/utils/content-path";
 import { TripDetailMap } from "@/components/features/trips/detail/trip-detail-map";
 import type { MapMarker } from "@/components/ui/custom/map-view";
+import { NavigationLinks } from "@/components/features/shared/navigation-links";
+import { PrintButton } from "@/components/features/shared/print-button";
 
 interface TripDetailItineraryProps {
   trip: Trip;
@@ -35,6 +37,16 @@ function getStationEntity(
 function getStationLink(station: TripStation, entity: Place | Trail): string {
   if (station.station_type === "trail") return trailPath(entity);
   return placePath(entity);
+}
+
+/** Where to navigate for a stop: a place's point, or where a trail starts. */
+function getStationPoint(station: TripStation, entity: Place | Trail): { lat: number; lng: number } {
+  if (station.station_type === "trail") {
+    const trail = entity as Trail;
+    return { lat: trail.start_lat, lng: trail.start_lng };
+  }
+  const place = entity as Place;
+  return { lat: place.lat, lng: place.lng };
 }
 
 function getStationImage(entity: Place | Trail): string {
@@ -67,7 +79,10 @@ export function TripDetailItinerary({
   return (
     <div className="mx-auto max-w-7xl px-4 pb-24 md:px-6">
       <section>
-        <h2 className="mb-4 text-3xl font-light text-[#111827]">מסלול יומי מפורט</h2>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-3xl font-light text-[#111827]">מסלול יומי מפורט</h2>
+          <PrintButton />
+        </div>
         <div className="space-y-8">
           {sorted.map((station, index) => {
             const entity = getStationEntity(station, places, trails);
@@ -79,7 +94,8 @@ export function TripDetailItinerary({
             const typeStyle = getTypeStyle(typeName);
 
             return (
-              <Link key={station.id} href={getStationLink(station, entity)} className="block">
+              <div key={station.id} className="break-inside-avoid">
+              <Link href={getStationLink(station, entity)} className="block">
                 <div className="overflow-hidden rounded-sm border border-[#e5e7eb] transition-all hover:border-[#d1d5db]">
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                     <div className="md:col-span-1">
@@ -131,6 +147,12 @@ export function TripDetailItinerary({
                   </div>
                 </div>
               </Link>
+              <NavigationLinks
+                point={getStationPoint(station, entity)}
+                name={details.name}
+                className="mt-2 px-1"
+              />
+              </div>
             );
           })}
         </div>

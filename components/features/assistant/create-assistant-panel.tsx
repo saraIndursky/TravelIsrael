@@ -164,7 +164,7 @@ export function CreateAssistantPanel<T extends FieldValues>({
   }
 
   return (
-    <div className="fixed bottom-6 start-6 z-50" dir="rtl">
+    <div className="fixed bottom-6 start-6 z-50 print:hidden" dir="rtl">
       {!open ? (
         <button
           type="button"

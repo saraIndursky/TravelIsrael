@@ -45,7 +45,7 @@ export function LevelInfoButton({ title, description, note }: LevelInfoButtonPro
         aria-expanded={open}
         aria-controls={panelId}
         aria-label={`מה זה אומר: ${title}`}
-        className="absolute left-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-full text-[#9ca3af] transition-colors hover:bg-[#f3f4f6] hover:text-[#111827] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#111827]"
+        className="absolute left-2 top-2 inline-flex print:hidden h-6 w-6 items-center justify-center rounded-full text-[#9ca3af] transition-colors hover:bg-[#f3f4f6] hover:text-[#111827] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#111827]"
       >
         <Info className="h-4 w-4" />
       </button>

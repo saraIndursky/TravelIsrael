@@ -42,7 +42,7 @@ export function TripDetailHero({
 
       {!previewMode && (
         <div
-          className="absolute inset-x-4 top-6 z-10 flex items-center justify-between md:inset-x-6"
+          className="absolute inset-x-4 top-6 z-10 flex items-center justify-between md:inset-x-6 print:hidden"
           dir="ltr"
         >
           <div className="flex gap-3">

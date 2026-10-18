@@ -1,4 +1,5 @@
 import { toSafeExternalUrl } from "@/lib/utils/safe-url";
+import { wazeNavigationUrl } from "@/lib/utils/navigation-links";
 import { AlertCircle, CheckCircle2, Globe, Navigation, Phone } from "lucide-react";
 import type { Place } from "@/types";
 import {
@@ -26,6 +27,7 @@ export function PlaceDetailSidebar({ place }: PlaceDetailSidebarProps) {
   const features = getPlaceFeatures(place);
   const tips = getPlaceTips(place);
   const navUrl = getNavigationUrl(place);
+  const wazeUrl = wazeNavigationUrl({ lat: place.lat, lng: place.lng });
 
   return (
     <div className="space-y-8">
@@ -64,6 +66,17 @@ export function PlaceDetailSidebar({ place }: PlaceDetailSidebarProps) {
             <Navigation className="h-4 w-4" />
             נווט למקום
           </a>
+          {wazeUrl && (
+            <a
+              href={wazeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex w-full items-center justify-center gap-2 rounded-sm border border-[#111827] bg-white py-3 font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
+            >
+              <Navigation className="h-4 w-4" />
+              נווט ב-Waze
+            </a>
+          )}
         </div>
 
         <div className="mt-6 border-t border-[#e5e7eb] pt-6">

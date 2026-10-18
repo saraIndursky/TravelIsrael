@@ -40,9 +40,10 @@ export function TripGpxImport() {
     <div className="mb-6 rounded-lg border border-dashed border-[#d1d5db] bg-white p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-bold text-[#111827]">ייבוא טיול מ-GPX</h2>
-          <p className="mt-1 text-sm text-[#6b7280]">
-            רק מקובץ GPX שייצא מ-TravelIsrael — נשחזר את התחנות ונעביר לעריכת הטיול
+          <h2 className="text-lg font-bold text-[#111827]">שחזור טיול מקובץ GPX שהורדתם מכאן</h2>
+          <p className="mt-1 max-w-xl text-sm text-[#6b7280]">
+            כל טיול באתר בנוי מהמקומות והמסלולים של TravelIsrael, ולכן אפשר לשחזר טיול רק מקובץ שהורדתם
+            מדף טיול באתר. קובץ GPX מאתר אחר אי אפשר להפוך לטיול.
           </p>
         </div>
         <div>

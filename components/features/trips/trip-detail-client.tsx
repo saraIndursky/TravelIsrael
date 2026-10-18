@@ -384,7 +384,7 @@ export default function TripDetailClient({ id }: { id: string }) {
 
       <TripDetailDescription description={trip.full_description} />
 
-      <div className="mx-auto mb-8 max-w-7xl px-4 md:px-6">
+      <div className="mx-auto mb-8 max-w-7xl px-4 md:px-6 print:hidden">
         <TripDetailReport onSubmit={handleReport} canReport={canInteract} />
       </div>
 
@@ -413,7 +413,7 @@ export default function TripDetailClient({ id }: { id: string }) {
 
       />
 
-      <div className="py-8">
+      <div className="py-8 print:hidden">
         <TripDetailStats
           trip={trip}
           reviewsCount={comments.length}
@@ -421,13 +421,16 @@ export default function TripDetailClient({ id }: { id: string }) {
         />
       </div>
 
-      <TripDetailRating
-        avgRating={trip.avg_rating}
-        userRating={userRating}
-        onRate={handleRate}
-        canRate={canInteract}
-      />
+      <div className="print:hidden">
+        <TripDetailRating
+          avgRating={trip.avg_rating}
+          userRating={userRating}
+          onRate={handleRate}
+          canRate={canInteract}
+        />
+      </div>
 
+      <div className="print:hidden">
       <TripDetailReviews
         comments={comments}
         currentUserId={userId}
@@ -440,6 +443,7 @@ export default function TripDetailClient({ id }: { id: string }) {
         onAddReview={handleAddReview}
         canAddReview={canInteract && !hasUserReview}
       />
+      </div>
 
       {showCommentForm && canInteract && !hasUserReview && (
 
@@ -520,6 +524,7 @@ export default function TripDetailClient({ id }: { id: string }) {
 
 
 
+      <div className="print:hidden">
       <TripDetailActions
         trip={trip}
         isFavorite={favorite}
@@ -530,6 +535,7 @@ export default function TripDetailClient({ id }: { id: string }) {
         duplicating={duplicating}
         submitting={submitting}
       />
+      </div>
 
     </div>
 
