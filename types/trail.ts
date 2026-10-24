@@ -16,6 +16,10 @@ export interface Trail {
   tags: string[];
   estimated_price: number;
   operating_hours?: string;
+  phone?: string;
+  website?: string;
+  /** Short note on how to arrange a visit, e.g. that booking is required. */
+  contact_note?: string;
   start_lat: number;
   start_lng: number;
   end_lat: number;

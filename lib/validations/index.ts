@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DIFFICULTY_LEVELS } from "@/lib/levels";
+import { toStoredImageUrl } from "@/lib/utils/image-url";
 
 const difficultySchema = z.enum(
   DIFFICULTY_LEVELS.map((level) => level.code) as [string, ...string[]]
@@ -67,7 +68,8 @@ const imageUrlSchema = z
     (val) =>
       !val ||
       val.startsWith("data:image/") ||
-      z.string().url().safeParse(val).success,
+      // Wikimedia photos are shown through an internal proxy path; the real address is checked.
+      z.string().url().safeParse(toStoredImageUrl(val)).success,
     { message: "יש להזין כתובת תמונה תקינה" }
   );
 
@@ -122,6 +124,16 @@ export const trailFormSchema = z.object({
   tags: z.array(z.string()).min(1, "יש לבחור לפחות תגית אחת"),
   estimated_price: z.coerce.number().min(0),
   operating_hours: z.string().optional().or(z.literal("")),
+  phone: z.string().max(40, "מספר הטלפון ארוך מדי").optional().or(z.literal("")),
+  website: z
+    .string()
+    .max(500, "כתובת האתר ארוכה מדי")
+    .optional()
+    .or(z.literal(""))
+    .refine((val) => !val || (/^https?:\/\//i.test(val) && z.string().url().safeParse(val).success), {
+      message: "כתובת אתר לא תקינה (צריכה להתחיל ב-https://)",
+    }),
+  contact_note: z.string().max(400, "ההערה ארוכה מדי (עד 400 תווים)").optional().or(z.literal("")),
   start_lat: z.coerce.number().min(-90).max(90),
   start_lng: z.coerce.number().min(-180).max(180),
   end_lat: z.coerce.number().min(-90).max(90),

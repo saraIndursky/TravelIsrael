@@ -59,6 +59,9 @@ const emptyValues: TrailFormValues = {
   tags: [],
   estimated_price: 0,
   operating_hours: "",
+  phone: "",
+  website: "",
+  contact_note: "",
   start_lat: 32.0853,
   start_lng: 34.7818,
   end_lat: 32.0853,
@@ -81,6 +84,9 @@ function toFormValues(trail: Trail): TrailFormValues {
     tags: trail.tags,
     estimated_price: trail.estimated_price,
     operating_hours: trail.operating_hours ?? "",
+    phone: trail.phone ?? "",
+    website: trail.website ?? "",
+    contact_note: trail.contact_note ?? "",
     start_lat: trail.start_lat,
     start_lng: trail.start_lng,
     end_lat: trail.end_lat,
@@ -158,6 +164,9 @@ export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormP
         tags: values.tags,
         estimated_price: values.estimated_price,
         operating_hours: values.operating_hours,
+        phone: values.phone,
+        website: values.website,
+        contact_note: values.contact_note,
         start_lat: values.start_lat,
         start_lng: values.start_lng,
         end_lat: values.end_lat,
@@ -305,6 +314,41 @@ export function TrailForm({ mode = "create", trailId, initialTrail }: TrailFormP
             placeholder="למשל: 08:00–17:00"
             id="trail-operating-hours" {...register("operating_hours")}
           />
+        </div>
+      </Section>
+
+      <Section title="יצירת קשר ותיאום">
+        <p className="text-sm text-[#6b7280]">
+          לא חובה. כדאי למלא במסלול סגור, או כזה שדורש תיאום מראש (שמורת טבע, מסלול מודרך, הזמנה).
+        </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <Label htmlFor="trail-phone">טלפון</Label>
+            <input className={inputClass} type="tel" id="trail-phone" {...register("phone")} />
+            <FieldError message={errors.phone?.message} />
+          </div>
+          <div>
+            <Label htmlFor="trail-website">אתר אינטרנט</Label>
+            <input
+              className={inputClass}
+              type="url"
+              placeholder="https://..."
+              id="trail-website"
+              {...register("website")}
+            />
+            <FieldError message={errors.website?.message} />
+          </div>
+        </div>
+        <div>
+          <Label htmlFor="trail-contact-note">הערת תיאום</Label>
+          <textarea
+            className={`${inputClass} min-h-[5rem]`}
+            maxLength={400}
+            placeholder="למשל: הכניסה בתיאום מראש בלבד, ימים א׳–ה׳"
+            id="trail-contact-note"
+            {...register("contact_note")}
+          />
+          <FieldError message={errors.contact_note?.message} />
         </div>
       </Section>
 

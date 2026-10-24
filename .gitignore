@@ -39,3 +39,6 @@ next-env.d.ts
 
 # private documents (demo accounts etc.) - never committed
 docs/private/
+
+# Claude Code personal permissions for this project (not shared)
+.claude/settings.local.json

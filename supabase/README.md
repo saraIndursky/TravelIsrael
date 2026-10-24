@@ -35,6 +35,7 @@
 | `schema/32_comment_edit_requeue.sql` | תגובה שנערכה חוזרת לתור הפיקוח כלא נצפתה, כדי שעריכה לא תעקוף בדיקה — public + demo |
 | `schema/33_text_limits.sql` | מגבלות אורך לטקסט משתמשים ואיסור כתובות `javascript:`/`data:` באתר של מקום — public + demo |
 | `schema/34_level_tables.sql` | רמות נגישות (1–5) ורמות קושי (6 רמות) כטבלאות עם שם והסבר, קריאה לכולם וכתיבה למנהל; `difficulty` בטלאים וטיולים עובר מ-enum ל-text עם מפתח זר; אחרי ההרצה: `select pg_notify(pgrst, reload schema)` — **הורץ על demo בלבד**, ב-public עדיין לא — public + demo |
+| `schema/35_trail_contact.sql` | פרטי יצירת קשר למסלול: טלפון, אתר והערת תיאום (כולם אופציונליים), עם הגבלות אורך ואיסור כתובות `javascript:`/`data:` — public + demo. הורץ על demo; על public עדיין לא |
 
 ## הרצת SQL על הפרויקט החי
 

@@ -36,6 +36,9 @@ export interface CreateTrailInput {
   tags: string[];
   estimated_price: number;
   operating_hours?: string;
+  phone?: string;
+  website?: string;
+  contact_note?: string;
   start_lat: number;
   start_lng: number;
   end_lat: number;
@@ -182,6 +185,9 @@ export async function createTrail(data: CreateTrailInput): Promise<Trail> {
         tags: data.tags,
         estimated_price: data.estimated_price,
         operating_hours: data.operating_hours?.trim() || null,
+        phone: data.phone?.trim() || null,
+        website: data.website?.trim() || null,
+        contact_note: data.contact_note?.trim() || null,
         start_lat: data.start_lat,
         start_lng: data.start_lng,
         end_lat: data.end_lat,
@@ -229,6 +235,9 @@ export async function updateTrail(id: string, data: UpdateTrailInput): Promise<T
       tags: data.tags,
       estimated_price: data.estimated_price,
       operating_hours: data.operating_hours?.trim() || null,
+      phone: data.phone?.trim() || null,
+      website: data.website?.trim() || null,
+      contact_note: data.contact_note?.trim() || null,
       start_lat: data.start_lat,
       start_lng: data.start_lng,
       end_lat: data.end_lat,

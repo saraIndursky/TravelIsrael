@@ -69,6 +69,9 @@ type TrailRow = {
   tags: string[];
   estimated_price: number;
   operating_hours: string | null;
+  phone?: string | null;
+  website?: string | null;
+  contact_note?: string | null;
   start_lat: number;
   start_lng: number;
   end_lat: number;
@@ -217,6 +220,9 @@ export function mapTrail(row: TrailRow): Trail {
     tags: row.tags ?? [],
     estimated_price: row.estimated_price,
     operating_hours: row.operating_hours ?? undefined,
+    phone: row.phone ?? undefined,
+    website: row.website ?? undefined,
+    contact_note: row.contact_note ?? undefined,
     start_lat: row.start_lat,
     start_lng: row.start_lng,
     end_lat: row.end_lat,
