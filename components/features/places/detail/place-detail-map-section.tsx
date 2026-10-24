@@ -8,9 +8,11 @@ import { toast } from "@/components/ui/use-toast";
 
 interface PlaceDetailMapSectionProps {
   place: Place;
+  /** Shown at the end of the heading row (the print button). */
+  headerAction?: React.ReactNode;
 }
 
-export function PlaceDetailMapSection({ place }: PlaceDetailMapSectionProps) {
+export function PlaceDetailMapSection({ place, headerAction }: PlaceDetailMapSectionProps) {
   const handleDownloadGpx = () => {
     try {
       downloadGpx(gpxFilename(place.name, place.id), placeToGpx(place));
@@ -21,7 +23,10 @@ export function PlaceDetailMapSection({ place }: PlaceDetailMapSectionProps) {
 
   return (
     <section className="print-keep-together">
-      <h2 className="mb-6 text-3xl font-light text-[#111827]">מיקום</h2>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-3xl font-light text-[#111827]">מיקום</h2>
+        {headerAction}
+      </div>
       <div className="overflow-hidden rounded-sm border border-[#e5e7eb]">
         <MapView
           markers={[{ lat: place.lat, lng: place.lng, label: place.name }]}

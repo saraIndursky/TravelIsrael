@@ -219,9 +219,6 @@ export default function TrailDetailClient({ id }: { id: string }) {
       <div className="mx-auto max-w-7xl px-4 pb-12 pt-16 md:px-6">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
           <div className="space-y-12 lg:col-span-2">
-            <div className="flex justify-end print:hidden">
-              <PrintButton />
-            </div>
             <TripDetailDescription
               description={trail.full_description}
               title="על המסלול"
@@ -236,7 +233,7 @@ export default function TrailDetailClient({ id }: { id: string }) {
             <div className="print:hidden">
               <TripDetailReport onSubmit={handleReport} canReport={canInteract} />
             </div>
-            <TrailDetailWaypoints trail={trail} />
+            <TrailDetailWaypoints trail={trail} headerAction={<PrintButton />} />
             <TrailDetailMapSection trail={trail} />
             <div className="print:hidden">
               <TrailDetailGallery

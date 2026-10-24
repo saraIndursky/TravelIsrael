@@ -3,14 +3,19 @@ import { getTrailWaypoints } from "@/lib/utils/trail-detail-content";
 
 interface TrailDetailWaypointsProps {
   trail: Trail;
+  /** Shown at the end of the heading row (the print button). */
+  headerAction?: React.ReactNode;
 }
 
-export function TrailDetailWaypoints({ trail }: TrailDetailWaypointsProps) {
+export function TrailDetailWaypoints({ trail, headerAction }: TrailDetailWaypointsProps) {
   const waypoints = getTrailWaypoints(trail);
 
   return (
     <section>
-      <h2 className="mb-6 text-3xl font-light text-[#111827]">תחנות במסלול</h2>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-3xl font-light text-[#111827]">תחנות במסלול</h2>
+        {headerAction}
+      </div>
       <div className="space-y-3">
         {waypoints.map((point, index) => (
           <div key={`${point.name}-${index}`} className="flex items-start gap-4 rounded-sm bg-[#f9fafb] p-4">
