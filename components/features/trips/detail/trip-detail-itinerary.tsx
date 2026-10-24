@@ -83,7 +83,7 @@ export function TripDetailItinerary({
           <h2 className="text-3xl font-light text-[#111827]">מסלול יומי מפורט</h2>
           <PrintButton />
         </div>
-        <div className="space-y-8">
+        <div className="space-y-8 print:space-y-3">
           {sorted.map((station, index) => {
             const entity = getStationEntity(station, places, trails);
             const details = resolveStationDetails(station, places, trails);
@@ -97,7 +97,7 @@ export function TripDetailItinerary({
               <div key={station.id} className="break-inside-avoid">
               <Link href={getStationLink(station, entity)} className="block">
                 <div className="overflow-hidden rounded-sm border border-[#e5e7eb] transition-all hover:border-[#d1d5db]">
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                  <div className="print-station-grid grid grid-cols-1 gap-6 md:grid-cols-3">
                     <div className="md:col-span-1">
                       <div className="relative aspect-[4/3] md:aspect-square">
                         <Image
@@ -117,12 +117,12 @@ export function TripDetailItinerary({
                       </div>
                     </div>
 
-                    <div className="p-6 md:col-span-2">
+                    <div className="print-station-body p-6 md:col-span-2">
                       <div className="mb-3 flex items-start justify-between">
                         <div>
                           <div className="mb-2 flex items-center gap-3">
-                            <span className="text-2xl font-bold text-[#111827]">{index + 1}.</span>
-                            <h3 className="text-2xl font-medium text-[#111827]">{details.name}</h3>
+                            <span className="print-station-title text-2xl font-bold text-[#111827]">{index + 1}.</span>
+                            <h3 className="print-station-title text-2xl font-medium text-[#111827]">{details.name}</h3>
                           </div>
                           <div className="flex flex-wrap items-center gap-4 text-sm text-[#6b7280]">
                             <span className="flex items-center gap-1">
@@ -140,7 +140,7 @@ export function TripDetailItinerary({
                           </div>
                         </div>
                       </div>
-                      <p className="mb-4 line-clamp-4 leading-relaxed text-[#4b5563]">
+                      <p className="print-station-desc mb-4 line-clamp-4 leading-relaxed text-[#4b5563]">
                         {getStationDescription(entity)}
                       </p>
                     </div>

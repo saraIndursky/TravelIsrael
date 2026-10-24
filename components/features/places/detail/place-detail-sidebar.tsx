@@ -61,7 +61,7 @@ export function PlaceDetailSidebar({ place }: PlaceDetailSidebarProps) {
             href={navUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex w-full items-center justify-center gap-2 rounded-sm bg-[#111827] py-3 font-medium text-white transition-colors hover:bg-[#1f2937]"
+            className="flex w-full items-center justify-center gap-2 rounded-sm bg-[#111827] py-3 font-medium text-white transition-colors hover:bg-[#1f2937] print:hidden"
           >
             <Navigation className="h-4 w-4" />
             נווט למקום
@@ -71,7 +71,7 @@ export function PlaceDetailSidebar({ place }: PlaceDetailSidebarProps) {
               href={wazeUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex w-full items-center justify-center gap-2 rounded-sm border border-[#111827] bg-white py-3 font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6]"
+              className="flex w-full items-center justify-center gap-2 rounded-sm border border-[#111827] bg-white py-3 font-medium text-[#111827] transition-colors hover:bg-[#f3f4f6] print:hidden"
             >
               <Navigation className="h-4 w-4" />
               נווט ב-Waze

@@ -40,7 +40,7 @@ export function TrailDetailMapSection({ trail }: TrailDetailMapSectionProps) {
   };
 
   return (
-    <section>
+    <section className="print-keep-together">
       <h2 className="mb-6 text-3xl font-light text-[#111827]">מפה ונתיב</h2>
       <div className="overflow-hidden rounded-sm border border-[#e5e7eb]">
         <MapView
@@ -54,7 +54,7 @@ export function TrailDetailMapSection({ trail }: TrailDetailMapSectionProps) {
       <button
         type="button"
         onClick={handleDownloadGpx}
-        className="mx-auto mt-3 flex items-center gap-2 text-sm text-[#111827] hover:underline"
+        className="mx-auto mt-3 flex items-center gap-2 text-sm text-[#111827] hover:underline print:hidden"
       >
         <Download className="h-4 w-4" />
         הורדת קובץ GPX

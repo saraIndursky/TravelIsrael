@@ -30,7 +30,7 @@ export function TrailDetailHero({
   const goBack = useGoBack();
 
   return (
-    <div className={previewMode ? "relative h-[50vh] min-h-[280px]" : "relative h-[70vh] md:h-[80vh]"}>
+    <div className={`print-hero ${previewMode ? "relative h-[50vh] min-h-[280px]" : "relative h-[70vh] md:h-[80vh]"}`}>
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url('${trail.image_url}')` }}
@@ -40,7 +40,7 @@ export function TrailDetailHero({
 
       {!previewMode && (
         <div
-          className="absolute inset-x-4 top-6 z-10 flex items-center justify-between md:inset-x-6"
+          className="absolute inset-x-4 top-6 z-10 flex items-center justify-between md:inset-x-6 print:hidden"
           dir="ltr"
         >
           <div className="flex gap-3">

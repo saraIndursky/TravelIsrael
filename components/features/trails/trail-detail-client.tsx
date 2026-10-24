@@ -33,6 +33,7 @@ import { TrailDetailMapSection } from "@/components/features/trails/detail/trail
 import { TrailDetailGallery } from "@/components/features/trails/detail/trail-detail-gallery";
 import { TrailDetailSidebar } from "@/components/features/trails/detail/trail-detail-sidebar";
 import { TrailDetailNature } from "@/components/features/trails/detail/trail-detail-nature";
+import { PrintButton } from "@/components/features/shared/print-button";
 import { TrailDetailActions } from "@/components/features/trails/detail/trail-detail-actions";
 import { CreateAssistantPanel } from "@/components/features/assistant/create-assistant-panel";
 import { TrailDetailRelatedTrips } from "@/components/features/trails/detail/trail-detail-related-trips";
@@ -218,6 +219,9 @@ export default function TrailDetailClient({ id }: { id: string }) {
       <div className="mx-auto max-w-7xl px-4 pb-12 pt-16 md:px-6">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
           <div className="space-y-12 lg:col-span-2">
+            <div className="flex justify-end print:hidden">
+              <PrintButton />
+            </div>
             <TripDetailDescription
               description={trail.full_description}
               title="על המסלול"
@@ -229,26 +233,32 @@ export default function TrailDetailClient({ id }: { id: string }) {
                 תגיות: <span className="text-[#111827]">{tagsDisplay}</span>
               </p>
             )}
-            <TripDetailReport onSubmit={handleReport} canReport={canInteract} />
+            <div className="print:hidden">
+              <TripDetailReport onSubmit={handleReport} canReport={canInteract} />
+            </div>
             <TrailDetailWaypoints trail={trail} />
             <TrailDetailMapSection trail={trail} />
-            <TrailDetailGallery
-              images={galleryImages}
-              communityImages={communityImages}
-              currentUserId={userId}
-              canAddImage={canInteract}
-              onAddImage={handleAddGalleryImage}
-              onDeleteImage={handleDeleteGalleryImage}
-            />
+            <div className="print:hidden">
+              <TrailDetailGallery
+                images={galleryImages}
+                communityImages={communityImages}
+                currentUserId={userId}
+                canAddImage={canInteract}
+                onAddImage={handleAddGalleryImage}
+                onDeleteImage={handleDeleteGalleryImage}
+              />
+            </div>
             <TrailDetailNature trail={trail} />
           </div>
           <TrailDetailSidebar trail={trail} />
         </div>
       </div>
 
-      <TrailDetailRelatedTrips trips={trips} />
+      <div className="print:hidden">
+        <TrailDetailRelatedTrips trips={trips} />
+      </div>
 
-      <div className="py-8">
+      <div className="py-8 print:hidden">
         <TripDetailRating
           avgRating={avgRating}
           userRating={userRating}
@@ -257,6 +267,7 @@ export default function TrailDetailClient({ id }: { id: string }) {
         />
       </div>
 
+      <div className="print:hidden">
       <TripDetailReviews
         comments={comments}
         currentUserId={userId}
@@ -269,9 +280,10 @@ export default function TrailDetailClient({ id }: { id: string }) {
         onAddReview={handleAddReview}
         canAddReview={canInteract && !hasUserReview}
       />
+      </div>
 
       {showCommentForm && canInteract && !hasUserReview && (
-        <div className="mx-auto mb-12 max-w-7xl px-4 md:px-6">
+        <div className="mx-auto mb-12 max-w-7xl px-4 md:px-6 print:hidden">
           <form
             className="rounded-sm border border-[#e5e7eb] bg-[#f9fafb] p-6"
             onSubmit={async (e) => {
@@ -314,7 +326,9 @@ export default function TrailDetailClient({ id }: { id: string }) {
         </div>
       )}
 
-      <TrailDetailActions trail={trail} />
+      <div className="print:hidden">
+        <TrailDetailActions trail={trail} />
+      </div>
 
       {showOwnerAssistant && (
         <CreateAssistantPanel

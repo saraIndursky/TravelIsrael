@@ -32,7 +32,9 @@ export function TripDetailHero({
   const goBack = useGoBack();
 
   return (
-    <div className={previewMode ? "relative h-[50vh] min-h-[280px]" : "relative h-[70vh] md:h-[80vh]"}>
+    <div
+      className={`print-hero ${previewMode ? "relative h-[50vh] min-h-[280px]" : "relative h-[70vh] md:h-[80vh]"}`}
+    >
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url('${trip.main_image}')` }}

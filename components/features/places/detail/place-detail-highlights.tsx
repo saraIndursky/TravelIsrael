@@ -57,7 +57,7 @@ export function PlaceDetailHighlights({ place, avgRating }: PlaceDetailHighlight
 
   return (
     <div className="relative z-10 mx-auto -mb-6 -mt-12 max-w-7xl px-4 md:px-6">
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+      <div className="print-highlights grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
         {highlights.map((item) => {
           const Icon = item.icon;
           return (

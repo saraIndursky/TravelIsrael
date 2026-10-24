@@ -41,7 +41,7 @@ export function TripDetailMap({
   };
 
   return (
-    <section className={className ?? (isEmbedded ? "mt-6" : "mt-12")}>
+    <section className={`print-keep-together ${className ?? (isEmbedded ? "mt-6" : "mt-12")}`}>
       <h2
         className={
           isEmbedded

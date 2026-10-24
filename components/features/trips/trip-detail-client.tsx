@@ -396,6 +396,7 @@ export default function TripDetailClient({ id }: { id: string }) {
         mapMarkers={mapMarkers}
       />
 
+      <div className="print:hidden">
       <TripDetailGallery
 
         trip={trip}
@@ -412,6 +413,7 @@ export default function TripDetailClient({ id }: { id: string }) {
         onDeleteImage={handleDeleteGalleryImage}
 
       />
+      </div>
 
       <div className="py-8 print:hidden">
         <TripDetailStats

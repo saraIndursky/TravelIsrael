@@ -165,6 +165,10 @@ button:disabled,
 }
 
 /* Printing a trip (or saving it as PDF): only the content, no site chrome or map controls. */
+@page {
+  margin: 10mm;
+}
+
 @media print {
   header,
   footer,
@@ -179,5 +183,79 @@ button:disabled,
 
   a[href]::after {
     content: none !important;
+  }
+
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+
+  /* Browsers skip background images when printing unless asked; the trip photo is one. */
+  .print-hero,
+  .print-hero * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-hero {
+    height: 15rem !important;
+    min-height: 0 !important;
+  }
+
+  .print-highlights {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 0.4rem !important;
+  }
+
+  .print-highlights > * {
+    padding: 0.4rem !important;
+    font-size: 0.7rem;
+  }
+
+  .print-highlights > * * {
+    font-size: inherit !important;
+  }
+
+  .print-tight {
+    padding-top: 1.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  .print-tight h2 {
+    margin-bottom: 0.5rem !important;
+    font-size: 1.5rem !important;
+  }
+
+  /* A stop is a small photo with its details next to it, not a page of its own. */
+  .print-station-grid {
+    grid-template-columns: 6.5rem 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  .print-station-grid > :first-child > div {
+    aspect-ratio: 1 / 1 !important;
+  }
+
+  .print-station-body {
+    padding: 0.5rem 0.5rem 0.5rem 0 !important;
+  }
+
+  .print-station-title {
+    font-size: 1.1rem !important;
+  }
+
+  .print-station-desc {
+    -webkit-line-clamp: 3 !important;
+    margin-bottom: 0 !important;
+    font-size: 0.85rem !important;
+  }
+
+  .print-keep-together {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-keep-together .leaflet-container {
+    height: 17rem !important;
   }
 }

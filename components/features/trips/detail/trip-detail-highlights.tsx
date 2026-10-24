@@ -90,7 +90,7 @@ export function TripDetailHighlights({
           : "mx-auto max-w-7xl px-4 pb-2 pt-2 md:px-6"
       }
     >
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+      <div className="print-highlights grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
         {highlights.map((item) => {
           const Icon = item.icon;
           return (

@@ -31,6 +31,7 @@ import { PlaceDetailHighlights } from "@/components/features/places/detail/place
 import { PlaceDetailGallery } from "@/components/features/places/detail/place-detail-gallery";
 import { PlaceDetailSidebar } from "@/components/features/places/detail/place-detail-sidebar";
 import { PlaceDetailMapSection } from "@/components/features/places/detail/place-detail-map-section";
+import { PrintButton } from "@/components/features/shared/print-button";
 import { PlaceDetailActions } from "@/components/features/places/detail/place-detail-actions";
 import { CreateAssistantPanel } from "@/components/features/assistant/create-assistant-panel";
 import { PlaceDetailRelatedTrips } from "@/components/features/places/detail/place-detail-related-trips";
@@ -234,6 +235,9 @@ export default function PlaceDetailClient({ id }: { id: string }) {
       <div className="mx-auto max-w-7xl px-4 pb-12 pt-16 md:px-6">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
           <div className="space-y-12 lg:col-span-2">
+            <div className="flex justify-end print:hidden">
+              <PrintButton />
+            </div>
             <TripDetailDescription
               description={place.full_description}
               title="על המקום"
@@ -245,24 +249,30 @@ export default function PlaceDetailClient({ id }: { id: string }) {
                 תגיות: <span className="text-[#111827]">{tagsDisplay}</span>
               </p>
             )}
-            <TripDetailReport onSubmit={handleReport} canReport={canInteract} />
+            <div className="print:hidden">
+              <TripDetailReport onSubmit={handleReport} canReport={canInteract} />
+            </div>
             <PlaceDetailMapSection place={place} />
-            <PlaceDetailGallery
-              images={galleryImages}
-              communityImages={communityImages}
-              currentUserId={userId}
-              canAddImage={canInteract}
-              onAddImage={handleAddGalleryImage}
-              onDeleteImage={handleDeleteGalleryImage}
-            />
+            <div className="print:hidden">
+              <PlaceDetailGallery
+                images={galleryImages}
+                communityImages={communityImages}
+                currentUserId={userId}
+                canAddImage={canInteract}
+                onAddImage={handleAddGalleryImage}
+                onDeleteImage={handleDeleteGalleryImage}
+              />
+            </div>
           </div>
           <PlaceDetailSidebar place={place} />
         </div>
       </div>
 
-      <PlaceDetailRelatedTrips trips={trips} />
+      <div className="print:hidden">
+        <PlaceDetailRelatedTrips trips={trips} />
+      </div>
 
-      <div className="py-8">
+      <div className="py-8 print:hidden">
         <TripDetailRating
           avgRating={avgRating}
           userRating={userRating}
@@ -272,6 +282,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
         />
       </div>
 
+      <div className="print:hidden">
       <TripDetailReviews
         comments={comments}
         currentUserId={userId}
@@ -284,9 +295,10 @@ export default function PlaceDetailClient({ id }: { id: string }) {
         onAddReview={handleAddReview}
         canAddReview={canInteract && !hasUserReview}
       />
+      </div>
 
       {showCommentForm && canInteract && !hasUserReview && (
-        <div className="mx-auto mb-12 max-w-7xl px-4 md:px-6">
+        <div className="mx-auto mb-12 max-w-7xl px-4 md:px-6 print:hidden">
           <form
             className="rounded-sm border border-[#e5e7eb] bg-[#f9fafb] p-6"
             onSubmit={async (e) => {
@@ -329,7 +341,9 @@ export default function PlaceDetailClient({ id }: { id: string }) {
         </div>
       )}
 
-      <PlaceDetailActions place={place} />
+      <div className="print:hidden">
+        <PlaceDetailActions place={place} />
+      </div>
 
       {showOwnerAssistant && (
         <CreateAssistantPanel
