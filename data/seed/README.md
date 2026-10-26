@@ -1,8 +1,8 @@
-# `data/seed/` — נתוני עזר לעוזר AI בלבד
+# `data/seed/` — reference data for the AI assistant only
 
-קבצים סטטיים ל-**demo assistant** (`lib/assistant/seed-lookup.ts`): התאמת שמות מקומות/מסלולים,
-זיהוי אזור, וקואורדינטות משוערות כשאין התאמה ב-Supabase.
+Static files for the **demo assistant** (`lib/assistant/seed-lookup.ts`): matching place and trail names,
+detecting the region, and approximate coordinates when there is no match in Supabase.
 
-**לא** מקור הנתונים של האפליקציה. כל ה-UI והדפים קוראים מ-`lib/data/` → Supabase.
+This is **not** the app's data source. All UI and pages read from `lib/data/` → Supabase.
 
-אין להוסיף כאן entities חדשים לפרודקשן. לעדכון נתוני דמו אמיתיים — `supabase/seed/demo_seed.sql`.
+Do not add new production entities here. To update the real demo data, use `supabase/seed/demo_seed.sql`.

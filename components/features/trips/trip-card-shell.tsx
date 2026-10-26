@@ -11,7 +11,7 @@ interface TripCardShellProps {
   footer: React.ReactNode;
 }
 
-/** מבנה כרטיס טיול אחיד — תמונה, תוכן, קו מפריד, פעולות בתחתית */
+/** Shared trip card layout — image, content, divider, actions at the bottom */
 export function TripCardShell({ trip, headerExtra, subtitle, children, footer }: TripCardShellProps) {
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded border border-[#e5e7eb] bg-white transition-all duration-300 hover:border-[#d1d5db]">

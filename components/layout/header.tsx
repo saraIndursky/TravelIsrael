@@ -116,10 +116,10 @@ export function Header() {
       )}
     >
       <div className="ti-container grid h-[72px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 md:gap-x-4">
-        {/* עמודה 1 — לוגו */}
+        {/* Column 1 — logo */}
         <Logo className="shrink-0" />
 
-        {/* עמודה 2 — ניווט ממורכז / חיפוש פתוח */}
+        {/* Column 2 — centered navigation / open search */}
         <div className="min-w-0 justify-self-stretch">
           {searchExpanded ? (
             <div className="lg:hidden">
@@ -140,7 +140,7 @@ export function Header() {
           )}
         </div>
 
-        {/* עמודה 3 — חיפוש + משתמש + תפריט (לא חופף לניווט) */}
+        {/* Column 3 — search + user + menu (does not overlap the navigation) */}
         <div className="flex shrink-0 items-center justify-end">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden w-40 shrink-0 lg:block xl:w-52">

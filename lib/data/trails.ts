@@ -191,7 +191,7 @@ export async function createTrail(data: CreateTrailInput): Promise<Trail> {
   return mapTrail(row);
 }
 
-/** בעלים רשאי לערוך רק כל עוד המסלול לא אושר. מסלול מאושר — מנהל בלבד. */
+/** An owner may edit only until the trail is approved. An approved trail — admin only. */
 export function canEditTrail(trail: Trail, role: UserRole, userId: string | null): boolean {
   if (role === "admin") return true;
   if (!userId || trail.created_by !== userId) return false;
@@ -228,7 +228,7 @@ export async function updateTrail(id: string, data: UpdateTrailInput): Promise<T
       end_lng: data.end_lng,
       waypoints: data.waypoints,
       image_url: toStoredImageUrl(data.image_url.trim()) || DEFAULT_TRAIL_IMAGE,
-      // עריכה של בעלים מחזירה את המסלול לתור האישור; מנהל עורך בלי לשנות סטטוס
+      // An owner's edit sends the trail back to the approval queue; an admin edits without changing the status
       ...(isAdmin ? {} : { status: "pending" as Status, rejection_reason: null }),
       updated_at: new Date().toISOString(),
     })

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Legacy URL — תוכן הטיולים שלי עבר ל-/profile/content */
+/** Legacy URL — "my trips" moved to /profile/content */
 export default function ProfileTripsPage() {
   redirect("/profile/content");
 }
