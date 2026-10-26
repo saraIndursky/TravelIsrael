@@ -13,7 +13,7 @@ interface TripDetailHeroProps {
   onToggleFavorite?: () => void;
   onShare?: () => void;
   canShare?: boolean;
-  /** מצב תצוגה מקדימה — ללא כפתורי פעולה */
+  /** Preview mode — no action buttons */
   previewMode?: boolean;
 }
 

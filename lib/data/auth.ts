@@ -461,7 +461,7 @@ export async function changePassword(input: PasswordChangeInput): Promise<void> 
   }
 }
 
-/** שולח מייל איפוס סיסמה דרך Supabase Auth. */
+/** Sends a password reset email through Supabase Auth. */
 export async function requestPasswordReset(email: string): Promise<void> {
   const trimmed = email.trim().toLowerCase();
   if (!trimmed) {
@@ -482,7 +482,7 @@ export async function requestPasswordReset(email: string): Promise<void> {
   }
 }
 
-/** עדכון סיסמה אחרי קישור recovery (המשתמש כבר ב-session). */
+/** Updates the password after a recovery link (the user already has a session). */
 export async function updatePasswordAfterReset(newPassword: string): Promise<void> {
   if (newPassword.length < 8) {
     throw new Error("הסיסמה חייבת להכיל לפחות 8 תווים");

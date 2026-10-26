@@ -176,7 +176,7 @@ export async function createPlace(data: CreatePlaceInput): Promise<Place> {
   return mapPlace(row);
 }
 
-/** בעלים רשאי לערוך רק כל עוד המקום לא אושר. מקום מאושר — מנהל בלבד. */
+/** An owner may edit only until the place is approved. An approved place — admin only. */
 export function canEditPlace(place: Place, role: UserRole, userId: string | null): boolean {
   if (role === "admin") return true;
   if (!userId || place.created_by !== userId) return false;
@@ -212,7 +212,7 @@ export async function updatePlace(id: string, data: UpdatePlaceInput): Promise<P
       phone: data.phone?.trim() || null,
       website: data.website?.trim() || null,
       image_url: toStoredImageUrl(data.image_url.trim()) || DEFAULT_PLACE_IMAGE,
-      // עריכה של בעלים מחזירה את המקום לתור האישור; מנהל עורך בלי לשנות סטטוס
+      // An owner's edit sends the place back to the approval queue; an admin edits without changing the status
       ...(isAdmin ? {} : { status: "pending" as Status, rejection_reason: null }),
       updated_at: new Date().toISOString(),
     })

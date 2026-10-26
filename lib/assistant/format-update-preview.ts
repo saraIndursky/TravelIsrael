@@ -73,7 +73,7 @@ export function getDefaultTripImage(): string {
   return TRIP_DEFAULT_IMAGE;
 }
 
-/** תיאור קצר לכרטיס טיול — שורה אחת, מקסימום 80 תווים */
+/** Short description for a trip card — one line, up to 80 characters */
 export const TRIP_SHORT_DESCRIPTION_MAX = 80;
 
 export function suggestTripShortDescription(

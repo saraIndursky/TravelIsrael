@@ -7,7 +7,7 @@ export interface TripStation {
   station_type: StationType;
   place_id: string | null;
   trail_id: string | null;
-  /** אופן הגעה לתחנה הבאה (לא רלוונטי לתחנה האחרונה) */
+  /** Travel mode to the next stop (not relevant for the last stop) */
   travel_mode?: TravelMode;
 }
 

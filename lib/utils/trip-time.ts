@@ -39,7 +39,7 @@ function getStationDurationMinutes(
   return 0;
 }
 
-/** נקודת כניסה לתחנה — מקום: lat/lng, מסלול: נקודת התחלה */
+/** Entry point of a stop — place: lat/lng, trail: start point */
 export function getStationEntryLocation(
   station: TripStation,
   places: Place[],
@@ -56,7 +56,7 @@ export function getStationEntryLocation(
   return null;
 }
 
-/** נקודת יציאה מתחנה — מקום: lat/lng, מסלול: נקודת סיום */
+/** Exit point of a stop — place: lat/lng, trail: end point */
 export function getStationExitLocation(
   station: TripStation,
   places: Place[],
@@ -92,7 +92,7 @@ function formatSegmentDistance(distanceKm: number, mode: TravelMode): string {
   return `${rounded} ק"מ ${modeText[mode]}`;
 }
 
-/** זמן כולל = משך כל תחנה + זמן מעבר בין תחנות (לפי מרחק ואופן הגעה) */
+/** Total time = duration of each stop + travel time between stops (by distance and travel mode) */
 export function calculateTotalTripMinutes(
   stations: TripStation[],
   places: Place[],
@@ -122,7 +122,7 @@ export function calculateTotalTripMinutes(
   return Math.round(totalMinutes);
 }
 
-/** מרחק מעבר בין תחנות (לא כולל אורך מסלולי הליכה) */
+/** Travel distance between stops (not including the length of hiking trails) */
 export function calculateSegmentDistances(
   stations: TripStation[],
   places: Place[],

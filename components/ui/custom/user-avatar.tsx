@@ -40,7 +40,7 @@ interface UserAvatarProps {
   avatarUrl?: string;
   size?: UserAvatarSize;
   className?: string;
-  /** light = על רקע כהה (הידר עמוד הבית) */
+  /** light = on a dark background (home page header) */
   variant?: "default" | "light";
 }
 

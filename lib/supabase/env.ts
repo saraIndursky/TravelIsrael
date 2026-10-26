@@ -20,7 +20,7 @@ export function getSupabaseAnonKey(): string {
 
 export type SupabaseSchemaName = "public" | "demo";
 
-/** סכמת ה-DB שאליה פונים. `demo` דורשת הוספת הסכמה ל-Exposed schemas בהגדרות הפרויקט. */
+/** The DB schema to query. `demo` requires adding the schema to Exposed schemas in the project settings. */
 export function getSupabaseSchema(): SupabaseSchemaName {
   return process.env.NEXT_PUBLIC_SUPABASE_SCHEMA?.trim() === "demo" ? "demo" : "public";
 }

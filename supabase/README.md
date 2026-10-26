@@ -1,66 +1,66 @@
-# Supabase — סכמה ונתוני דמו
+# Supabase — schema and demo data
 
-תיקייה זו היא **תמונת מצב (baseline) של המסד החי**, לא היסטוריית מיגרציות.
+This folder is a **baseline snapshot of the live database**, not a migration history.
 
-הסכמה הבסיסית של `public` נוצרה דרך הדשבורד לפני שהתחילו להיווצר מיגרציות,
-ולכן `supabase_migrations.schema_migrations` מכיל רק את השינויים המאוחרים.
-הקבצים כאן הופקו מהמסד עצמו ומשקפים את מה שרץ בפועל בפרויקט
+The base `public` schema was created in the dashboard before migrations were introduced, so
+`supabase_migrations.schema_migrations` contains only the later changes. The files here were
+exported from the database itself and reflect what actually runs in project
 `xsfbqypayaznaonsprzn`.
 
-הקבצים אינם מחוברים כרגע ל-Supabase CLI — הם משמשים לתיעוד, לצורך code review
-ולשחזור. אחרי `supabase link` אפשר להפוך אותם למיגרציה ראשונה.
+The files are not currently connected to the Supabase CLI — they are used for documentation,
+code review and recovery. After `supabase link` they can become the first migration.
 
-## מבנה
+## Structure
 
-| קובץ | תוכן |
+| File | Contents |
 | --- | --- |
-| `schema/01_enums.sql` | כל ה-enums (משותפים לשתי הסכמות) |
-| `schema/02_tables_public.sql` | טבלאות, מפתחות, אילוצים ואינדקסים של `public` |
-| `schema/03_functions_public.sql` | פונקציות, RPCs, hook ההרשמה וטריגרים |
-| `schema/04_policies_public.sql` | RLS של `public` |
-| `schema/05_storage.sql` | bucket ה-avatars ומדיניות הגישה אליו |
-| `schema/06_demo_schema.sql` | סכמת `demo` במלואה |
-| `seed/demo_seed.sql` | נתוני הדמו (239 שורות) |
-| `schema/14_notifications_phase3.sql` | kinds חברתיים (תגובה/דירוג) — public + demo |
-| `schema/15_notifications_realtime.sql` | Realtime publication — badge מיידי בפעמון |
-| `schema/16_notifications_broadcast.sql` | kinds לתוכן חדש/מועדפים + `region_ids` בהעדפות |
-| `schema/17_content_delete_hardening.sql` | חסימת מחיקה hard של תוכן מאושר |
-| `schema/25_region_requests.sql` | הצעת אזור חדש על ידי משתמש (ממתין עד אישור מנהל או אישור התוכן) — public + demo |
-| `schema/26_dedupe_regions.sql` | איחוד אזורים כפולים ("מרכז" ו"צפון" בתוך עצמם) — public + demo |
-| `schema/27_contact_messages.sql` | פניות מטופס יצירת הקשר (כולם שולחים, רק מנהל קורא) — public + demo |
-| `schema/28_profile_privacy.sql` | פרטיות פרופילים: מייל ותפקיד נראים רק לבעלים ולמנהלים; שם ותמונה דרך התצוגה public_profiles; app_config סגור — public + demo |
-| `schema/29_security_hardening.sql` | הקשחה: שינוי תפקיד רק למנהל, יצירת תוכן רק כטיוטה/ממתין, מוני צפיות/דירוג/מועדפים בטריגרים, אילוצי אורך, הרשאות הרצה — public + demo |
-| `schema/30_role_change_reauth.sql` | שינוי תפקיד דורש אימות סיסמה טרי (עד 5 דקות), ואוסר שינוי עצמי והסרת המנהל האחרון — public + demo |
-| `schema/31_account_deletion.sql` | מחיקת חשבון עצמית (`delete_my_account`, דורשת אימות סיסמה טרי): תוכן מאושר עובר לפרופיל מערכת "TravelIsrael" (מנהל שאי אפשר להתחבר אליו), וטיוטות, תוכן ממתין, תגובות, דירוגים ומועדפים נמחקים — public + demo |
-| `schema/32_comment_edit_requeue.sql` | תגובה שנערכה חוזרת לתור הפיקוח כלא נצפתה, כדי שעריכה לא תעקוף בדיקה — public + demo |
-| `schema/33_text_limits.sql` | מגבלות אורך לטקסט משתמשים ואיסור כתובות `javascript:`/`data:` באתר של מקום — public + demo |
+| `schema/01_enums.sql` | All enums (shared by both schemas) |
+| `schema/02_tables_public.sql` | Tables, keys, constraints and indexes of `public` |
+| `schema/03_functions_public.sql` | Functions, RPCs, the sign-up hook and triggers |
+| `schema/04_policies_public.sql` | RLS of `public` |
+| `schema/05_storage.sql` | The avatars bucket and its access policies |
+| `schema/06_demo_schema.sql` | The full `demo` schema |
+| `seed/demo_seed.sql` | Demo data (239 rows) |
+| `schema/14_notifications_phase3.sql` | Social notification kinds (comment/rating) — public + demo |
+| `schema/15_notifications_realtime.sql` | Realtime publication — instant badge on the bell |
+| `schema/16_notifications_broadcast.sql` | Kinds for new content/favorites + `region_ids` in preferences |
+| `schema/17_content_delete_hardening.sql` | Blocks hard deletion of approved content |
+| `schema/25_region_requests.sql` | A user can suggest a new region (pending until an admin approves it or the content) — public + demo |
+| `schema/26_dedupe_regions.sql` | Merges duplicate regions ("מרכז" and "צפון" nested in themselves) — public + demo |
+| `schema/27_contact_messages.sql` | Contact form messages (anyone can send, only admins can read) — public + demo |
+| `schema/28_profile_privacy.sql` | Profile privacy: email and role visible only to the owner and admins; name and avatar through the public_profiles view; app_config closed — public + demo |
+| `schema/29_security_hardening.sql` | Hardening: only admins change roles, content is created only as draft/pending, view/rating/favorite counters in triggers, length constraints, execute permissions — public + demo |
+| `schema/30_role_change_reauth.sql` | Changing a role requires a fresh password check (up to 5 minutes), and blocks self-changes and removing the last admin — public + demo |
+| `schema/31_account_deletion.sql` | Self-service account deletion (`delete_my_account`, requires a fresh password check): approved content moves to a "TravelIsrael" system profile (an admin no one can log in as), and drafts, pending content, comments, ratings and favorites are deleted — public + demo |
+| `schema/32_comment_edit_requeue.sql` | An edited comment returns to the moderation queue as unseen, so editing cannot bypass review — public + demo |
+| `schema/33_text_limits.sql` | Length limits on user text and no `javascript:`/`data:` URLs in a place's website — public + demo |
 
-## הרצת SQL על הפרויקט החי
+## Running SQL on the live project
 
-אין `supabase link` מקומי. אפשרות א:
+There is no local `supabase link`. Option A:
 
-1. **SQL Editor** בדשבורד — להדביק את תוכן הקובץ.
+1. **SQL Editor** in the dashboard — paste the file contents.
 
-אפשרות ב (CLI, בלי MCP):
+Option B (CLI, without MCP):
 
 ```bash
-# פעם אחת — התחברות + קישור לפרויקט
+# Once — log in and link the project
 npx supabase login
 npx supabase link --project-ref xsfbqypayaznaonsprzn
 
 npm run db:execute -- supabase/schema/14_notifications_phase3.sql
 ```
 
-או עם `DATABASE_URL` (connection string מהדשבורד) בלי link:
+Or with `DATABASE_URL` (connection string from the dashboard), without linking:
 
 ```bash
 set DATABASE_URL=postgresql://postgres.[ref]:[password]@...
 npm run db:execute -- supabase/schema/14_notifications_phase3.sql
 ```
 
-## הרצה על מסד ריק
+## Running on an empty database
 
-לפי הסדר:
+In this order:
 
 ```
 schema/01_enums.sql
@@ -72,49 +72,49 @@ schema/06_demo_schema.sql
 seed/demo_seed.sql
 ```
 
-`03` מפנה ל-`demo.resolve_bootstrap_role`, ולכן אם מריצים את `handle_new_user`
-לפני `06` יש להריץ אותו שוב אחרי — או להסיר זמנית את בלוק הסנכרון ל-demo.
+`03` references `demo.resolve_bootstrap_role`, so if `handle_new_user` runs before `06`, run it
+again afterwards — or temporarily remove the demo sync block.
 
-## סכמת demo
+## The demo schema
 
-עותק מלא של `public` באותו פרויקט, כדי לבדוק זרימות מול נתונים עשירים בלי לגעת
-בפרודקשן. המעבר ביניהן נעשה עם `NEXT_PUBLIC_SUPABASE_SCHEMA=public|demo`.
+A full copy of `public` in the same project, for testing flows against rich data without touching
+production. Switch between them with `NEXT_PUBLIC_SUPABASE_SCHEMA=public|demo`.
 
-משותף לשתיהן: `auth.users` (אותם חשבונות), Storage וכל ה-enums.
-שאר הדברים עצמאיים, כולל `is_admin()` וארבעת ה-RPCs.
+Shared by both: `auth.users` (the same accounts), Storage and all enums.
+Everything else is separate, including `is_admin()` and the four RPCs.
 
-**צעד ידני בדשבורד:** להוסיף `demo` ל-Settings → API → Exposed schemas.
-בלי זה PostgREST לא יגיש את הסכמה והאפליקציה תקבל שגיאות.
+**Manual dashboard step:** add `demo` under Settings → API → Exposed schemas.
+Without it PostgREST will not serve the schema and the app will get errors.
 
-### נתוני הדמו
+### Demo data
 
-15 אזורים, 3 פרופילים, 20 מקומות, 12 מסלולים, 11 טיולים (30 תחנות),
-76 דירוגים, 33 ביקורות, 34 מועדפים, 4 דיווחים.
-התוכן פרוס על כל הסטטוסים (`draft`, `pending`, `approved`, `rejected`).
+15 regions, 3 profiles, 20 places, 12 trails, 11 trips (30 stops),
+76 ratings, 33 reviews, 34 favorites, 4 reports.
+The content covers every status (`draft`, `pending`, `approved`, `rejected`).
 
 ## RPCs
 
-כולם `SECURITY DEFINER` ובודקים הרשאות בעצמם דרך `is_admin()` לפני כל שינוי.
-קיימים בשתי הסכמות.
+All are `SECURITY DEFINER` and check permissions themselves through `is_admin()` before any change.
+They exist in both schemas.
 
-| RPC | מה עושה |
+| RPC | What it does |
 | --- | --- |
-| `resolve_bootstrap_role(email)` | מחזיר את התפקיד למשתמש חדש. המשתמש הראשון במערכת מקבל `admin`; אחריו רק הכתובת ב-`app_config.bootstrap_admin_email` |
-| `sync_bootstrap_admin(id, email)` | מקדם משתמש קיים ל-`admin` אם מגיע לו. לעולם לא מוריד תפקיד |
-| `admin_update_user_role(id, role)` | שינוי תפקיד ידני על ידי מנהל |
-| `approve_trip_cascade(trip_id)` | מאשר טיול, ויחד איתו כל מקום/מסלול שלו שממתין לאישור |
+| `resolve_bootstrap_role(email)` | Returns the role for a new user. The first user gets `admin`; after that only the address in `app_config.bootstrap_admin_email` |
+| `sync_bootstrap_admin(id, email)` | Promotes an existing user to `admin` if eligible. Never lowers a role |
+| `admin_update_user_role(id, role)` | Manual role change by an admin |
+| `approve_trip_cascade(trip_id)` | Approves a trip together with its pending places and trails |
 
-## פערים ידועים
+## Known gaps
 
-- `trips_update` בשתי הסכמות עדיין בגרסה המקלה — הבעלים יכול לערוך טיול מאושר
-  ולקבוע לו כל סטטוס. ב-`places` וב-`trails` זה כבר הודק. להידוק יחד עם זרימת
-  עריכת הטיול (שלב 1.3 ב-`TODO.md`).
-- הבדלי `on delete` בין הסכמות מתועדים בראש `schema/06_demo_schema.sql`.
-- ל-`demo` אין את אינדקסי ה-`region_id` שיש ל-`public`.
+- `trips_update` in both schemas is still the permissive version — the owner can edit an approved
+  trip and set any status. `places` and `trails` are already tightened. To be tightened together with
+  the trip editing flow (step 1.3 in `TODO.md`).
+- `on delete` differences between the schemas are documented at the top of `schema/06_demo_schema.sql`.
+- `demo` does not have the `region_id` indexes that `public` has.
 
-## הפקה מחדש של ה-seed
+## Regenerating the seed
 
-הרצה מול המסד, ואיסוף עמודת `stmt` לפי הסדר:
+Run against the database and collect the `stmt` column in order:
 
 ```sql
 with recursive tree as (
@@ -141,6 +141,6 @@ s as (
 select stmt from s order by ord, sub, stmt;
 ```
 
-`jsonb_populate_record` נבחר כי הוא מטפל נכון ב-enums, במערכים וב-jsonb בלי
-לבנות רשימת עמודות ידנית. סדר הטבלאות הוא סדר התלויות; `regions` ממוינות לפי
-עומק ההיררכיה כי ה-FK העצמי אינו `deferrable`.
+`jsonb_populate_record` was chosen because it handles enums, arrays and jsonb correctly without
+building a column list by hand. The table order follows the dependencies; `regions` are sorted by
+hierarchy depth because the self-referencing FK is not `deferrable`.
